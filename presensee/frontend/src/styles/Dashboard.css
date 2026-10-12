@@ -884,3 +884,65 @@
   color: #ff8b8b;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
+
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sidebar-user-info:hover strong {
+  text-decoration: underline;
+}
+
+/* Bloco inteiro do usuário clicável */
+.sidebar-user-link {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+  padding: 6px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sidebar-user-link:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.sidebar-user-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sidebar-user-info strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-user-info span {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.sidebar-avatar-edit {
+  display: none;
+}

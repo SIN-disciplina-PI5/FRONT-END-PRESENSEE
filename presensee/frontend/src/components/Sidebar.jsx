@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import { getUsuario, logout } from "../services/auth"
 import "../styles/Sidebar.css"
+import { Link } from "react-router-dom";
 
 import {
   IconHome,
@@ -143,40 +144,49 @@ function Sidebar() {
         )}
       </button>
 
-      {/* USUÁRIO */}
+     {/* USUÁRIO */}
 
       <div className="sidebar-user">
 
-        <div
-          className="sidebar-avatar"
-          onClick={() => inputAvatar.current.click()}
-          title="Alterar foto"
+        <Link
+          to="/perfil-monitor"
+          className="sidebar-user-link"
+          title="Acessar perfil do monitor"
         >
-          {avatar ? (
-            <img src={avatar} alt="Foto do usuário" />
-          ) : (
-            <MascotAvatar size={34} />
-          )}
-
-          <span className="avatar-camera">
-            <IconCamera />
-          </span>
-
-          <input
-            ref={inputAvatar}
-            type="file"
-            accept="image/*"
-            onChange={escolherAvatar}
-            style={{ display: "none" }}
-          />
-        </div>
-
-        {!collapsed && (
-          <div>
-            <strong>{usuario?.nome || "Marcos A."}</strong>
-            <span>Monitor</span>
+          <div className="sidebar-avatar">
+            {avatar ? (
+              <img src={avatar} alt="Foto do usuário" />
+            ) : (
+              <MascotAvatar size={34} />
+            )}
           </div>
-        )}
+
+          {!collapsed && (
+            <div className="sidebar-user-info">
+              <strong>{usuario?.nome || "Visitante"}</strong>
+              <span>Monitor</span>
+            </div>
+          )}
+        </Link>
+
+        {/* Botão separado para alterar a foto */}
+        <button
+          type="button"
+          className="sidebar-avatar-edit"
+          onClick={() => inputAvatar.current?.click()}
+          title="Alterar foto"
+          aria-label="Alterar foto do perfil"
+        >
+          <IconCamera />
+        </button>
+
+        <input
+          ref={inputAvatar}
+          type="file"
+          accept="image/*"
+          onChange={escolherAvatar}
+          style={{ display: "none" }}
+        />
 
       </div>
 

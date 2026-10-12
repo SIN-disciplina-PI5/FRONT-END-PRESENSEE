@@ -13,7 +13,7 @@ import NovoAluno from "./pages/NovoAluno"
 import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
-
+import PerfilMonitor from "./pages/PerfilMonitor";
 
 import ProtectedRoute from "./components/ProtectedRoute"
 
@@ -26,6 +26,11 @@ function App() {
   <Route
   path="/"
   element={<Welcome />}
+/>
+
+<Route
+  path="/perfil-monitor"
+  element={<PerfilMonitor />}
 />
 
 <Route

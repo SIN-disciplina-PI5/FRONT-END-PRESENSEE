@@ -1,0 +1,256 @@
+/* Perfil do Monitor — PresenSee */
+.perfil-monitor-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 4px 0 30px;
+  color: var(--text-primary, #182033);
+}
+.pm-cabecalho {
+  display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:22px;
+}
+.pm-etiqueta {
+  display:inline-block; margin-bottom:8px; padding:6px 10px; border-radius:99px;
+  background:#f0eaff; color:#6540dd; font-size:10px; font-weight:800; letter-spacing:.7px;
+}
+.pm-cabecalho h1 { margin:0 0 6px; font-size:clamp(25px,2.4vw,32px); line-height:1.2; font-weight:760; color:var(--text-primary,#182033); }
+.pm-cabecalho p { margin:0; color:var(--text-secondary,#737d92); font-size:14px; line-height:1.5; }
+.pm-resumo,.pm-card {
+  border:1px solid var(--border-color,#e9e7f1); border-radius:16px; background:var(--card-bg,#fff);
+  box-shadow:0 5px 20px rgb(37 24 80 / 4%);
+}
+.pm-resumo { display:flex; align-items:center; gap:18px; padding:22px; margin-bottom:16px; }
+.pm-avatar-grande {
+  display:grid; place-items:center; width:92px; height:92px; flex:0 0 92px; overflow:hidden;
+  border-radius:24px; background:#eee8ff; border:3px solid #e4dbff;
+}
+.pm-avatar-grande img { width:100%; height:100%; object-fit:cover; }
+.pm-resumo-dados { flex:1; min-width:0; }
+.pm-resumo-dados h2 { margin:0 0 5px; font-size:21px; color:var(--text-primary,#182033); overflow-wrap:anywhere; }
+.pm-resumo-dados p { margin:0 0 10px; color:var(--text-secondary,#737d92); font-size:13px; }
+.pm-status { display:inline-flex; align-items:center; gap:7px; padding:6px 9px; border-radius:99px; background:#e7f8ef; color:#188052; font-size:11px; font-weight:700; }
+.pm-status > span { width:7px; height:7px; border-radius:50%; background:#22b573; }
+.pm-card { padding:22px; margin-bottom:16px; }
+.pm-card-titulo { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+.pm-icone { display:grid; place-items:center; width:42px; height:42px; flex:0 0 42px; border-radius:13px; background:#eee8ff; color:#6741e8; font-size:23px; font-weight:750; }
+.pm-icone-azul { background:#e4f3ff; color:#1788db; }
+.pm-card-titulo h2 { margin:0 0 4px; color:var(--text-primary,#182033); font-size:16px; font-weight:750; }
+.pm-card-titulo p { margin:0; color:var(--text-secondary,#737d92); font-size:12px; line-height:1.5; }
+.pm-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.pm-campo { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.pm-campo > span { color:var(--text-primary,#40485b); font-size:12px; font-weight:700; }
+.pm-campo input {
+  width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid var(--border-color,#dfe2eb);
+  border-radius:10px; outline:none; background:var(--input-bg,#fff); color:var(--text-primary,#182033);
+  font:inherit; font-size:13px; transition:border-color .2s,box-shadow .2s;
+}
+.pm-campo input:focus { border-color:#8a6af1; box-shadow:0 0 0 3px rgb(103 65 232 / 12%); }
+.pm-campo input:disabled { background:var(--surface-muted,#f8f9fc); color:var(--text-secondary,#667085); cursor:default; }
+.pm-campo-largo { grid-column:1 / -1; }
+.pm-botao-primario,.pm-botao-secundario {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 16px;
+  border-radius:10px; font:inherit; font-size:12px; font-weight:750; cursor:pointer; transition:transform .2s,background .2s;
+}
+.pm-botao-primario { border:1px solid #6240df; background:linear-gradient(135deg,#754cf2,#5429d8); color:#fff; box-shadow:0 5px 12px rgb(91 48 219 / 15%); }
+.pm-botao-primario:hover { transform:translateY(-1px); }
+.pm-botao-secundario { border:1px solid var(--border-color,#ded9ed); background:var(--card-bg,#fff); color:var(--color-primary,#6741e8); }
+.pm-botao-secundario:hover { background:#f5f1ff; }
+.pm-upload-foto { flex-shrink:0; }
+.pm-upload-foto input { display:none; }
+.pm-acoes-form { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--border-color,#eff0f5); }
+.pm-mensagem { margin:16px 0 0; color:var(--color-primary,#6741e8); font-size:12px; }
+.pm-info-seguranca { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.pm-info-seguranca > div { display:flex; flex-direction:column; gap:7px; padding:14px; border-radius:11px; background:var(--surface-muted,#f8f9fc); }
+.pm-info-seguranca strong { color:var(--text-primary,#344054); font-size:12px; }
+.pm-info-seguranca span { color:var(--text-secondary,#737d92); font-size:12px; overflow-wrap:anywhere; }
+@media(max-width:650px) {
+  .pm-cabecalho { align-items:flex-start; flex-direction:column; }
+  .pm-resumo { flex-wrap:wrap; padding:17px; }
+  .pm-avatar-grande { width:76px; height:76px; flex-basis:76px; }
+  .pm-upload-foto { width:100%; }
+  .pm-form-grid,.pm-info-seguranca { grid-template-columns:1fr; }
+  .pm-campo-largo { grid-column:auto; }
+  .pm-card { padding:17px; }
+}
+[data-theme="dark"] .perfil-monitor-page { color:#edf0fa; }
+[data-theme="dark"] .perfil-monitor-page .pm-resumo,
+[data-theme="dark"] .perfil-monitor-page .pm-card { background:var(--card-bg,#171d2e); border-color:var(--border-color,#30384d); }
+[data-theme="dark"] .perfil-monitor-page .pm-cabecalho h1,
+[data-theme="dark"] .perfil-monitor-page .pm-resumo-dados h2,
+[data-theme="dark"] .perfil-monitor-page .pm-card-titulo h2 { color:var(--text-primary,#edf0fa); }
+[data-theme="dark"] .perfil-monitor-page .pm-campo input:disabled,
+[data-theme="dark"] .perfil-monitor-page .pm-info-seguranca > div { background:var(--surface-muted,#20283a); }
+
+/* Abas do perfil */
+.pm-abas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 0 20px;
+  padding: 5px;
+  border: 1px solid #e7e2f2;
+  border-radius: 12px;
+  background: #f0edf8;
+}
+
+.pm-aba {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #687086;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.pm-aba:hover {
+  color: #6741e8;
+  background: #e8e0ff;
+}
+
+.pm-aba-ativa {
+  background: #ffffff;
+  color: #6741e8;
+  box-shadow: 0 2px 7px rgb(44 25 90 / 8%);
+}
+
+.pm-aba:focus-visible {
+  outline: 2px solid #8b6cf2;
+  outline-offset: 2px;
+}
+
+/* Formulário de ajuda e suporte */
+.pm-form-suporte {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pm-form-suporte .pm-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pm-form-suporte .pm-campo > span {
+  color: #30364a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pm-form-suporte .pm-campo input,
+.pm-form-suporte .pm-campo select,
+.pm-form-suporte .pm-campo textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #dfe2ed;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #20263a;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pm-form-suporte .pm-campo textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.pm-form-suporte .pm-campo input:focus,
+.pm-form-suporte .pm-campo select:focus,
+.pm-form-suporte .pm-campo textarea:focus {
+  border-color: #8060ed;
+  box-shadow: 0 0 0 3px rgb(103 65 232 / 12%);
+}
+
+.pm-form-suporte .pm-campo input::placeholder,
+.pm-form-suporte .pm-campo textarea::placeholder {
+  color: #9299aa;
+}
+
+.pm-contador {
+  align-self: flex-end;
+  margin-top: -2px;
+  color: #858ca0;
+  font-size: 11px;
+}
+
+/* Aviso de envio */
+.pm-suporte-destino {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid #e8e2ff;
+  border-radius: 10px;
+  background: #f7f4ff;
+  color: #656078;
+}
+
+.pm-suporte-destino > span {
+  flex-shrink: 0;
+  color: #6741e8;
+  font-size: 17px;
+}
+
+.pm-suporte-destino p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Botões */
+.pm-form-suporte .pm-acoes-form {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+  padding-top: 20px;
+  border-top: 1px solid #eceaf3;
+}
+
+.pm-form-suporte .pm-botao-primario,
+.pm-form-suporte .pm-botao-secundario {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .pm-abas {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .pm-aba {
+    flex: 1;
+    padding: 0 10px;
+  }
+
+  .pm-form-suporte .pm-acoes-form {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .pm-form-suporte .pm-acoes-form button {
+    width: 100%;
+  }
+}
