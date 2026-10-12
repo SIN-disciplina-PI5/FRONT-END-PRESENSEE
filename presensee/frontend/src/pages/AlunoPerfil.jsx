@@ -1,23 +1,76 @@
+
+
 import { useState } from "react"
+
 import { Link, useParams } from "react-router-dom"
+
 import DashboardLayout from "../layouts/DashboardLayout"
+
 import GaugeChart from "../components/GaugeChart"
-import ExpandButton from "../components/ExpandButton"
+
 import {
+
   alunos,
+
   intervencoes as intervencoesMock,
-  TIPOS_INTERVENCAO,
+
   formatarData,
-  dataHoje,
-  nivelRisco
+
+  nivelRisco,
+
 } from "../data/diarioMock"
-import "../styles/Diario.css"
+
+import "../styles/AlunoPerfil.css";
+
+
+
+
 
 function corFrequencia(valor) {
-  if (valor < 75) return "#ff0000"
-  if (valor < 90) return "#e5b500"
-  return "#22c55e"
+
+  if (valor < 75) return "#ef4444"; // Vermelho: ruim
+
+  if (valor < 90) return "#eab308"; // Amarelo: médio
+
+  return "#22c55e"; // Verde: bom
+
 }
+
+
+
+function corRisco(valor) {
+
+  if (valor >= 70) return "#ef4444"; // Alto risco
+
+  if (valor >= 40) return "#eab308"; // Risco médio
+
+  return "#22c55e"; // Baixo risco
+
+}
+
+
+
+
+
+function iniciais(nome) {
+
+  return nome
+
+    .split(" ")
+
+    .filter(Boolean)
+
+    .slice(0, 2)
+
+    .map(parte => parte[0])
+
+    .join("")
+
+    .toUpperCase()
+
+}
+
+
 
 function AlunoPerfil() {
 
@@ -26,20 +79,25 @@ function AlunoPerfil() {
   const aluno = alunos.find(item => item.id === Number(id))
 
 
-  const [intervencoes, setIntervencoes] = useState(
-    intervencoesMock.filter(item => item.alunoId === Number(id))
-  )
 
   const [pendencias, setPendencias] = useState(
-    (aluno?.pendencias || []).map(texto => ({ texto, feita: false }))
+
+    (aluno?.pendencias || []).map((texto, indice) => ({
+
+      id: `${indice}-${texto}`,
+
+      texto,
+
+      feita: false,
+
+    }))
+
   )
 
-  const [dadosAberto, setDadosAberto] = useState(false)
-  const [historicoAberto, setHistoricoAberto] = useState(false)
-  const [modalAberto, setModalAberto] = useState(false)
 
-  const [tipo, setTipo] = useState(TIPOS_INTERVENCAO[0])
-  const [descricao, setDescricao] = useState("")
+
+  const [historicoExpandido, setHistoricoExpandido] = useState(false)
+
 
 
   if (!aluno) {
@@ -48,13 +106,17 @@ function AlunoPerfil() {
 
       <DashboardLayout>
 
-        <div className="page-header">
-          <h1>Aluno não encontrado</h1>
-        </div>
+        <div className="perfil-page">
 
-        <Link to="/diario" className="diario-link-aluno">
-          Voltar para o Diário do Monitor
-        </Link>
+          <h1>Aluno não encontrado</h1>
+
+          <Link to="/diario" className="diario-link-aluno">
+
+            ← Voltar para o Diário do Monitor
+
+          </Link>
+
+        </div>
 
       </DashboardLayout>
 
@@ -63,327 +125,672 @@ function AlunoPerfil() {
   }
 
 
-  const ultima = intervencoes[0]
+
+  const historico = intervencoesMock
+
+    .filter(item => item.alunoId === aluno.id)
+
+    .sort((a, b) => b.data.localeCompare(a.data))
 
 
-  function alternarPendencia(indice) {
 
-    setPendencias(lista =>
-      lista.map((item, i) =>
-        i === indice ? { ...item, feita: !item.feita } : item
-      )
+  const ultimasIntervencoes = historicoExpandido
+
+    ? historico
+
+    : historico.slice(0, 3)
+
+
+
+  const responsavelPrincipal = aluno.responsaveis?.[0]
+
+
+
+  function adicionarPendencia() {
+
+  const texto = window.prompt("Digite a nova pendência:");
+
+
+
+  if (!texto || !texto.trim()) return;
+
+
+
+  setPendencias(lista => [
+
+    ...lista,
+
+    {
+
+      id: `${Date.now()}-${Math.random()}`,
+
+      texto: texto.trim(),
+
+      feita: false,
+
+    },
+
+  ]);
+
+}
+
+
+
+function editarPendencia(item) {
+
+  const texto = window.prompt(
+
+    "Edite a descrição da pendência:",
+
+    item.texto
+
+  );
+
+
+
+  if (texto === null || !texto.trim()) return
+
+}
+
+function excluirPendencia(idPendencia) {
+
+  const confirmar = window.confirm(
+
+    "Deseja realmente excluir esta pendência?"
+
+  );
+
+
+   function alternarPendencia(idPendencia) {
+  setPendencias((lista) =>
+    lista.map((item) =>
+      item.id === idPendencia
+        ? { ...item, feita: !item.feita }
+        : item
     )
+  );
+}
 
-  }
-
-
-  function fecharModal() {
-
-    setModalAberto(false)
-    setTipo(TIPOS_INTERVENCAO[0])
-    setDescricao("")
-
-  }
+  if (!confirmar) return;
 
 
-  function salvarIntervencao(e) {
 
-    e.preventDefault()
+  setPendencias(lista =>
 
-    const nova = {
-      id: Date.now(),
-      alunoId: aluno.id,
-      tipo,
-      data: dataHoje(),
-      descricao: descricao.trim()
-    }
+    lista.filter(item => item.id !== idPendencia)
 
-    setIntervencoes(lista => [nova, ...lista])
+  );
 
-    fecharModal()
+}
 
-  }
 
 
   return (
 
     <DashboardLayout>
 
-      <div className="perfil-page">
+      <main className="perfil-page perfil-moderno">
 
 
-        {/* LINHA 1: FICHA + FREQUÊNCIA + FALTAS */}
 
-        <div className="perfil-linha perfil-linha-topo">
+        {/* CAMINHO DA PÁGINA */}
 
+        <div className="perfil-breadcrumb">
 
-          <div className="perfil-ficha">
+          <Link to="/alunos">Alunos</Link>
 
-            <div className="perfil-ficha-topo">
+          <span>/</span>
 
-              <div className="perfil-foto"></div>
-
-              <div>
-                <h1>{aluno.nome}</h1>
-                <p>{aluno.turma}</p>
-              </div>
-
-            </div>
-
-
-            <div className="perfil-status">
-
-              <div>
-                <span className={`risk-dot ${nivelRisco(aluno.risco)}`}></span>
-                {aluno.status}
-              </div>
-
-              <div>
-                <span className={`risk-dot ${nivelRisco(aluno.risco)}`}></span>
-                Risco Atual: {aluno.risco}%
-              </div>
-
-            </div>
-
-
-            <ExpandButton
-              label="Dados do Aluno"
-              small
-              aberto={dadosAberto}
-              onClick={() => setDadosAberto(!dadosAberto)}
-            />
-
-            {dadosAberto && (
-
-              <dl className="perfil-dados">
-
-                <dt>Matrícula</dt>
-                <dd>{aluno.matricula}</dd>
-
-                <dt>Email</dt>
-                <dd>{aluno.email}</dd>
-
-                <dt>Responsável</dt>
-                <dd>{aluno.responsaveis.map(r => r.nome).join(", ")}</dd>
-
-              </dl>
-
-            )}
-
-          </div>
-
-
-          <div className="card-branco perfil-card-gauge">
-
-            <h2>Frequência</h2>
-
-            <div className="perfil-gauge">
-              <GaugeChart
-                value={aluno.frequencia}
-                color={corFrequencia(aluno.frequencia)}
-              />
-            </div>
-
-          </div>
-
-
-          <div className="card-branco perfil-card-faltas">
-
-            <h2>Faltas</h2>
-
-            <strong>{aluno.faltas}</strong>
-
-          </div>
-
+          <span>Perfil do aluno</span>
 
         </div>
 
 
-        {/* LINHA 2: INTERVENÇÕES */}
 
-        <div className="perfil-linha perfil-linha-meio">
+        {/* CABEÇALHO COMPLETO DO ALUNO */}
 
+        <section className="perfil-cabecalho">
 
-          <div className="card-branco perfil-card-quantidade">
+          <div className="perfil-identificacao">
 
-            <div className="perfil-card-titulo-linha">
+            <div className="perfil-avatar-iniciais">
 
-              <h2>Quantidade de Intervenções</h2>
-
-              <strong>{intervencoes.length}</strong>
+              {iniciais(aluno.nome)}
 
             </div>
 
-            <ExpandButton
-              label="Nova intervenção"
-              icone="plus"
-              small
-              onClick={() => setModalAberto(true)}
-            />
-
-          </div>
 
 
-          <div className="card-branco perfil-card-ultima">
+            <div className="perfil-identificacao-texto">
 
-            <h2>Última intervenção</h2>
+              <h1>{aluno.nome}</h1>
 
-            {ultima ? (
+              <p>
 
-              <>
+                {aluno.turma} <span>·</span> Matrícula: {aluno.matricula}
 
-                <p className="perfil-ultima-data">
-                  {formatarData(ultima.data)}
-                </p>
-
-                <p>
-                  <span className="perfil-tipo">{ultima.tipo}</span> com o aluno
-                </p>
-
-              </>
-
-            ) : (
-
-              <p className="diario-vazio">
-                Nenhuma intervenção registrada.
               </p>
 
-            )}
 
-            <ExpandButton
-              label="Ver todas as informações"
-              small
-              aberto={historicoAberto}
-              onClick={() => setHistoricoAberto(!historicoAberto)}
-            />
 
-            {historicoAberto && (
+              <span className={`perfil-status-badge ${nivelRisco(aluno.risco)}`}>
 
-              <ul className="diario-lista perfil-historico">
+                <span className="perfil-status-ponto" />
 
-                {intervencoes.map(item => (
+                {aluno.status}
 
-                  <li key={item.id}>
-                    <span>
-                      <strong>{item.tipo}</strong>
-                      {item.descricao && ` — ${item.descricao}`}
-                    </span>
-                    <small>{formatarData(item.data)}</small>
-                  </li>
+              </span>
 
-                ))}
-
-              </ul>
-
-            )}
+            </div>
 
           </div>
 
 
-        </div>
 
+          <div className="perfil-contatos">
 
-        {/* PENDÊNCIAS */}
+            <div className="perfil-contato-item">
 
-        <section className="perfil-pendencias">
+              <span className="perfil-contato-icone">✉</span>
 
-          <h2>Pendências</h2>
-
-          {pendencias.length > 0 ? (
-
-            <div className="perfil-pendencias-lista">
-
-              {pendencias.map((item, indice) => (
-
-                <label key={item.texto} className={item.feita ? "feita" : ""}>
-
-                  <input
-                    type="checkbox"
-                    checked={item.feita}
-                    onChange={() => alternarPendencia(indice)}
-                  />
-
-                  {item.texto}
-
-                </label>
-
-              ))}
+              <span>{aluno.email}</span>
 
             </div>
 
-          ) : (
 
-            <p className="diario-vazio">
-              Nenhuma pendência para este aluno.
+
+            <div className="perfil-contato-item">
+
+              <span className="perfil-contato-icone">♙</span>
+
+              <span>
+
+                Responsável: {responsavelPrincipal?.nome || "Não informado"}
+
+              </span>
+
+            </div>
+
+
+
+            <div className="perfil-contato-item">
+
+              <span className="perfil-contato-icone">☎</span>
+
+              <span>
+
+                {responsavelPrincipal?.telefone || "Telefone não informado"}
+
+              </span>
+
+            </div>
+
+          </div>
+
+
+
+          <div className="perfil-risco">
+
+            <span className="perfil-risco-label">Risco atual</span>
+
+            <strong>{aluno.risco}%</strong>
+
+
+
+          <div className="perfil-risco-barra">
+
+            <span
+
+               style={{
+
+               width: `${Math.min(100, Math.max(0, Number(aluno.risco) || 0))}%`,
+
+               backgroundColor: corRisco(aluno.risco),
+
+          }}
+
+          />
+
+          </div>
+
+
+
+            <p>
+
+              {aluno.frequencia < 75
+
+                ? "Frequência abaixo do esperado. É importante manter o acompanhamento."
+
+                : "Continue acompanhando a frequência e o desempenho do aluno."}
+
             </p>
 
-          )}
+          </div>
 
         </section>
 
 
-      </div>
+
+        {/* TRÊS INDICADORES */}
+
+        <section className="perfil-indicadores">
 
 
-      {/* MODAL: NOVA INTERVENÇÃO */}
 
-      {modalAberto && (
+          <article className="perfil-indicador perfil-indicador-frequencia">
 
-        <div className="interv-overlay" onClick={fecharModal}>
+            <div className="perfil-indicador-titulo">
 
-          <form
-            className="interv-modal"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={salvarIntervencao}
-          >
+              <span className="perfil-indicador-icone">↗</span>
 
-            <h2>Nova intervenção</h2>
-
-            <label htmlFor="interv-tipo">Tipo</label>
-
-            <select
-              id="interv-tipo"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-            >
-              {TIPOS_INTERVENCAO.map(item => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-
-            <label htmlFor="interv-descricao">Descrição</label>
-
-            <textarea
-              id="interv-descricao"
-              rows={4}
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="O que foi conversado ou combinado"
-            />
-
-            <div className="interv-acoes">
-
-              <button type="button" className="interv-cancelar" onClick={fecharModal}>
-                Cancelar
-              </button>
-
-              <button type="submit" className="interv-salvar">
-                Salvar intervenção
-              </button>
+              <h2>Frequência</h2>
 
             </div>
 
-          </form>
 
-        </div>
 
-      )}
+            <div className="perfil-frequencia-conteudo">
 
+              <div className="perfil-gauge-moderno">
+
+                <GaugeChart
+
+                  value={aluno.frequencia}
+
+                  color={corFrequencia(aluno.frequencia)}
+
+                />
+
+              </div>
+
+
+
+              <div className="perfil-frequencia-legenda">
+
+                <span className={`perfil-pilula-frequencia ${
+
+                  aluno.frequencia < 75 ? "atencao" : "normal"
+
+                }`}>
+
+                  {aluno.frequencia < 75
+
+                    ? "Abaixo do esperado"
+
+                    : "Frequência registrada"}
+
+                </span>
+
+                <p>Frequência atual do aluno</p>
+
+              </div>
+
+            </div>
+
+          </article>
+
+
+
+          <article className="perfil-indicador perfil-indicador-faltas">
+
+            <div className="perfil-indicador-titulo">
+
+              <span className="perfil-indicador-icone">▦</span>
+
+              <h2>Faltas</h2>
+
+            </div>
+
+
+
+            <strong className="perfil-indicador-numero">
+
+              {aluno.faltas}
+
+            </strong>
+
+            <span className="perfil-indicador-descricao">Faltas registradas</span>
+
+            <span className="perfil-indicador-detalhe">
+
+              Histórico de frequência
+
+            </span>
+
+          </article>
+
+
+
+          <article className="perfil-indicador perfil-indicador-intervencoes">
+
+            <div className="perfil-indicador-titulo">
+
+              <span className="perfil-indicador-icone">▤</span>
+
+              <h2>Intervenções</h2>
+
+            </div>
+
+
+
+            <strong className="perfil-indicador-numero">
+
+              {historico.length}
+
+            </strong>
+
+            <span className="perfil-indicador-descricao">
+
+              {historico.length === 1
+
+                ? "Intervenção registrada"
+
+                : "Intervenções registradas"}
+
+            </span>
+
+
+
+            {historico.length > 0 && (
+
+              <span className="perfil-indicador-detalhe">
+
+                Última em {formatarData(historico[0].data)}
+
+              </span>
+
+            )}
+
+          </article>
+
+
+
+        </section>
+
+
+
+        {/* HISTÓRICO E PENDÊNCIAS */}
+
+        <section className="perfil-inferior">
+
+
+
+          <article className="perfil-bloco perfil-bloco-historico">
+
+            <header className="perfil-bloco-cabecalho">
+
+              <div className="perfil-bloco-titulo">
+
+                <span className="perfil-bloco-icone roxo">◷</span>
+
+                <h2>Últimas intervenções</h2>
+
+              </div>
+
+
+
+              {historico.length > 3 && (
+
+                <button
+
+                  type="button"
+
+                  className="perfil-link-historico"
+
+                  onClick={() => setHistoricoExpandido(!historicoExpandido)}
+
+                >
+
+                  {historicoExpandido ? "Mostrar menos" : "Ver histórico completo"}
+
+                  <span>{historicoExpandido ? "↑" : "→"}</span>
+
+                </button>
+
+              )}
+
+            </header>
+
+
+
+            {historico.length > 0 ? (
+
+              <div className="perfil-timeline">
+
+                {ultimasIntervencoes.map(item => (
+
+                  <div className="perfil-timeline-item" key={item.id}>
+
+                    <div className="perfil-timeline-marcador">
+
+                      <span />
+
+                    </div>
+
+
+
+                    <div className="perfil-timeline-data">
+
+                      {formatarData(item.data)}
+
+                    </div>
+
+
+
+                    <div className="perfil-timeline-conteudo">
+
+                      <span className={`perfil-tipo-badge ${
+
+                        item.tipo === "Conversa Individual"
+
+                          ? "conversa"
+
+                          : item.tipo === "Contato com responsável"
+
+                            ? "responsavel"
+
+                            : "encaminhamento"
+
+                      }`}>
+
+                        {item.tipo}
+
+                      </span>
+
+
+
+                      <p>{item.descricao || "Sem descrição registrada."}</p>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="perfil-sem-registros">
+
+                <span>◷</span>
+
+                <p>Nenhuma intervenção registrada para este aluno.</p>
+
+              </div>
+
+            )}
+
+          </article>
+
+
+
+         <article className="perfil-bloco perfil-bloco-pendencias">
+
+  <header className="perfil-bloco-cabecalho">
+
+    <div className="perfil-bloco-titulo">
+
+      <span className="perfil-bloco-icone verde">☷</span>
+
+      <h2>Pendências</h2>
+
+    </div>
+
+
+
+    <div className="perfil-pendencias-acoes">
+
+      <span className="perfil-pendencias-contador">
+
+        {pendencias.filter(item => !item.feita).length} abertas
+
+      </span>
+
+
+
+      <button
+
+        type="button"
+
+        className="perfil-btn-adicionar-pendencia"
+
+        onClick={adicionarPendencia}
+
+        title="Adicionar pendência"
+
+        aria-label="Adicionar pendência"
+
+      >
+
+        +
+
+      </button>
+
+    </div>
+
+  </header>
+
+
+
+  {pendencias.length > 0 ? (
+
+    <div className="perfil-pendencias-modernas">
+
+      {pendencias.map(item => (
+
+  <div
+
+    key={item.id}
+
+    className={`perfil-pendencia-item ${
+
+      item.feita ? "concluida" : ""
+
+    }`}
+
+  >
+
+    <label className="perfil-pendencia-checkbox">
+  <input
+    type="checkbox"
+    checked={Boolean(item.feita)}
+    onChange={() => {
+      alternarPendencia(item.id);
+    }}
+  />
+
+  <span className="perfil-pendencia-texto">
+    {item.texto}
+  </span>
+</label>
+
+
+
+    <div className="perfil-pendencia-botoes">
+
+      <button
+
+        type="button"
+
+        className="perfil-btn-editar-pendencia"
+
+        onClick={() => editarPendencia(item)}
+
+        title="Editar pendência"
+
+        aria-label={`Editar pendência: ${item.texto}`}
+
+      >
+
+        ✎
+
+      </button>
+
+
+
+      <button
+
+        type="button"
+
+        className="perfil-btn-excluir-pendencia"
+
+        onClick={() => excluirPendencia(item.id)}
+
+        title="Excluir pendência"
+
+        aria-label={`Excluir pendência: ${item.texto}`}
+
+      >
+
+        ×
+
+      </button>
+
+    </div>
+
+  </div>
+
+))}
+
+    </div>
+
+  ) : (
+
+    <div className="perfil-sem-registros">
+
+      <span>✓</span>
+
+      <p>Nenhuma pendência para este aluno.</p>
+
+    </div>
+
+  )}
+
+
+
+  <div className="perfil-pendencias-rodape">
+
+    <span className="perfil-pendencias-status-ponto" />
+
+    As marcações são mantidas enquanto esta tela estiver aberta.
+
+  </div>
+
+</article>
+
+        </section>
+
+
+
+      </main>
 
     </DashboardLayout>
 
   )
 
 }
+
+
 
 export default AlunoPerfil

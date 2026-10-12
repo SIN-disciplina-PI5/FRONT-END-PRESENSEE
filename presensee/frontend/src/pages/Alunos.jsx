@@ -2,10 +2,11 @@
 import DashboardLayout from "../layouts/DashboardLayout"
 import "../styles/Alunos.css"
 import { useMemo, useState } from "react"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Alunos() {
   const location = useLocation()
+  const navigate = useNavigate() 
 
   const [alunos] = useState([
     {
@@ -636,11 +637,13 @@ const ocorrencias = [
                 </span>
               </button>
 
-              <button>
-                📖
-                <span>
-                  Diário do monitor
-                </span>
+             <button
+              onClick={() => {
+              navigate(`/alunos/${alunoSelecionado.matricula}`);
+              }}
+              >
+                👤
+              <span>Perfil do aluno</span>
               </button>
 
             </div>

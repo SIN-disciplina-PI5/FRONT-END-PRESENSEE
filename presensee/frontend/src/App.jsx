@@ -120,14 +120,14 @@ function App() {
           }
         />
 
-        <Route
-          path="/diario/aluno/:id"
-          element={
-            <ProtectedRoute>
-              <AlunoPerfil />
-            </ProtectedRoute>
-          }
-        />
+           <Route
+           path="/alunos/:id"
+           element={
+         <ProtectedRoute>
+         <AlunoPerfil />
+        </ProtectedRoute>
+        }
+       />
 
 
       </Routes>
