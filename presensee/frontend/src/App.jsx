@@ -13,7 +13,8 @@ import NovoAluno from "./pages/NovoAluno"
 import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
-import PerfilMonitor from "./pages/PerfilMonitor";
+import PerfilMonitor from "./pages/PerfilMonitor"
+import { adminRoutes } from "./painel-administrativo/AdminRoutes";
 
 import ProtectedRoute from "./components/ProtectedRoute"
 
@@ -22,6 +23,7 @@ function App() {
     <BrowserRouter>
 
      <Routes>
+      {adminRoutes()}
 
   <Route
   path="/"
