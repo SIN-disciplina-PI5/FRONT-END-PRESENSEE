@@ -9,7 +9,7 @@ const example = [
 // Nunca utilize credenciais fixas no frontend em produção.
 export const isAdminDemo = () => sessionStorage.getItem(SESSION) === "true"
 export function loginAdminDemo(email, senha) {
-  if (email.trim().toLowerCase() !== "admin@presensee.demo" || senha !== "Admin@123") return false
+  if (email.trim().toLowerCase() !== "admin@presensee.com" || senha !== "admin123") return false
   sessionStorage.setItem(SESSION, "true")
   return true
 }
@@ -20,7 +20,7 @@ export function getEscolas() {
 export function getLogs() { try { return JSON.parse(localStorage.getItem(AUDIT)) || [] } catch { return [] } }
 function log(acao) { localStorage.setItem(AUDIT, JSON.stringify([{id: crypto.randomUUID(), acao, data: new Date().toLocaleString('pt-BR')}, ...getLogs()].slice(0,100))) }
 export function saveEscola(escola) {
- const saved = { ...escola, id: crypto.randomUUID() }
+ const saved = { ...escola, id: crypto.randomUUID(), criadoEm: new Date().toISOString(), usuarios: [], totalAlunos: null }
  localStorage.setItem(KEY, JSON.stringify([...getEscolas(),saved]))
  log(`Escola cadastrada: ${saved.nome}`)
  return saved

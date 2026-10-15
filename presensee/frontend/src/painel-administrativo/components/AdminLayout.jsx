@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { logoutAdminDemo } from "../services/adminDemo"
 import "../styles/admin.css"
-const menu = [["/admin/dashboard","⌂","Dashboard"],["/admin/escolas","▤","Escolas"],["/admin/gestores","♙","Gestores"],["/admin/acessos","◇","Controle de acessos"],["/admin/auditoria","▦","Auditoria"]]
+const menu = [["/admin/dashboard","⌂","Dashboard"],["/admin/escolas","▤","Escolas"],["/admin/gestores","♙","Gestores"],["/admin/auditoria","▦","Auditoria"]]
 export default function AdminLayout(){
  const navigate = useNavigate()
  const [collapsed,setCollapsed]=useState(false)

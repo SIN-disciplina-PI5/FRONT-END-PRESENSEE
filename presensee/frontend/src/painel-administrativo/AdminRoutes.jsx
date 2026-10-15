@@ -21,6 +21,5 @@ export function adminRoutes(){return <>
  <Route path="escolas" element={<AdminEscolas/>}/>
  <Route path="escolas/nova" element={<AdminNovaEscola/>}/>
  <Route path="gestores" element={<AdminGestores/>}/>
- <Route path="acessos" element={<AdminEscolas modo="acessos"/>}/>
  <Route path="auditoria" element={<AdminAuditoria/>}/>
  </Route></Route></>}

@@ -76,3 +76,25 @@
 @media(max-width:1100px){ .admin-grid{grid-template-columns:1fr}.admin-stats{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:900px){ .admin-main{padding:24px}.admin-sidebar{width:200px} }
 @media(max-width:650px){ .admin-sidebar{width:70px;padding:20px 9px}.admin-sidebar span,.admin-brand h2,.admin-user span{display:none}.admin-main{padding:16px}.admin-heading{flex-wrap:wrap}.admin-form-grid{grid-template-columns:1fr}.admin-stats{gap:10px}.admin-filters{flex-direction:column}.admin-row-actions{flex-direction:column;align-items:stretch} }
+
+/* Detalhes de instituições e gestores */
+.admin-link-button {border:0;background:transparent;color:var(--color-primary,#633df2);font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left}
+.admin-link-button:hover {text-decoration:underline}
+.admin-outline-btn {border:1px solid var(--color-primary,#633df2);border-radius:9px;color:var(--color-primary,#633df2);background:transparent;padding:8px 11px;cursor:pointer;font:inherit;font-size:12px}
+.admin-details-modal {max-width:860px;width:min(92vw,860px);max-height:87vh;overflow-y:auto}
+.admin-modal-title {display:flex;align-items:center;justify-content:space-between;gap:18px}
+.admin-modal-title h2 {margin:0}
+.admin-close {background:transparent;border:0;font-size:27px;cursor:pointer;color:var(--color-text,#222)}
+.admin-detail-summary {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.admin-detail-summary>div {background:var(--color-bg,#f7f7fb);border:1px solid var(--color-border,#e2e2ea);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:6px}
+.admin-detail-summary small,.admin-detail-grid dt {color:var(--color-text-muted,#6b6b78);font-size:12px}
+.admin-detail-summary strong {font-size:25px;color:var(--color-primary,#633df2)}
+.admin-detail-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:10px 0 22px}
+.admin-detail-grid>div {border-bottom:1px solid var(--color-border,#ddd);padding-bottom:10px;min-width:0}
+.admin-detail-grid dt {margin-bottom:5px}.admin-detail-grid dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.admin-map-link {color:var(--color-primary,#633df2);font-size:13px;font-weight:700}
+.admin-manager-hero {display:flex;gap:14px;align-items:center;margin:20px 0}
+.admin-manager-hero h3,.admin-manager-hero p{margin:2px 0}
+.admin-manager-avatar {width:56px;height:56px;display:grid;place-items:center;background:#e9e3ff;border-radius:50%;color:#4b25c9;font-size:24px;font-weight:800}
+[data-theme="dark"] .admin-detail-summary>div {background:var(--color-bg);border-color:var(--color-border)}
+@media(max-width:650px){.admin-detail-summary{grid-template-columns:repeat(2,1fr)}.admin-detail-grid{grid-template-columns:1fr}}

@@ -2,12 +2,14 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { changeStatus, deleteEscola, getEscolas } from "../services/adminDemo"
 import "../styles/admin.css"
+import EscolaDetalhesModal from "../components/EscolaDetalhesModal"
 
 export default function AdminEscolas({ modo = "escolas" }) {
   const [escolas, setEscolas] = useState(getEscolas())
   const [busca, setBusca] = useState("")
   const [filtro, setFiltro] = useState("Todas")
   const [excluir, setExcluir] = useState(null)
+  const [detalhes, setDetalhes] = useState(null)
 
   function status(id, novoStatus) {
     changeStatus(id, novoStatus)
@@ -59,13 +61,14 @@ export default function AdminEscolas({ modo = "escolas" }) {
             <tbody>
               {lista.map((escola) => (
                 <tr key={escola.id}>
-                  <td><strong>{escola.nome}</strong>{escola.inep && <small>INEP: {escola.inep}</small>}</td>
+                  <td><button type="button" className="admin-link-button" onClick={() => setDetalhes(escola)}>{escola.nome}</button>{escola.inep && <small>INEP: {escola.inep}</small>}</td>
                   <td>{escola.municipio}</td>
                   <td>{escola.rede}</td>
                   <td>{escola.gestor}</td>
                   <td><span className={`admin-badge ${escola.status.toLowerCase()}`}>{escola.status}</span></td>
                   <td>
                     <div className="admin-row-actions">
+                      <button type="button" className="admin-outline-btn" onClick={() => setDetalhes(escola)}>Detalhes</button>
                       <select
                         aria-label={`Alterar situação de ${escola.nome}`}
                         value={escola.status}
@@ -89,6 +92,8 @@ export default function AdminEscolas({ modo = "escolas" }) {
           {!lista.length && <p className="admin-empty">Nenhuma escola encontrada.</p>}
         </div>
       </section>
+
+      <EscolaDetalhesModal escola={detalhes} onClose={() => setDetalhes(null)} />
 
       {excluir && (
         <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setExcluir(null) }}>
