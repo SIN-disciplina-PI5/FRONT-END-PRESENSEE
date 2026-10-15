@@ -9,7 +9,7 @@ const example = [
 // Nunca utilize credenciais fixas no frontend em produção.
 export const isAdminDemo = () => sessionStorage.getItem(SESSION) === "true"
 export function loginAdminDemo(email, senha) {
-  if (email.trim().toLowerCase() !== "admin@presensee.demo" || senha !== "Admin@123") return false
+  if (email.trim().toLowerCase() !== "admin@presensee.com" || senha !== "admin123") return false
   sessionStorage.setItem(SESSION, "true")
   return true
 }
