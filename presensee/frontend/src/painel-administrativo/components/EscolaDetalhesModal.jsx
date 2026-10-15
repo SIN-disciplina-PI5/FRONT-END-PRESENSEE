@@ -13,7 +13,6 @@ export default function EscolaDetalhesModal({ escola, onClose }) {
     <AdminModal title={escola.nome} onClose={onClose}>
       <div className="admin-detail-summary">
         <div><small>Usuários vinculados</small><strong>{usuarios.length ? usuarios.length : "—"}</strong></div>
-        <div><small>Monitores</small><strong>{usuarios.length ? monitores.length : "—"}</strong></div>
         <div><small>Alunos cadastrados</small><strong>{escola.totalAlunos ?? "—"}</strong></div>
       </div>
       <h3>Informações institucionais</h3>
