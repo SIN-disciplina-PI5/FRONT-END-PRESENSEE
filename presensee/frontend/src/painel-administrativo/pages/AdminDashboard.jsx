@@ -29,7 +29,6 @@ export default function AdminDashboard() {
           <h1>Olá, Superadmin!</h1>
           <p>Visão geral da rede de escolas do PresenSee.</p>
         </div>
-        <Link className="admin-btn" to="/admin/escolas/nova">+ Nova escola</Link>
       </div>
 
       <h2 className="admin-section-title">Visão Geral</h2>

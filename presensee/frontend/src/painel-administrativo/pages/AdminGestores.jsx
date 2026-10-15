@@ -20,7 +20,6 @@ export default function AdminGestores() {
             </tr>
           ))}</tbody>
         </table></div>
-        <p className="admin-hint">Os registros são demonstrativos. Vinculações reais de usuários precisam da API.</p>
       </section>
       <GestorDetalhesModal escola={selecionado} onClose={() => setSelecionado(null)} />
     </div>

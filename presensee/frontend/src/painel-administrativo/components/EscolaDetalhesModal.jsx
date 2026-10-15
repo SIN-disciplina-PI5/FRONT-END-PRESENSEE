@@ -13,11 +13,9 @@ export default function EscolaDetalhesModal({ escola, onClose }) {
     <AdminModal title={escola.nome} onClose={onClose}>
       <div className="admin-detail-summary">
         <div><small>Usuários vinculados</small><strong>{usuarios.length ? usuarios.length : "—"}</strong></div>
-        <div><small>Gestores</small><strong>{usuarios.length ? gestores.length : "—"}</strong></div>
         <div><small>Monitores</small><strong>{usuarios.length ? monitores.length : "—"}</strong></div>
         <div><small>Alunos cadastrados</small><strong>{escola.totalAlunos ?? "—"}</strong></div>
       </div>
-      <p className="admin-hint">Os totais de usuários e alunos dependem da integração com o banco de dados. Não são estimados pelo cadastro do gestor.</p>
       <h3>Informações institucionais</h3>
       <dl className="admin-detail-grid">
         <div><dt>Rede</dt><dd>{show(escola.rede)}</dd></div>
@@ -43,7 +41,7 @@ export default function EscolaDetalhesModal({ escola, onClose }) {
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Nome</th><th>Perfil</th><th>E-mail</th><th>Início</th></tr></thead><tbody>
           {usuarios.map((u, index) => <tr key={u.id || index}><td>{show(u.nome)}</td><td>{show(u.perfil)}</td><td>{show(u.email)}</td><td>{fmt(u.criadoEm)}</td></tr>)}
         </tbody></table></div>
-      ) : <p className="admin-hint">Nenhuma lista de usuários foi sincronizada ainda. O nome do gestor cadastrado acima é apenas um dado de contato.</p>}
+      ) : (<p className="admin-hint">Nenhum usuário vinculado a esta escola.</p>)}
     </AdminModal>
   )
 }

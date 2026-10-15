@@ -16,7 +16,6 @@ export default function GestorDetalhesModal({ escola, onClose }) {
         <div><dt>Início no PresenSee</dt><dd>{data ? new Date(data).toLocaleDateString("pt-BR") : "Não informado"}</dd></div>
         <div><dt>Status da escola</dt><dd>{show(escola.status)}</dd></div>
       </dl>
-      <p className="admin-hint">O início de utilização e os dados pessoais completos dependem do cadastro de usuários do backend. Não é usada uma data inventada.</p>
     </AdminModal>
   )
 }
