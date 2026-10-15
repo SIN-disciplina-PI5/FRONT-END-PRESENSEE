@@ -9,7 +9,7 @@ const example = [
 // Nunca utilize credenciais fixas no frontend em produção.
 export const isAdminDemo = () => sessionStorage.getItem(SESSION) === "true"
 export function loginAdminDemo(email, senha) {
-  if (email.trim().toLowerCase() !== "admin@presensee.com" || senha !== "admin123") return false
+  if (email.trim().toLowerCase() !== "admin@presensee.demo" || senha !== "Admin@123") return false
   sessionStorage.setItem(SESSION, "true")
   return true
 }
@@ -29,4 +29,14 @@ export function changeStatus(id,status) {
  const escolas = getEscolas().map(e=>e.id===id?{...e,status}:e)
  localStorage.setItem(KEY,JSON.stringify(escolas))
  log(`Acesso alterado para ${status}: ${escolas.find(e=>e.id===id)?.nome}`)
+}
+
+// Apenas demonstração: remover definitivamente requer API segura e autorização no backend.
+export function deleteEscola(id) {
+  const escolas = getEscolas()
+  const escola = escolas.find((item) => item.id === id)
+  if (!escola) return false
+  localStorage.setItem(KEY, JSON.stringify(escolas.filter((item) => item.id !== id)))
+  log(`Escola excluída: ${escola.nome}`)
+  return true
 }
