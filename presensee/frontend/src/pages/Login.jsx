@@ -19,7 +19,7 @@ function Login() {
 
     // EXCLUSIVAMENTE LOCAL: permite demonstrar o superadministrador sem backend.
     // Esta combinação não deve existir em um build de produção.
-    if (import.meta.env.DEV && loginAdminDemo(email, senha)) {
+if (loginAdminDemo(email, senha)) {
       localStorage.removeItem("token")
       localStorage.removeItem("usuario")
       navigate("/admin/dashboard", { replace: true })

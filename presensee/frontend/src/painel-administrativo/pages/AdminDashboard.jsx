@@ -2,12 +2,14 @@ import { Link } from "react-router-dom"
 import { Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { getEscolas } from "../services/adminDemo"
 import "../styles/admin.css"
+import { useNavigate } from "react-router-dom"
 
 export default function AdminDashboard() {
   const escolas = getEscolas()
   const ativos = escolas.filter((e) => e.status === "Ativa").length
   const pendentes = escolas.filter((e) => e.status === "Pendente").length
   const bloqueadas = escolas.filter((e) => e.status === "Bloqueada").length
+  const navigate = useNavigate()
 
   const data = [
     { name: "Ativas", value: ativos, color: "#20c96b" },
@@ -22,6 +24,8 @@ export default function AdminDashboard() {
     { name: "Abr", n: escolas.length }
   ]
 
+  
+
   return (
     <div className="admin-page">
       <div className="admin-heading">
@@ -33,19 +37,37 @@ export default function AdminDashboard() {
 
       <h2 className="admin-section-title">Visão Geral</h2>
       <div className="admin-stats">
-        {[
-          ["Escolas cadastradas", escolas.length, "◈"],
-          ["Escolas ativas", ativos, "✓"],
-          ["Aguardando ativação", pendentes, "!"],
-          ["Bloqueadas", bloqueadas, "⊘"]
-        ].map(([title, value, icon], i) => (
-          <article className={`admin-stat admin-stat-${i}`} key={title}>
-            <div className={`admin-stat-icon i${i}`}>{icon}</div>
-            <strong>{value}</strong>
-            <span>{title}</span>
-          </article>
-        ))}
+  {[
+    ["Escolas cadastradas", escolas.length, "◈", "Todas"],
+    ["Escolas ativas", ativos, "✓", "Ativa"],
+    ["Aguardando ativação", pendentes, "!", "Pendente"],
+    ["Bloqueadas", bloqueadas, "⊘", "Bloqueada"]
+  ].map(([title, value, icon, filtro], i) => (
+    <article
+      className="admin-stat"
+      key={title}
+      role="button"
+      tabIndex={0}
+      onClick={() =>
+        navigate(`/admin/escolas?status=${filtro}`)
+      }
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          navigate(`/admin/escolas?status=${filtro}`)
+        }
+      }}
+      style={{ cursor: "pointer" }}
+    >
+      <div className={`admin-stat-icon i${i}`}>
+        {icon}
       </div>
+
+      <strong>{value}</strong>
+      <span>{title}</span>
+    </article>
+  ))}
+</div>
 
       <div className="admin-grid">
         <section className="admin-panel admin-feature-chart">
