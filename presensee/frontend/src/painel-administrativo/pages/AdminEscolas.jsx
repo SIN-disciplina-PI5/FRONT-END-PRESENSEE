@@ -1,0 +1,9 @@
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { changeStatus, getEscolas } from "../services/adminDemo"
+export default function AdminEscolas({modo="escolas"}){
+ const [escolas,setEscolas]=useState(getEscolas()),[busca,setBusca]=useState(""),[filtro,setFiltro]=useState("Todas")
+ function status(id,s){changeStatus(id,s);setEscolas(getEscolas())}
+ const lista=escolas.filter(e=>(filtro==="Todas"||e.status===filtro)&&[e.nome,e.municipio,e.gestor].join(" ").toLowerCase().includes(busca.toLowerCase()))
+ return <div className="admin-page"><div className="admin-heading"><div><h1>{modo==="acessos"?"Controle de acessos":"Escolas"}</h1><p>{modo==="acessos"?"Libere ou suspenda o acesso institucional.":"Cadastre e gerencie instituições vinculadas ao projeto."}</p></div><Link className="admin-btn" to="/admin/escolas/nova">+ Nova escola</Link></div><section className="admin-panel"><div className="admin-filters"><input placeholder="Buscar escola, município ou gestor..." value={busca} onChange={e=>setBusca(e.target.value)}/><select value={filtro} onChange={e=>setFiltro(e.target.value)}>{["Todas","Ativa","Pendente","Bloqueada"].map(x=><option key={x}>{x}</option>)}</select></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Escola</th><th>Município</th><th>Rede</th><th>Gestor</th><th>Status</th><th>Ações</th></tr></thead><tbody>{lista.map(e=><tr key={e.id}><td><strong>{e.nome}</strong><small>{e.inep&&`INEP: ${e.inep}`}</small></td><td>{e.municipio}</td><td>{e.rede}</td><td>{e.gestor}</td><td><span className={`admin-badge ${e.status.toLowerCase()}`}>{e.status}</span></td><td><select aria-label={`Alterar situação de ${e.nome}`} value={e.status} onChange={ev=>status(e.id,ev.target.value)}><option>Ativa</option><option>Pendente</option><option>Bloqueada</option></select></td></tr>)}</tbody></table>{!lista.length&&<p>Nenhuma escola encontrada.</p>}</div></section></div>
+}
