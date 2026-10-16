@@ -5,7 +5,7 @@ import { saveEscola } from "../services/adminDemo"
 const initial = {
   nome: "", inep: "", rede: "Estadual", municipio: "", uf: "PE",
   cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
-  gestor: "", email: "", telefone: "", status: "Pendente"
+  gestor: "", cargoGestor: "", email: "", telefone: "", status: "Pendente"
 }
 
 export default function AdminNovaEscola() {
@@ -70,6 +70,7 @@ export default function AdminNovaEscola() {
         <h3>Gestor responsável</h3>
         <div className="admin-form-grid">
           {field("Nome completo", "gestor", true)}
+          {field("Cargo", "cargoGestor", true)}
           {field("E-mail institucional", "email", true, "email")}
           {field("Telefone", "telefone", false, "tel")}
         </div>
