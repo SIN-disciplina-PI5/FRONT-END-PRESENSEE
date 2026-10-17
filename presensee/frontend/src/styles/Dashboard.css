@@ -1,26 +1,18 @@
+/* Regras originais preservadas da branch; estilos específicos pd- ao final. */
+/* Estilos originais necessários às demais páginas da aplicação. */
 .layout {
-
   display: flex;
-
   min-height: 100vh;
-
   background: #f7f7fb;
-
 }
-
 
 .content {
-
   flex: 1;
-
   padding: 32px 38px;
-
   box-sizing: border-box;
-
   overflow-x: hidden;
-
+  min-width: 0;
 }
-
 
 .dashboard-page {
   width: 100%;
@@ -31,11 +23,6 @@
   flex-direction: column;
   justify-content: center;
 }
-
-
-/* =========================
-   CABEÇALHO
-========================= */
 
 .dashboard-header {
   display: flex;
@@ -56,45 +43,26 @@
   font-weight: 700;
 }
 
-
-/* =========================
-   AVATAR DO CABEÇALHO
-========================= */
-
 .dashboard-avatar {
   width: 50px;
   height: 50px;
-
   border-radius: 50%;
-
   background: #6651cf;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-size: 20px;
-
   overflow: hidden;
-
   flex-shrink: 0;
-
   cursor: pointer;
 }
 
 .dashboard-avatar img {
   width: 100%;
   height: 100%;
-
   object-fit: cover;
-
   display: block;
 }
-
-
-/* =========================
-   TÍTULO DA SEÇÃO
-========================= */
 
 .section-title {
   text-align: center;
@@ -104,24 +72,19 @@
   margin: 0 0 18px;
 }
 
-
-/* =========================
-   CARDS
-========================= */
-
 .dashboard-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3,1fr);
   gap: 22px;
   margin-bottom: 26px;
 }
 
 .dashboard-card {
   min-height: 128px;
-  background: linear-gradient(160deg, #f2eeff 0%, #ffffff 65%);
+  background: linear-gradient(160deg,#f2eeff 0%,#ffffff 65%);
   border: 1px solid #e6e0ff;
   border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(75, 37, 201, 0.08);
+  box-shadow: 0 4px 14px rgba(75,37,201,0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -131,20 +94,17 @@
 
 .dashboard-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(75, 37, 201, 0.14);
+  box-shadow: 0 10px 22px rgba(75,37,201,0.14);
 }
 
 .dashboard-card-icon {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-bottom: 10px;
-
   background: #e4dbff;
   color: #4b25c9;
 }
@@ -163,7 +123,7 @@
 }
 
 .dashboard-card.attention {
-  background: linear-gradient(160deg, #fff6e0 0%, #ffffff 65%);
+  background: linear-gradient(160deg,#fff6e0 0%,#ffffff 65%);
   border-color: #ffe6ad;
 }
 
@@ -177,7 +137,7 @@
 }
 
 .dashboard-card.danger {
-  background: linear-gradient(160deg, #ffe9e9 0%, #ffffff 65%);
+  background: linear-gradient(160deg,#ffe9e9 0%,#ffffff 65%);
   border-color: #ffc9c9;
 }
 
@@ -190,20 +150,12 @@
   color: #a83c3c;
 }
 
-
-/* =========================
-   LINHA DO GRÁFICO + GAUGE
-========================= */
-
 .dashboard-charts-row {
   display: flex;
   gap: 26px;
   align-items: stretch;
   margin-bottom: 26px;
 }
-
-
-/* GRÁFICO DE LINHA */
 
 .risk-chart-card {
   flex: 1;
@@ -212,7 +164,7 @@
   border-radius: 18px;
   padding: 24px 28px 30px;
   box-sizing: border-box;
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.14);
 }
 
 .risk-chart-card h2 {
@@ -238,27 +190,21 @@
   display: block;
 }
 
-
-/* GAUGE CIRCULAR - CARD BRANCO SEPARADO */
-
 .risk-gauge-card {
   width: 260px;
   flex-shrink: 0;
-
   background: white;
   border-radius: 18px;
   padding: 24px;
   box-sizing: border-box;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-
   transition: 0.2s;
 }
 
 .risk-gauge-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
 .risk-gauge-card h2 {
@@ -272,11 +218,9 @@
   position: relative;
   flex: 1;
   min-height: 240px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: pointer;
 }
 
@@ -284,25 +228,16 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-
+  transform: translate(-50%,-50%);
   font-size: 26px;
   font-weight: 800;
   color: #171717;
-
   pointer-events: none;
 }
 
-
-/* =========================
-   PARTE INFERIOR
-========================= *//* =========================
-   SEGUNDA FILEIRA DE GRÁFICOS
-========================= */
-
 .dashboard-charts-row-2 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3,1fr);
   gap: 22px;
   margin-bottom: 26px;
 }
@@ -312,7 +247,7 @@
   border-radius: 16px;
   padding: 20px;
   box-sizing: border-box;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
 
 .mini-chart-card h2 {
@@ -327,9 +262,7 @@
   height: 210px;
 }
 
-
-@media (max-width: 1100px) {
-
+@media (max-width:1100px) {
   .dashboard-charts-row-2 {
     grid-template-columns: 1fr;
   }
@@ -337,312 +270,161 @@
 }
 
 .dashboard-bottom {
-
   display: grid;
-
   grid-template-columns: 1.25fr 0.75fr;
-
   gap: 18px;
-
   width: 100%;
-
 }
 
-
-/* =========================
-   CARD DE ATENÇÃO
-========================= */
-
-.attention-card,
-
-.class-risk-card {
-
+.attention-card,.class-risk-card {
   background: white;
-
   border-radius: 13px;
-
   padding: 18px;
-
   box-sizing: border-box;
-
-  box-shadow:
-    0 4px 13px
-    rgba(0, 0, 0, 0.07);
-
+  box-shadow: 0 4px 13px rgba(0,0,0,0.07);
   min-height: 150px;
-
 }
 
-.attention-card h2,
-
-.class-risk-card h2 {
-
+.attention-card h2,.class-risk-card h2 {
   margin: 0 0 17px;
-
   color: #171717;
-
   font-size: 15px;
-
   font-weight: 700;
-
 }
-
-
-/* =========================
-   LISTA DE ATENÇÃO
-========================= */
 
 .attention-list {
-
   display: flex;
-
   flex-direction: column;
-
   gap: 14px;
-
 }
 
 .attention-item {
-
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
-
   font-size: 13px;
-
   color: #222;
-
 }
 
 .attention-student {
-
   display: flex;
-
   align-items: center;
-
   gap: 10px;
-
 }
 
 .risk-dot {
-
   width: 12px;
-
   height: 12px;
-
   border-radius: 50%;
-
   display: inline-block;
-
   flex-shrink: 0;
-
 }
 
 .risk-dot.alto {
-
   background: #d90000;
-
 }
 
 .risk-dot.medio {
-
   background: #e5b500;
-
 }
 
 .attention-item strong {
-
   color: #d90000;
-
   font-size: 13px;
-
 }
 
 .attention-item:nth-child(3) strong {
-
   color: #d99b00;
-
 }
 
-
-/* =========================
-   RISCO POR TURMA
-========================= */
-
 .class-risk-list {
-
   display: flex;
-
   flex-direction: column;
-
   gap: 18px;
-
 }
 
 .class-risk-item {
-
   display: flex;
-
   align-items: center;
-
   gap: 12px;
-
 }
 
 .class-risk-item > span {
-
   width: 28px;
-
   color: #222;
-
   font-size: 13px;
-
 }
 
 .risk-bar {
-
   flex: 1;
-
   height: 10px;
-
   background: #dddddd;
-
   border-radius: 10px;
-
   overflow: hidden;
-
 }
 
 .risk-bar-fill {
-
   height: 100%;
-
   background: #633df2;
-
   border-radius: 10px;
-
   transition: width 0.3s;
-
 }
 
-
-
-
-/* =========================
-   TABELAS
-========================= */
-
 .page-header {
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   margin-bottom: 30px;
-
 }
 
 .add-button {
-
   background-color: #6c63ff;
-
   color: white;
-
   border: none;
-
   padding: 12px 20px;
-
   border-radius: 10px;
-
   cursor: pointer;
-
 }
 
 .students-table {
-
   width: 100%;
-
   background: white;
-
   border-radius: 15px;
-
   overflow: hidden;
-
-  box-shadow:
-    0 4px 15px
-    rgba(0, 0, 0, 0.08);
-
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
 .students-table th {
-
   background-color: #111827;
-
   color: white;
-
   padding: 15px;
-
   text-align: left;
-
 }
 
 .students-table td {
-
   padding: 15px;
-
   border-bottom: 1px solid #eee;
-
 }
-
-
-/* =========================
-   ERRO
-========================= */
 
 .dashboard-error {
-
   background: white;
-
   padding: 20px;
-
   border-radius: 10px;
-
   color: #b91c1c;
-
-  box-shadow:
-    0 4px 10px
-    rgba(0, 0, 0, 0.05);
-
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-
-/* =========================
-   RESPONSIVIDADE
-========================= */
-
-@media (max-width: 1100px) {
-
+@media (max-width:1100px) {
   .dashboard-page {
-
     max-width: 100%;
-
   }
 
   .dashboard-cards {
-
-    grid-template-columns:
-      repeat(3, 1fr);
-
+    grid-template-columns: repeat(3,1fr);
   }
 
   .dashboard-bottom {
-
     grid-template-columns: 1fr;
-
   }
 
   .dashboard-charts-row {
@@ -659,56 +441,36 @@
 
 }
 
-
-@media (max-width: 900px) {
-
+@media (max-width:900px) {
   .content {
-
     padding: 25px;
-
   }
 
 }
 
-
-@media (max-width: 600px) {
-
+@media (max-width:600px) {
   .dashboard-cards {
-
     grid-template-columns: 1fr;
-
   }
 
   .dashboard-header h1 {
-
     font-size: 22px;
-
   }
 
   .dashboard-avatar {
-
     width: 42px;
-
     height: 42px;
-
   }
 
   .risk-chart {
-
     height: 200px;
-
   }
 
   .content {
-
     padding: 15px;
-
   }
 
 }
-/* =========================
-   MODO ESCURO — Dashboard
-========================= */
 
 [data-theme="dark"] .layout {
   background: #0b1220;
@@ -718,8 +480,6 @@
   background: #0b1220;
 }
 
-/* CABEÇALHO */
-
 [data-theme="dark"] .dashboard-header h1 {
   color: #e8edf5;
 }
@@ -728,15 +488,13 @@
   color: #22d3c5;
 }
 
-/* CARDS */
-
 [data-theme="dark"] .dashboard-card {
-  background: linear-gradient(160deg, #141b2d 0%, #0f1626 65%);
+  background: linear-gradient(160deg,#141b2d 0%,#0f1626 65%);
   border-color: #22304a;
 }
 
 [data-theme="dark"] .dashboard-card-icon {
-  background: rgba(34, 211, 197, 0.15);
+  background: rgba(34,211,197,0.15);
   color: #22d3c5;
 }
 
@@ -749,12 +507,12 @@
 }
 
 [data-theme="dark"] .dashboard-card.attention {
-  background: linear-gradient(160deg, #241d0f 0%, #141626 65%);
+  background: linear-gradient(160deg,#241d0f 0%,#141626 65%);
   border-color: #3a2f12;
 }
 
 [data-theme="dark"] .dashboard-card.attention .dashboard-card-icon {
-  background: rgba(253, 203, 110, 0.15);
+  background: rgba(253,203,110,0.15);
   color: #fdcb6e;
 }
 
@@ -763,20 +521,18 @@
 }
 
 [data-theme="dark"] .dashboard-card.danger {
-  background: linear-gradient(160deg, #2a1414 0%, #141626 65%);
+  background: linear-gradient(160deg,#2a1414 0%,#141626 65%);
   border-color: #3a1818;
 }
 
 [data-theme="dark"] .dashboard-card.danger .dashboard-card-icon {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239,68,68,0.15);
   color: #ef4444;
 }
 
 [data-theme="dark"] .dashboard-card.danger strong {
   color: #ef4444;
 }
-
-/* GRÁFICO DE LINHA */
 
 [data-theme="dark"] .risk-chart-card {
   background: #0f2733;
@@ -790,11 +546,9 @@
   color: #ffffff;
 }
 
-/* GAUGE */
-
 [data-theme="dark"] .risk-gauge-card {
   background: #141b2d;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
 }
 
 [data-theme="dark"] .risk-gauge-card h2 {
@@ -805,27 +559,21 @@
   color: #e8edf5;
 }
 
-/* MINI GRÁFICOS */
-
 [data-theme="dark"] .mini-chart-card {
   background: #141b2d;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
 }
 
 [data-theme="dark"] .mini-chart-card h2 {
   color: #e8edf5;
 }
 
-/* PARTE INFERIOR */
-
-[data-theme="dark"] .attention-card,
-[data-theme="dark"] .class-risk-card {
+[data-theme="dark"] .attention-card,[data-theme="dark"] .class-risk-card {
   background: #141b2d;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
 }
 
-[data-theme="dark"] .attention-card h2,
-[data-theme="dark"] .class-risk-card h2 {
+[data-theme="dark"] .attention-card h2,[data-theme="dark"] .class-risk-card h2 {
   color: #e8edf5;
 }
 
@@ -849,11 +597,9 @@
   background: #22304a;
 }
 
-/* TABELAS */
-
 [data-theme="dark"] .students-table {
   background: #141b2d;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.35);
 }
 
 [data-theme="dark"] .students-table th {
@@ -870,19 +616,15 @@
   background: #1a2437;
 }
 
-/* BOTÃO */
-
 [data-theme="dark"] .add-button {
   background-color: #6c63ff;
   color: #ffffff;
 }
 
-/* ERRO */
-
 [data-theme="dark"] .dashboard-error {
   background: #141b2d;
   color: #ff8b8b;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
 }
 
 .sidebar-user-info {
@@ -899,7 +641,6 @@
   text-decoration: underline;
 }
 
-/* Bloco inteiro do usuário clicável */
 .sidebar-user-link {
   display: flex;
   align-items: center;
@@ -945,4 +686,686 @@
 
 .sidebar-avatar-edit {
   display: none;
+}
+
+
+/* ==========================================================
+   DASHBOARD HOME: estilos isolados das demais telas (pd-)
+   ========================================================== */
+
+.pd-dashboard {
+  --pd-surface: #ffffff;
+  --pd-text: #10162f;
+  --pd-muted: #7880a2;
+  --pd-line: #e9e9f2;
+  width: 100%;
+  max-width: 1540px;
+  min-width: 0;
+  margin: 0 auto;
+  color: var(--pd-text);
+  font-family: var(--font-body, Poppins, sans-serif);
+}
+
+.pd-dashboard * {
+  box-sizing: border-box;
+}
+
+.pd-cabecalho,
+.pd-usuario,
+.pd-painel-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pd-cabecalho {
+  min-width: 0;
+  margin-bottom: 24px;
+}
+
+.pd-usuario {
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.pd-avatar {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ded8fc;
+}
+
+.pd-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pd-usuario h1 {
+  margin: 0;
+  font-size: clamp(23px, 2.6vw, 35px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.9px;
+}
+
+.pd-usuario p,
+.pd-painel-cabecalho p {
+  margin: 5px 0 0;
+  color: var(--pd-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.pd-mes-atual,
+.pd-seletor-periodo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #e2e4f2;
+  border-radius: 11px;
+  background: var(--pd-surface);
+  color: #25275d;
+  box-shadow: 0 3px 11px rgba(23, 24, 74, 0.03);
+  white-space: nowrap;
+}
+
+.pd-mes-atual > svg,
+.pd-seletor-periodo > svg {
+  flex-shrink: 0;
+  color: #633df2;
+}
+
+.pd-mes-atual span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pd-seletor-periodo {
+  min-height: 37px;
+  padding: 0 10px;
+}
+
+.pd-seletor-periodo select {
+  max-width: 160px;
+  padding: 8px 2px;
+  border: none;
+  outline-offset: 3px;
+  background: transparent;
+  color: inherit;
+  font: 500 11px var(--font-body, Poppins, sans-serif);
+  cursor: pointer;
+}
+
+.pd-acessivel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Cards de indicadores */
+
+.pd-indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+  margin-bottom: 19px;
+}
+
+.pd-indicador {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  min-height: 104px;
+  padding: 17px 20px;
+  border: 1px solid #ded5ff;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #f8f6ff, var(--pd-surface) 78%);
+  box-shadow: var(--shadow-card, 0 4px 15px rgba(0, 0, 0, 0.08));
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.pd-indicador:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 24px rgba(68, 49, 151, 0.13);
+}
+
+.pd-indicador-icone {
+  display: grid;
+  width: 61px;
+  height: 61px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 17px;
+  background: #e9e1ff;
+  color: #633df2;
+}
+
+.pd-indicador-icone svg {
+  width: 28px;
+  height: 28px;
+}
+
+.pd-indicador-conteudo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pd-indicador-conteudo strong {
+  color: #633df2;
+  font-size: clamp(27px, 2.4vw, 39px);
+  line-height: 1.12;
+  font-weight: 800;
+}
+
+.pd-indicador-conteudo span {
+  color: var(--pd-text);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pd-indicador--atencao {
+  border-color: #ffe6ac;
+  background: linear-gradient(110deg, #fffaf0, var(--pd-surface) 78%);
+}
+
+.pd-indicador--atencao .pd-indicador-icone {
+  color: #f09a00;
+  background: #fff0cf;
+}
+
+.pd-indicador--atencao .pd-indicador-conteudo strong {
+  color: #ee9d00;
+}
+
+.pd-indicador--risco {
+  border-color: #ffd4d7;
+  background: linear-gradient(110deg, #fff5f6, var(--pd-surface) 78%);
+}
+
+.pd-indicador--risco .pd-indicador-icone {
+  color: #ee253e;
+  background: #ffe2e5;
+}
+
+.pd-indicador--risco .pd-indicador-conteudo strong {
+  color: #e6263c;
+}
+
+.pd-indicador-variacao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pd-indicador-variacao strong {
+  font-size: 16px;
+}
+
+.pd-variacao-positiva {
+  color: #0dbb73;
+}
+
+.pd-variacao-negativa {
+  color: #ef3c42;
+}
+
+.pd-indicador-variacao small {
+  color: var(--pd-muted);
+  font-size: 10px;
+}
+
+/* Gráficos */
+
+.pd-grade-principal,
+.pd-grade-inferior {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+
+.pd-grade-principal {
+  grid-template-columns: minmax(0, 2.2fr) minmax(290px, 1fr);
+  margin-bottom: 19px;
+}
+
+.pd-grade-inferior {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr) minmax(0, 1.33fr);
+}
+
+.pd-painel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--pd-line);
+  border-radius: 13px;
+  background: var(--pd-surface);
+  box-shadow: var(--shadow-card, 0 4px 15px rgba(0, 0, 0, 0.08));
+}
+
+.pd-painel-cabecalho {
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pd-painel-titulos {
+  min-width: 0;
+}
+
+.pd-painel h2 {
+  margin: 0;
+  color: var(--pd-text);
+  font-size: clamp(14px, 1.35vw, 18px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+.pd-grafico-evolucao {
+  width: 100%;
+  min-width: 0;
+  height: 230px;
+  margin-top: 15px;
+}
+
+.pd-grafico-circular {
+  position: relative;
+  display: grid;
+  width: min(100%, 245px);
+  height: 245px;
+  flex: 1;
+  min-height: 0;
+  place-items: center;
+  margin: 14px auto 0;
+}
+
+.pd-grafico-circular > .recharts-responsive-container,
+.pd-grafico-circular-rotulo {
+  grid-area: 1 / 1;
+}
+
+.pd-grafico-circular-rotulo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.pd-grafico-circular-rotulo strong {
+  font-size: clamp(27px, 2.6vw, 38px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pd-grafico-circular-rotulo span {
+  font-size: 12px;
+}
+
+.pd-painel-pequeno {
+  padding: 17px 19px 13px;
+}
+
+.pd-painel-pequeno h2 {
+  font-size: clamp(13px, 1.2vw, 16px);
+}
+
+.pd-painel-pequeno .pd-painel-cabecalho p {
+  font-size: 12px;
+}
+
+.pd-grafico-inferior {
+  width: 100%;
+  min-width: 0;
+  height: 166px;
+  margin-top: 9px;
+}
+
+.pd-distribuicao {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pd-donut {
+  width: 55%;
+  height: 169px;
+  min-width: 0;
+}
+
+.pd-legenda-risco {
+  display: grid;
+  flex: 1;
+  gap: 11px;
+  min-width: 0;
+}
+
+.pd-legenda-linha {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+
+.pd-legenda-linha strong {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.pd-legenda-bolinha {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.pd-legenda-alto {
+  background: #f23b4b;
+}
+
+.pd-legenda-medio {
+  background: #ffaf17;
+}
+
+.pd-legenda-baixo {
+  background: #11ba7a;
+}
+
+.pd-turmas-conteudo {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+
+.pd-grafico-turmas {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd-seta {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid #e8e7f1;
+  border-radius: 50%;
+  background: var(--pd-surface);
+  color: #4b25c9;
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25, 25, 45, 0.05);
+}
+
+.pd-seta:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pd-sem-dados,
+.pd-aviso {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  color: var(--pd-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.pd-tooltip {
+  display: grid;
+  gap: 3px;
+  padding: 9px 12px;
+  border: 1px solid var(--pd-line);
+  border-radius: 10px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font-size: 12px;
+  box-shadow: 0 5px 12px rgba(17, 24, 39, 0.08);
+}
+
+.pd-dashboard .recharts-cartesian-axis-tick-value {
+  fill: var(--pd-muted);
+  font-size: 11px;
+}
+
+.pd-dashboard .recharts-bar-rectangle path {
+  transition: filter 160ms ease;
+}
+
+.pd-dashboard .recharts-bar-rectangle:hover path {
+  filter: brightness(1.08);
+}
+
+/* No desktop, as 3 áreas são proporcionais à altura útil do monitor. */
+
+@media (min-width: 1250px) and (min-height: 760px) {
+  .layout:has(.pd-dashboard) > .content {
+    height: 100dvh;
+    padding: clamp(16px, 2.4vh, 26px) clamp(20px, 2.3vw, 38px);
+    overflow-y: hidden;
+  }
+
+  .pd-dashboard {
+    display: grid;
+    height: 100%;
+    grid-template-rows: minmax(55px, 0.25fr) minmax(95px, 0.42fr) minmax(230px, 1.33fr) minmax(205px, 1.03fr);
+    gap: clamp(10px, 1.65vh, 18px);
+  }
+
+  .pd-cabecalho,
+  .pd-indicadores,
+  .pd-grade-principal {
+    margin-bottom: 0;
+  }
+
+  .pd-grade-principal,
+  .pd-grade-inferior {
+    min-height: 0;
+  }
+
+  .pd-painel {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .pd-grafico-evolucao,
+  .pd-grafico-inferior,
+  .pd-donut {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .pd-grafico-circular {
+    height: 100%;
+  }
+
+  .pd-distribuicao {
+    overflow: hidden;
+  }
+}
+
+/* Telas intermediárias: mantém tudo legível, liberando scroll se necessário. */
+
+@media (max-width: 1350px) {
+  .pd-indicador {
+    padding: 13px;
+    gap: 11px;
+  }
+
+  .pd-indicador-icone {
+    width: 49px;
+    height: 49px;
+  }
+
+  .pd-indicador-variacao small {
+    display: none;
+  }
+
+  .pd-grade-principal {
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  }
+}
+
+@media (max-width: 1150px) {
+  .pd-indicador-variacao {
+    display: none;
+  }
+
+  .pd-grade-inferior {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pd-grade-inferior > .pd-painel:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .pd-grafico-evolucao {
+    height: 245px;
+  }
+}
+
+@media (max-width: 850px) {
+  .pd-cabecalho {
+    gap: 10px;
+  }
+
+  .pd-grade-principal {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-grafico-circular {
+    height: 230px;
+    flex: none;
+  }
+
+  .pd-indicador-conteudo strong {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 680px) {
+  .pd-cabecalho {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pd-usuario h1 {
+    font-size: 23px;
+  }
+
+  .pd-avatar {
+    width: 49px;
+    height: 49px;
+  }
+
+  .pd-indicadores,
+  .pd-grade-inferior {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-grade-inferior > .pd-painel:last-child {
+    grid-column: auto;
+  }
+
+  .pd-painel {
+    padding: 18px;
+  }
+
+  .pd-painel-cabecalho {
+    flex-wrap: wrap;
+  }
+
+  .pd-grafico-inferior {
+    height: 180px;
+  }
+}
+
+/* Modo escuro: restrito aos componentes da Home. */
+
+[data-theme="dark"] .pd-dashboard {
+  --pd-surface: #141b2d;
+  --pd-text: #f1f5f9;
+  --pd-muted: #a8b3c2;
+  --pd-line: #27344d;
+}
+
+[data-theme="dark"] .pd-indicador {
+  background: linear-gradient(110deg, #1c1a36, var(--pd-surface) 80%);
+  border-color: #38305e;
+}
+
+[data-theme="dark"] .pd-indicador--atencao {
+  background: linear-gradient(110deg, #2b241c, var(--pd-surface) 80%);
+  border-color: #473825;
+}
+
+[data-theme="dark"] .pd-indicador--risco {
+  background: linear-gradient(110deg, #301f29, var(--pd-surface) 80%);
+  border-color: #522e3b;
+}
+
+[data-theme="dark"] .pd-seletor-periodo,
+[data-theme="dark"] .pd-mes-atual,
+[data-theme="dark"] .pd-seta {
+  border-color: var(--pd-line);
+  color: var(--pd-text);
+}
+
+[data-theme="dark"] .pd-indicador-icone {
+  background: #332b60;
+}
+
+[data-theme="dark"] .pd-indicador--atencao .pd-indicador-icone {
+  background: #41341e;
+}
+
+[data-theme="dark"] .pd-indicador--risco .pd-indicador-icone {
+  background: #482732;
+}
+
+[data-theme="dark"] .pd-barra .recharts-label {
+  fill: #e8edf5;
+}
+
+.pd-evolucao,
+.pd-frequencia {
+  min-width: 0;
+}
+
+.pd-seletor-turmas {
+  padding: 0 8px;
 }

@@ -1,979 +1,250 @@
-
-import DashboardLayout from "../layouts/DashboardLayout"
-import "../styles/Alunos.css"
-import { useMemo, useState } from "react"
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import DashboardLayout from "../layouts/DashboardLayout";
+import { IconAlunos, MascotAvatar } from "../components/Icons";
+import { getUsuario } from "../services/auth";
+import "../styles/Alunos.css";
 
-function Alunos() {
-  const location = useLocation()
-  const navigate = useNavigate() 
+// Dados demonstrativos já utilizados na página original.
+const ALUNOS_INICIAIS = [
+  { nome: "Maria Joaquina", matricula: "001", turma: "3A", frequencia: 95, risco: "Baixo" },
+  { nome: "João Silva", matricula: "002", turma: "2B", frequencia: 87, risco: "Baixo" },
+  { nome: "Marcos Heitor", matricula: "003", turma: "3A", frequencia: 79, risco: "Médio" },
+  { nome: "Ana Beatriz", matricula: "004", turma: "1A", frequencia: 76, risco: "Médio" },
+  { nome: "Pedro Henrique", matricula: "005", turma: "2B", frequencia: 66, risco: "Alto" },
+  { nome: "Gabriel Soares", matricula: "006", turma: "2B", frequencia: 65, risco: "Alto" },
+];
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const NOTAS = {
+  Julho: [ ["Matemática",6,7],["Dev. Mobile",7.5,8],["História",6.5,6],["Português",7,7],["PI",8,7.5],["Inglês",6,6.5] ],
+  Agosto: [ ["Matemática",7,3],["Dev. Mobile",7,3],["História",7,3],["Português",7,3],["PI",7,3],["Inglês",7,3] ],
+};
+const OCORRENCIAS = [
+  ["⚠️", "Falta injustificada", "12 de Agosto", "Aluno não compareceu à aula."],
+  ["📝", "Baixo desempenho", "08 de Agosto", "Desempenho abaixo da média na avaliação."],
+  ["💬", "Conversa com o monitor", "05 de Agosto", "Conversa realizada para acompanhamento do aluno."],
+  ["⚠️", "Faltas recorrentes", "01 de Agosto", "Registrado aumento no número de faltas."],
+];
+const normalizeTurma = (valor) => {
+  if (!valor) return "";
+  const match = String(valor).match(/(\d)\s*(?:º\s*Ano\s*)?([A-Z])/i);
+  return match ? `${match[1]}${match[2].toUpperCase()}` : String(valor);
+};
 
-  const [alunos] = useState([
-    {
-      nome: "Maria Joaquina",
-      matricula: "001",
-      turma: "3A",
-      frequencia: 95,
-      risco: "Baixo"
-    },
-    {
-      nome: "João Silva",
-      matricula: "002",
-      turma: "2B",
-      frequencia: 87,
-      risco: "Baixo"
-    },
-    {
-      nome: "Marcos Heitor",
-      matricula: "003",
-      turma: "3A",
-      frequencia: 82,
-      risco: "Médio"
-    },
-    {
-      nome: "Ana Beatriz",
-      matricula: "004",
-      turma: "1A",
-      frequencia: 76,
-      risco: "Médio"
-    },
-    {
-      nome: "Pedro Henrique",
-      matricula: "005",
-      turma: "2B",
-      frequencia: 66,
-      risco: "Alto"
-    },
-    {
-      nome: "Gabriel Soares",
-      matricula: "006",
-      turma: "2B",
-      frequencia: 65,
-      risco: "Alto"
-    }
-  ])
+export default function Alunos() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const usuario = getUsuario();
+  const [alunos] = useState(ALUNOS_INICIAIS);
+  const [busca, setBusca] = useState("");
+  const [turmaSelecionada, setTurmaSelecionada] = useState(() => normalizeTurma(location.state?.turma));
+  const [riscoSelecionado, setRiscoSelecionado] = useState("");
+  const [frequenciaSelecionada, setFrequenciaSelecionada] = useState("");
+  const [ordenacao, setOrdenacao] = useState({ campo: "nome", direcao: "asc" });
+  const [pagina, setPagina] = useState(1);
+  const [itensPorPagina, setItensPorPagina] = useState(10);
+  const [alunoSelecionado, setAlunoSelecionado] = useState(null);
+  const [modalAtivo, setModalAtivo] = useState("principal");
+  const [mesSelecionado, setMesSelecionado] = useState("Agosto");
+  const [mesNotas, setMesNotas] = useState("Agosto");
 
-  const [busca, setBusca] = useState("")
-  const [turmaSelecionada, setTurmaSelecionada] = useState(() => {
-  const turmaRecebida = location.state?.turma
-
-  if (turmaRecebida === "1º Ano A") return "1A"
-  if (turmaRecebida === "2º Ano B") return "2B"
-  if (turmaRecebida === "3º Ano A") return "3A"
-
-  return ""
-})
-  const [riscoSelecionado, setRiscoSelecionado] = useState("")
-  const [frequenciaSelecionada, setFrequenciaSelecionada] = useState("")
-
-  const alunosFiltrados = useMemo(() => {
-
-    return alunos.filter((aluno) => {
-
-      const nomeCorresponde =
-        aluno.nome.toLowerCase().includes(busca.toLowerCase())
-
-      const turmaCorresponde =
-        turmaSelecionada === "" ||
-        aluno.turma === turmaSelecionada
-
-      const riscoCorresponde =
-        riscoSelecionado === "" ||
-        aluno.risco === riscoSelecionado
-
-      let frequenciaCorresponde = true
-
-      if (frequenciaSelecionada === "acima-80") {
-        frequenciaCorresponde = aluno.frequencia > 80
-      }
-
-      if (frequenciaSelecionada === "70-80") {
-        frequenciaCorresponde =
-          aluno.frequencia >= 70 &&
-          aluno.frequencia <= 80
-      }
-
-      if (frequenciaSelecionada === "abaixo-70") {
-        frequenciaCorresponde = aluno.frequencia < 70
-      }
-
-      return (
-        nomeCorresponde &&
-        turmaCorresponde &&
-        riscoCorresponde &&
-        frequenciaCorresponde
-      )
-    })
-
-  }, [
-    alunos,
-    busca,
-    turmaSelecionada,
-    riscoSelecionado,
-    frequenciaSelecionada
-  ])
-
-  const [alunoSelecionado, setAlunoSelecionado] = useState(null)
-
-  const [mostrarFrequencia, setMostrarFrequencia] =
-    useState(false)
-
-  const [mostrarNotas, setMostrarNotas] =
-    useState(false)
-
-  const [mostrarOcorrencias, setMostrarOcorrencias] =
-    useState(false)
-
-  const [mesSelecionado, setMesSelecionado] =
-    useState("Agosto")
-
-  const meses = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro"
-  ]
-
-  const dadosFrequencia = {
-    Janeiro: { dias: 31, faltas: 2 },
-    Fevereiro: { dias: 28, faltas: 3 },
-    Março: { dias: 31, faltas: 2 },
-    Abril: { dias: 30, faltas: 4 },
-    Maio: { dias: 31, faltas: 3 },
-    Junho: { dias: 30, faltas: 4 },
-    Julho: { dias: 31, faltas: 5 },
-    Agosto: { dias: 15, faltas: 3 },
-    Setembro: { dias: 30, faltas: 2 },
-    Outubro: { dias: 31, faltas: 3 },
-    Novembro: { dias: 30, faltas: 2 },
-    Dezembro: { dias: 31, faltas: 1 }
-  }
-
-  function abrirAluno(aluno) {
-    setAlunoSelecionado(aluno)
-    setMostrarFrequencia(false)
-    setMostrarNotas(false)
-    setMostrarOcorrencias(false)
-  }
-
-  function fecharAluno() {
-    setAlunoSelecionado(null)
-    setMostrarFrequencia(false)
-    setMostrarNotas(false)
-    setMostrarOcorrencias(false)
-  }
-
-  function abrirFrequencia() {
-    setMostrarFrequencia(true)
-    setMostrarNotas(false)
-    setMostrarOcorrencias(false)
-  }
-
-  function abrirNotas() {
-    setMostrarNotas(true)
-    setMostrarFrequencia(false)
-    setMostrarOcorrencias(false)
-  }
-
-  function abrirOcorrencias() {
-    setMostrarOcorrencias(true)
-    setMostrarFrequencia(false)
-    setMostrarNotas(false)
-  }
-
-  function voltarParaAluno() {
-    setMostrarFrequencia(false)
-    setMostrarNotas(false)
-    setMostrarOcorrencias(false)
-  }
-
-  const dadosMesAtual =
-    dadosFrequencia[mesSelecionado]
-
-  const diasDoMes = useMemo(() => {
-
-    const dias = []
-
-    for (
-      let dia = 1;
-      dia <= dadosMesAtual.dias;
-      dia++
-    ) {
-
-      const faltou =
-        dia % 7 === 0 ||
-        dia === 5 ||
-        dia === 12
-
-      dias.push({
-        dia: dia,
-        status: faltou ? "falta" : "presente"
-      })
-    }
-
-    return dias
-
-  }, [dadosMesAtual])
-
-  const percentualFrequencia = useMemo(() => {
-
-    const presentes =
-      diasDoMes.filter(
-        (dia) => dia.status === "presente"
-      ).length
-
-    return Math.round(
-      (presentes / diasDoMes.length) * 100
-    )
-
-  }, [diasDoMes])
-
-  const [mesNotas, setMesNotas] = useState("Agosto")
-
-const notasPorMes = {
-  Julho: [
-    { disciplina: "Matemática", n1: 6.0, n2: 7.0 },
-    { disciplina: "Dev. Mobile", n1: 7.5, n2: 8.0 },
-    { disciplina: "História", n1: 6.5, n2: 6.0 },
-    { disciplina: "Português", n1: 7.0, n2: 7.0 },
-    { disciplina: "PI", n1: 8.0, n2: 7.5 },
-    { disciplina: "Inglês", n1: 6.0, n2: 6.5 }
-  ],
-  Agosto: [
-    { disciplina: "Matemática", n1: 7.0, n2: 3.0 },
-    { disciplina: "Dev. Mobile", n1: 7.0, n2: 3.0 },
-    { disciplina: "História", n1: 7.0, n2: 3.0 },
-    { disciplina: "Português", n1: 7.0, n2: 3.0 },
-    { disciplina: "PI", n1: 7.0, n2: 3.0 },
-    { disciplina: "Inglês", n1: 7.0, n2: 3.0 }
-  ]
-}
-
-const notasDoMes = (notasPorMes[mesNotas] || []).map((n) => {
-  const media = (n.n1 + n.n2) / 2
-
-  let tendencia = "estavel"
-  if (n.n2 > n.n1) tendencia = "subindo"
-  if (n.n2 < n.n1) tendencia = "caindo"
-
-  return { ...n, media, tendencia }
-})
-
-function classeNota(valor) {
-  if (valor < 5) return "nota-baixa"
-  if (valor < 7) return "nota-media"
-  return "nota-alta"
-}
-
-const textoTendencia = {
-  subindo: "↑ Subindo",
-  caindo: "↓ Caindo",
-  estavel: "→ Estável"
-}
-
-const ocorrencias = [
-  {
-    tipo: "falta",
-    icone: "⚠️",
-    titulo: "Falta injustificada",
-    data: "12 de Agosto",
-    descricao: "Aluno não compareceu à aula."
-  },
-  {
-    tipo: "desempenho",
-    icone: "📝",
-    titulo: "Baixo desempenho",
-    data: "08 de Agosto",
-    descricao: "Desempenho abaixo da média na avaliação."
-  },
-  {
-    tipo: "conversa",
-    icone: "💬",
-    titulo: "Conversa com o monitor",
-    data: "05 de Agosto",
-    descricao: "Conversa realizada para acompanhamento do aluno."
-  },
-  {
-    tipo: "falta",
-    icone: "⚠️",
-    titulo: "Faltas recorrentes",
-    data: "01 de Agosto",
-    descricao: "Registrado aumento no número de faltas."
-  }
-]
+  const turmas = useMemo(() => [...new Set(alunos.map((aluno) => aluno.turma))]
+    .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })), [alunos]);
+  const resumo = useMemo(() => ({
+    Baixo: alunos.filter((a) => a.risco === "Baixo").length,
+    Médio: alunos.filter((a) => a.risco === "Médio").length,
+    Alto: alunos.filter((a) => a.risco === "Alto").length,
+  }), [alunos]);
+  const alunosFiltrados = useMemo(() => alunos.filter((aluno) => {
+    const nomeOk = aluno.nome.toLocaleLowerCase("pt-BR").includes(busca.trim().toLocaleLowerCase("pt-BR"));
+    const turmaOk = !turmaSelecionada || aluno.turma === turmaSelecionada;
+    const riscoOk = !riscoSelecionado || aluno.risco === riscoSelecionado;
+    const f = aluno.frequencia;
+    const frequenciaOk = !frequenciaSelecionada ||
+      (frequenciaSelecionada === "acima-80" && f > 80) ||
+      (frequenciaSelecionada === "70-80" && f >= 70 && f <= 80) ||
+      (frequenciaSelecionada === "abaixo-70" && f < 70);
+    return nomeOk && turmaOk && riscoOk && frequenciaOk;
+  }), [alunos, busca, turmaSelecionada, riscoSelecionado, frequenciaSelecionada]);
+  const alunosOrdenados = useMemo(() => [...alunosFiltrados].sort((a, b) => {
+    const x = a[ordenacao.campo];
+    const y = b[ordenacao.campo];
+    const comparacao = typeof x === "number" ? x - y : String(x).localeCompare(String(y), "pt-BR", { numeric: true });
+    return ordenacao.direcao === "asc" ? comparacao : -comparacao;
+  }), [alunosFiltrados, ordenacao]);
+  const totalPaginas = Math.max(1, Math.ceil(alunosOrdenados.length / itensPorPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const alunosPaginados = alunosOrdenados.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
+  const atualizarFiltro = (setter, valor) => { setter(valor); setPagina(1); };
+  const ordenar = (campo) => { setOrdenacao((prev) => ({ campo, direcao: prev.campo === campo && prev.direcao === "asc" ? "desc" : "asc" })); setPagina(1); };
+  const abrirAluno = (aluno) => { setAlunoSelecionado(aluno); setModalAtivo("principal"); };
+  const fecharAluno = () => { setAlunoSelecionado(null); setModalAtivo("principal"); };
+  const diasNoMes = new Date(2026, MESES.indexOf(mesSelecionado) + 1, 0).getDate();
+  const diasFrequencia = Array.from({ length: diasNoMes }, (_, index) => ({ dia: index + 1, presente: (index + 1) % 7 !== 0 && index + 1 !== 5 && index + 1 !== 12 }));
+  const percentualFrequencia = Math.round(diasFrequencia.filter((d) => d.presente).length / diasFrequencia.length * 100);
+  const notasDoMes = (NOTAS[mesNotas] || []).map(([disciplina, n1, n2]) => ({ disciplina, n1, n2, media: (n1 + n2) / 2 }));
 
   return (
-
     <DashboardLayout>
-
       <div className="alunos-page">
-
-        <div className="alunos-header">
-          <div>
-            <h1>
-              Olá, Visitante!
-            </h1>
-
-            <p>
-              Alunos
-            </p>
+        <header className="alunos-header">
+          <div className="alunos-header-usuario">
+        
+            <div>
+              <h1>Alunos</h1>
+              <p>Gerencie os alunos, acompanhe a frequência e identifique os níveis de risco.</p>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <input
-          className="search-aluno"
-          type="text"
-          placeholder="Buscar aluno..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
-
-        <div className="filters">
-
-          <select
-            value={turmaSelecionada}
-            onChange={(e) =>
-              setTurmaSelecionada(e.target.value)
-            }
+        <section className="alunos-resumo" aria-label="Filtrar alunos por nível de risco">
+          <button
+            type="button"
+            className={`alunos-resumo-card total ${!riscoSelecionado ? "selecionado" : ""}`}
+            onClick={() => atualizarFiltro(setRiscoSelecionado, "")}
+            aria-pressed={!riscoSelecionado}
+            aria-label="Mostrar alunos de todos os níveis de risco"
           >
-            <option value="">
-              Turma
-            </option>
-
-            <option value="1A">
-              1A
-            </option>
-
-            <option value="2B">
-              2B
-            </option>
-
-            <option value="3A">
-              3A
-            </option>
-          </select>
-
-          <select
-            value={riscoSelecionado}
-            onChange={(e) =>
-              setRiscoSelecionado(e.target.value)
-            }
-          >
-            <option value="">
-              Nível de risco
-            </option>
-
-            <option value="Baixo">
-              Baixo
-            </option>
-
-            <option value="Médio">
-              Médio
-            </option>
-
-            <option value="Alto">
-              Alto
-            </option>
-          </select>
-
-          <select
-            value={frequenciaSelecionada}
-            onChange={(e) =>
-              setFrequenciaSelecionada(e.target.value)
-            }
-          >
-            <option value="">
-              Frequência
-            </option>
-
-            <option value="acima-80">
-              Acima de 80%
-            </option>
-
-            <option value="70-80">
-              Entre 70% e 80%
-            </option>
-
-            <option value="abaixo-70">
-              Abaixo de 70%
-            </option>
-          </select>
-
-        </div>
-
-        <table className="students-table">
-
-          <thead>
-            <tr>
-              <th>Aluno</th>
-              <th>Turma</th>
-              <th>Frequência</th>
-              <th>Risco</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {alunosFiltrados.map((aluno) => (
-
-              <tr
-                key={aluno.matricula}
-                onClick={() => abrirAluno(aluno)}
-              >
-
-                <td>
-                  {aluno.nome}
-                </td>
-
-                <td>
-                  {aluno.turma}
-                </td>
-
-                <td>
-                  {aluno.frequencia}%
-                </td>
-
-                <td>
-
-                  <span
-                    className={
-                      `risk-status ${aluno.risco.toLowerCase()}`
-                    }
-                  >
-
-                    <span className="risk-dot"></span>
-
-                    {aluno.risco}
-
-                  </span>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-            {alunosFiltrados.length === 0 && (
-
-              <tr>
-                <td colSpan="4">
-                  Nenhum aluno encontrado.
-                </td>
-              </tr>
-
-            )}
-
-          </tbody>
-
-        </table>
-
-        <div className="pagination">
-
-          <span>
-            {alunosFiltrados.length} aluno(s) encontrado(s)
-          </span>
-
-          <button>
-            ‹
+            <span className="alunos-resumo-icone" aria-hidden="true">
+              <IconAlunos width={27} height={27} />
+            </span>
+            <span className="alunos-resumo-info">
+              <strong>{alunos.length}</strong>
+              <b>Total de alunos</b>
+              <small>Cadastrados no sistema</small>
+            </span>
           </button>
 
-          <button className="current-page">
-            1
-          </button>
-
-          <span>
-            de 1
-          </span>
-
-          <button>
-            ›
-          </button>
-
-        </div>
-
-      </div>
-
-
-      {/* POPUP PRINCIPAL */}
-
-      {alunoSelecionado &&
-        !mostrarFrequencia &&
-        !mostrarNotas &&
-        !mostrarOcorrencias && (
-
-        <div
-          className="student-modal-overlay"
-          onClick={fecharAluno}
-        >
-
-          <div
-            className="student-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-
+          {[["Baixo", "baixo"], ["Médio", "medio"], ["Alto", "alto"]].map(([nivel, classe]) => (
             <button
-              className="close-modal"
-              onClick={fecharAluno}
+              type="button"
+              className={`alunos-resumo-card ${classe} ${riscoSelecionado === nivel ? "selecionado" : ""}`}
+              key={nivel}
+              onClick={() => atualizarFiltro(setRiscoSelecionado, riscoSelecionado === nivel ? "" : nivel)}
+              aria-pressed={riscoSelecionado === nivel}
+              aria-label={`Filtrar alunos com risco ${nivel.toLowerCase()}`}
             >
-              ×
-            </button>
-
-            <div className="student-modal-header">
-
-              <div className="student-avatar">
-                👤
-              </div>
-
-              <div>
-
-                <h2>
-                  {alunoSelecionado.nome}
-                </h2>
-
-                <p>
-                  {alunoSelecionado.turma}
-                </p>
-
-              </div>
-
-              <span
-                className={
-                  `modal-risk ${alunoSelecionado.risco.toLowerCase()}`
-                }
-              >
-                Risco {alunoSelecionado.risco}
+              <span className="alunos-resumo-icone" aria-hidden="true">
+                <span className="alunos-resumo-ponto" />
               </span>
-
-            </div>
-
-            <div className="student-summary">
-
-              <div>
-
-                <strong>
-                  5.0
-                </strong>
-
-                <span>
-                  Média geral
-                </span>
-
-              </div>
-
-              <div>
-
-                <strong>
-                  4
-                </strong>
-
-                <span>
-                  Ocorrências
-                </span>
-
-              </div>
-
-              <button
-                className="frequency-summary"
-                onClick={abrirFrequencia}
-              >
-
-                <strong>
-                  {alunoSelecionado.frequencia}%
-                </strong>
-
-                <span>
-                  Frequência geral
-                </span>
-
-              </button>
-
-            </div>
-
-            <div className="risk-reason">
-
-              <h3>
-                Por que este aluno está em risco?
-              </h3>
-
-              <div>
-                🟡 Frequência caindo progressivamente
-              </div>
-
-              <div>
-                🟡 Queda das notas
-              </div>
-
-              <div>
-                🟡 Faltas recentes
-              </div>
-
-              <div>
-                🟡 Ocorrências recentes
-              </div>
-
-            </div>
-
-            <div className="student-actions">
-
-              <button onClick={abrirNotas}>
-                📝
-                <span>
-                  Notas
-                </span>
-              </button>
-
-              <button onClick={abrirOcorrencias}>
-                📋
-                <span>
-                  Ocorrências
-                </span>
-              </button>
-
-             <button
-              onClick={() => {
-              navigate(`/alunos/${alunoSelecionado.matricula}`);
-              }}
-              >
-                👤
-              <span>Perfil do aluno</span>
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* POPUP FREQUÊNCIA */}
-
-      {alunoSelecionado && mostrarFrequencia && (
-
-        <div
-          className="student-modal-overlay"
-          onClick={fecharAluno}
-        >
-
-          <div
-            className="frequency-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-
-            <button
-              className="close-modal"
-              onClick={fecharAluno}
-            >
-              ×
-            </button>
-
-            <div className="frequency-student-header">
-
-              <div className="student-avatar">
-                👤
-              </div>
-
-              <div>
-
-                <h2>
-                  {alunoSelecionado.nome}
-                </h2>
-
-                <p>
-                  {alunoSelecionado.turma}
-                </p>
-
-              </div>
-
-              <span
-                className={
-                  `modal-risk ${alunoSelecionado.risco.toLowerCase()}`
-                }
-              >
-                Risco {alunoSelecionado.risco}
+              <span className="alunos-resumo-info">
+                <strong>{resumo[nivel]}</strong>
+                <b>{nivel} risco</b>
+                <small>{alunos.length ? Math.round((resumo[nivel] / alunos.length) * 100) : 0}% do total</small>
               </span>
-
-            </div>
-
-            <div className="frequency-title">
-
-              <div>
-
-                <h2>
-                  Frequência Geral
-                </h2>
-
-                <select
-                  className="frequency-month-select"
-                  value={mesSelecionado}
-                  onChange={(e) =>
-                    setMesSelecionado(e.target.value)
-                  }
-                >
-
-                  {meses.map((mes) => (
-
-                    <option
-                      key={mes}
-                      value={mes}
-                    >
-                      {mes}
-                    </option>
-
-                  ))}
-
-                </select>
-
-              </div>
-
-              <div className="frequency-circle">
-
-                <span>
-                  {percentualFrequencia}%
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="frequency-week">
-
-              <span>seg</span>
-              <span>ter</span>
-              <span>qua</span>
-              <span>qui</span>
-              <span>sex</span>
-
-            </div>
-
-            <div className="frequency-grid">
-
-              {diasDoMes.map((dia) => (
-
-                <div
-                  className="frequency-day"
-                  key={dia.dia}
-                >
-
-                  <span className="day-number">
-                    {dia.dia}
-                  </span>
-
-                  <span
-                    className={
-                      `day-status ${dia.status}`
-                    }
-                  >
-                    {dia.status === "presente"
-                      ? "✓"
-                      : "×"
-                    }
-                  </span>
-
-                </div>
-
-              ))}
-
-            </div>
-
-            <button
-              className="back-frequency"
-              onClick={voltarParaAluno}
-            >
-              ← Voltar
             </button>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-    {/* POPUP NOTAS */}
-
-{alunoSelecionado && mostrarNotas && (
-
-  <div className="student-modal-overlay" onClick={fecharAluno}>
-
-    <div
-      className="detail-modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-
-      <button className="close-modal" onClick={fecharAluno}>
-        ×
-      </button>
-
-      <div className="detail-student-header">
-        <div className="student-avatar">👤</div>
-
-        <div>
-          <h2>{alunoSelecionado.nome}</h2>
-          <p>{alunoSelecionado.turma}</p>
-        </div>
-
-        <span className={`modal-risk ${alunoSelecionado.risco.toLowerCase()}`}>
-          Risco {alunoSelecionado.risco}
-        </span>
-      </div>
-
-      <h2 className="detail-title">Notas</h2>
-
-      <div className="notes-filter">
-        <label htmlFor="mes-notas">Ver de</label>
-
-        <select
-          id="mes-notas"
-          value={mesNotas}
-          onChange={(e) => setMesNotas(e.target.value)}
-        >
-          {meses.map((mes) => (
-            <option key={mes} value={mes}>
-              {mes}
-            </option>
           ))}
-        </select>
-      </div>
+        </section>
 
-      {notasDoMes.length > 0 ? (
-        <>
-          <div className="notes-table-wrapper">
-            <table className="notes-table">
+        <section className="alunos-filtros-panel" aria-label="Filtros da listagem">
+          <label className="alunos-busca">
+            <span aria-hidden="true" className="alunos-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg></span>
+            <input
+              className="search-aluno"
+              type="search"
+              placeholder="Buscar aluno por nome..."
+              value={busca}
+              onChange={(e) => atualizarFiltro(setBusca, e.target.value)}
+              aria-label="Buscar aluno por nome"
+            />
+          </label>
+          <div className="alunos-filtro">
+            <label htmlFor="alunos-turma">Turma</label>
+            <select id="alunos-turma" value={turmaSelecionada} onChange={(e) => atualizarFiltro(setTurmaSelecionada, e.target.value)}>
+              <option value="">Todas as turmas</option>
+              {turmas.map((turma) => <option value={turma} key={turma}>{turma}</option>)}
+            </select>
+          </div>
+          <div className="alunos-filtro">
+            <label htmlFor="alunos-risco">Nível de risco</label>
+            <select id="alunos-risco" value={riscoSelecionado} onChange={(e) => atualizarFiltro(setRiscoSelecionado, e.target.value)}>
+              <option value="">Todos os riscos</option>
+              {["Baixo", "Médio", "Alto"].map((nivel) => <option value={nivel} key={nivel}>{nivel}</option>)}
+            </select>
+          </div>
+          <div className="alunos-filtro">
+            <label htmlFor="alunos-frequencia">Frequência</label>
+            <select id="alunos-frequencia" value={frequenciaSelecionada} onChange={(e) => atualizarFiltro(setFrequenciaSelecionada, e.target.value)}>
+              <option value="">Todas</option>
+              <option value="acima-80">Acima de 80%</option>
+              <option value="70-80">Entre 70% e 80%</option>
+              <option value="abaixo-70">Abaixo de 70%</option>
+            </select>
+          </div>
+        </section>
+
+        <section className="alunos-tabela-panel" aria-label="Listagem de alunos">
+          <div className="alunos-tabela-scroll">
+            <table className="students-table">
               <thead>
                 <tr>
-                  <th>Disciplina</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>Média</th>
-                  <th>Tendência</th>
+                  {[["nome", "Aluno"], ["turma", "Turma"], ["frequencia", "Frequência"], ["risco", "Risco"]].map(([campo, titulo]) => (
+                    <th scope="col" key={campo}>
+                      <button type="button" className="alunos-ordenar" onClick={() => ordenar(campo)}>
+                        {titulo} <span aria-hidden="true">↕</span>
+                      </button>
+                    </th>
+                  ))}
+                  <th scope="col">Última atualização</th>
+                  <th scope="col">Ações</th>
                 </tr>
               </thead>
-
               <tbody>
-                {notasDoMes.map((nota) => (
-                  <tr key={nota.disciplina}>
-                    <td className="note-subject">{nota.disciplina}</td>
-                    <td>{nota.n1.toFixed(1)}</td>
-                    <td>{nota.n2.toFixed(1)}</td>
-                    <td>
-                      <span className={`note-badge ${classeNota(nota.media)}`}>
-                        {nota.media.toFixed(1)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`trend ${nota.tendencia}`}>
-                        {textoTendencia[nota.tendencia]}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {alunosPaginados.map((aluno) => {
+                  const iniciais = aluno.nome.split(" ").slice(0, 2).map((parte) => parte[0]).join("").toUpperCase();
+                  const cor = aluno.frequencia < 70 ? "alto" : aluno.frequencia <= 80 ? "medio" : "baixo";
+                  return (
+                    <tr key={aluno.matricula}>
+                      <td><div className="alunos-nome"><span className="alunos-avatar">{iniciais}</span><strong>{aluno.nome}</strong></div></td>
+                      <td><span className="alunos-turma-tag">{aluno.turma}</span></td>
+                      <td>
+                        <div className="alunos-frequencia">
+                          <span>{aluno.frequencia}%</span>
+                          <progress className={`alunos-progresso ${cor}`} value={aluno.frequencia} max="100" aria-label={`Frequência de ${aluno.nome}`} />
+                        </div>
+                      </td>
+                      <td><span className={`risk-status ${aluno.risco.toLowerCase()}`}><span className="risk-dot" />{aluno.risco}</span></td>
+                      <td className="alunos-atualizacao">{aluno.ultimaAtualizacao || "—"}</td>
+                      <td>
+                        <div className="alunos-acoes">
+                          <button type="button" className="alunos-acao" onClick={() => abrirAluno(aluno)} aria-label={`Ver detalhes de ${aluno.nome}`} title="Ver detalhes"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                          <button type="button" className="alunos-acao" onClick={() => navigate(`/alunos/${aluno.matricula}`)} aria-label={`Abrir perfil de ${aluno.nome}`} title="Abrir perfil">⋮</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {alunosPaginados.length === 0 && <tr><td colSpan={6} className="alunos-vazio">Nenhum aluno encontrado.</td></tr>}
               </tbody>
             </table>
           </div>
-
-          <div className="notes-average">
-            <span>Média geral do mês</span>
-            <strong>
-              {(
-                notasDoMes.reduce((soma, n) => soma + n.media, 0) /
-                notasDoMes.length
-              ).toFixed(1)}
-            </strong>
-          </div>
-        </>
-      ) : (
-        <p className="empty-message">
-          Sem notas registradas neste mês.
-        </p>
-      )}
-
-      <button className="back-frequency" onClick={voltarParaAluno}>
-        ← Voltar
-      </button>
-
-    </div>
-
-  </div>
-
-)}
-
-
-{/* POPUP OCORRÊNCIAS */}
-
-{alunoSelecionado && mostrarOcorrencias && (
-
-  <div className="student-modal-overlay" onClick={fecharAluno}>
-
-    <div
-      className="detail-modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-
-      <button className="close-modal" onClick={fecharAluno}>
-        ×
-      </button>
-
-      <div className="detail-student-header">
-        <div className="student-avatar">👤</div>
-
-        <div>
-          <h2>{alunoSelecionado.nome}</h2>
-          <p>{alunoSelecionado.turma}</p>
-        </div>
-
-        <span className={`modal-risk ${alunoSelecionado.risco.toLowerCase()}`}>
-          Risco {alunoSelecionado.risco}
-        </span>
-      </div>
-
-      <h2 className="detail-title">Ocorrências</h2>
-
-      <p className="detail-subtitle">
-        Histórico de ocorrências do aluno
-      </p>
-
-      <div className="occurrences-list">
-        {ocorrencias.map((item, index) => (
-          <div className={`occurrence-item ${item.tipo}`} key={index}>
-
-            <div className="occurrence-icon">{item.icone}</div>
-
-            <div className="occurrence-content">
-              <div className="occurrence-top">
-                <strong>{item.titulo}</strong>
-                <span>{item.data}</span>
-              </div>
-
-              <p>{item.descricao}</p>
+          <footer className="alunos-paginacao">
+            <span>Mostrando {alunosPaginados.length} de {alunosFiltrados.length} alunos</span>
+            <div className="alunos-paginas">
+              <button type="button" disabled={paginaAtual <= 1} onClick={() => setPagina(paginaAtual - 1)} aria-label="Página anterior">‹</button>
+              <strong>{paginaAtual}</strong><span>de {totalPaginas}</span>
+              <button type="button" disabled={paginaAtual >= totalPaginas} onClick={() => setPagina(paginaAtual + 1)} aria-label="Próxima página">›</button>
             </div>
-
-          </div>
-        ))}
+            <label className="alunos-por-pagina">
+              Itens por página
+              <select value={itensPorPagina} onChange={(e) => { setItensPorPagina(Number(e.target.value)); setPagina(1); }}>
+                {[10, 20, 50].map((n) => <option value={n} key={n}>{n}</option>)}
+              </select>
+            </label>
+          </footer>
+        </section>
       </div>
 
-      <button className="back-frequency" onClick={voltarParaAluno}>
-        ← Voltar
-      </button>
-
-    </div>
-
-  </div>
-
-)}
-
+    {alunoSelecionado && <div className="student-modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) fecharAluno(); }} role="presentation">
+      <div className="student-modal" role="dialog" aria-modal="true" aria-label={`Informações de ${alunoSelecionado.nome}`}>
+        <button className="close-modal" onClick={fecharAluno} aria-label="Fechar">×</button>
+        <div className="student-modal-header"><div className="student-avatar">👤</div><div><h2>{alunoSelecionado.nome}</h2><p>Turma {alunoSelecionado.turma}</p></div><span className={`modal-risk ${alunoSelecionado.risco.toLowerCase()}`}>Risco {alunoSelecionado.risco}</span></div>
+        {modalAtivo === "principal" && <><div className="student-summary"><div><strong>5.0</strong><span>Média geral (exemplo)</span></div><div><strong>4</strong><span>Ocorrências (exemplo)</span></div><button className="frequency-summary" onClick={() => setModalAtivo("frequencia")}><strong>{alunoSelecionado.frequencia}%</strong><span>Frequência geral</span></button></div><div className="risk-reason"><h3>Indicadores de acompanhamento</h3><div>🟡 Verificar tendência da frequência</div><div>🟡 Conferir notas e ocorrências recentes</div></div><div className="student-actions"><button onClick={() => setModalAtivo("notas")}>📝 <span>Notas</span></button><button onClick={() => setModalAtivo("ocorrencias")}>📋 <span>Ocorrências</span></button><button onClick={() => navigate(`/alunos/${alunoSelecionado.matricula}`)}>👤 <span>Perfil do aluno</span></button></div></>}
+        {modalAtivo === "frequencia" && <><div className="frequency-title"><div><h2>Frequência Geral</h2><select className="frequency-month-select" value={mesSelecionado} onChange={(e) => setMesSelecionado(e.target.value)}>{MESES.map((mes) => <option key={mes} value={mes}>{mes}</option>)}</select></div><div className="frequency-circle"><span>{percentualFrequencia}%</span></div></div><p className="alunos-modal-aviso">Calendário demonstrativo; frequência real do aluno: {alunoSelecionado.frequencia}%.</p><div className="frequency-week">{["seg", "ter", "qua", "qui", "sex"].map((dia) => <span key={dia}>{dia}</span>)}</div><div className="frequency-grid">{diasFrequencia.map((dia) => <div className="frequency-day" key={dia.dia}><span className="day-number">{dia.dia}</span><span className={`day-status ${dia.presente ? "presente" : "falta"}`}>{dia.presente ? "✓" : "×"}</span></div>)}</div><button className="back-frequency" onClick={() => setModalAtivo("principal")}>← Voltar</button></>}
+        {modalAtivo === "notas" && <><h2 className="detail-title">Notas</h2><div className="notes-filter"><label htmlFor="mes-notas">Ver mês</label><select id="mes-notas" value={mesNotas} onChange={(e) => setMesNotas(e.target.value)}>{MESES.map((mes) => <option key={mes}>{mes}</option>)}</select></div><p className="alunos-modal-aviso">Notas demonstrativas.</p>{notasDoMes.length ? <><div className="notes-table-wrapper"><table className="notes-table"><thead><tr><th>Disciplina</th><th>1ª</th><th>2ª</th><th>Média</th><th>Tendência</th></tr></thead><tbody>{notasDoMes.map((nota) => <tr key={nota.disciplina}><td>{nota.disciplina}</td><td>{nota.n1.toFixed(1)}</td><td>{nota.n2.toFixed(1)}</td><td><span className={`note-badge ${nota.media < 5 ? "nota-baixa" : nota.media < 7 ? "nota-media" : "nota-alta"}`}>{nota.media.toFixed(1)}</span></td><td><span className={`trend ${nota.n2 > nota.n1 ? "subindo" : nota.n2 < nota.n1 ? "caindo" : "estavel"}`}>{nota.n2 > nota.n1 ? "↑ Subindo" : nota.n2 < nota.n1 ? "↓ Caindo" : "→ Estável"}</span></td></tr>)}</tbody></table></div><div className="notes-average"><span>Média do mês</span><strong>{(notasDoMes.reduce((soma, n) => soma + n.media, 0) / notasDoMes.length).toFixed(1)}</strong></div></> : <p className="empty-message">Sem notas registradas neste mês.</p>}<button className="back-frequency" onClick={() => setModalAtivo("principal")}>← Voltar</button></>}
+        {modalAtivo === "ocorrencias" && <><h2 className="detail-title">Ocorrências</h2><p className="alunos-modal-aviso">Registros demonstrativos.</p><div className="occurrences-list">{OCORRENCIAS.map(([icone, titulo, data, descricao]) => <article className="occurrence-item" key={`${data}-${titulo}`}><div className="occurrence-icon">{icone}</div><div className="occurrence-content"><div className="occurrence-top"><strong>{titulo}</strong><span>{data}</span></div><p>{descricao}</p></div></article>)}</div><button className="back-frequency" onClick={() => setModalAtivo("principal")}>← Voltar</button></>}
+      </div>
+    </div>}
     </DashboardLayout>
-
-  )
+  );
 }
-
-export default Alunos
