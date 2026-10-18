@@ -172,3 +172,50 @@ export function IconMoon(props) {
     </svg>
   )
 }
+
+export function IconCalendario(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+      <path d="M3.5 10h17" />
+      <path d="M8 3v4" />
+      <path d="M16 3v4" />
+    </svg>
+  )
+}
+
+export function IconRelogio(props) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  )
+}
+
+export function IconChecklist(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
+      <path d="m8 12.2 2.7 2.7 5.5-5.6" />
+    </svg>
+  )
+}
+
+export function IconSeta(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  )
+}
+
+export function IconEnviar(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M21 3 10.5 13.5" />
+      <path d="M21 3 14.5 21l-4-7.5L3 9.5 21 3Z" />
+    </svg>
+  )
+}
