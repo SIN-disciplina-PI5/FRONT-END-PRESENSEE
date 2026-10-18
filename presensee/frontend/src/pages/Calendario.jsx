@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { buscarPublicosCadastro } from "../services/cadastroEscolar";
 import DashboardLayout from "../layouts/DashboardLayout";
 import "../styles/Calendario.css";
 
