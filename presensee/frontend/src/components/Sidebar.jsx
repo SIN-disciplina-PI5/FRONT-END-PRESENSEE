@@ -1,13 +1,14 @@
+
 import { NavLink, useNavigate } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import { getUsuario, logout } from "../services/auth"
 import "../styles/Sidebar.css"
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"
 
 import {
   IconHome,
   IconAlunos,
-  IconAlertas,
+  IconCalendario,
   IconDiario,
   IconIntervencao,
   IconTurma,
@@ -23,15 +24,14 @@ import {
 const MENU = [
   { to: "/dashboard", label: "Home", Icon: IconHome },
   { to: "/alunos", label: "Alunos", Icon: IconAlunos },
-  { to: "/alertas", label: "Alertas", Icon: IconAlertas },
+  { to: "/calendario", label: "Calendário Escolar", Icon: IconCalendario },
   { to: "/diario", label: "Diário do monitor", Icon: IconDiario },
-  { to: "/intervencao", label: "Intervenção", Icon: IconIntervencao },,
+  { to: "/intervencao", label: "Intervenção", Icon: IconIntervencao },
   { to: "/turmas", label: "Turma", Icon: IconTurma },
   { to: "/relatorios", label: "Relatório", Icon: IconRelatorio },
 ]
 
 function Sidebar() {
-
   const navigate = useNavigate()
   const usuario = getUsuario()
 
@@ -49,16 +49,11 @@ function Sidebar() {
 
   const inputAvatar = useRef(null)
 
-
-  // Aplica o tema no <html> assim que a sidebar monta e sempre que muda
+  // Aplica o tema e salva a preferência
   useEffect(() => {
-
     document.documentElement.setAttribute("data-theme", tema)
-
     localStorage.setItem("tema", tema)
-
   }, [tema])
-
 
   function handleLogout() {
     logout()
@@ -99,7 +94,6 @@ function Sidebar() {
       {/* LOGO + BOTÃO DE COLAPSAR */}
 
       <div className="sidebar-top">
-
         <div className="sidebar-logo">
           {!collapsed && (
             <h2 className="brand-font" translate="no">
@@ -115,20 +109,26 @@ function Sidebar() {
         >
           <IconCollapse collapsed={collapsed} />
         </button>
-
       </div>
 
       {/* MENU */}
 
       <nav className="sidebar-menu">
-
         {MENU.map(({ to, label, Icon }) => (
-          <NavLink key={to} to={to} title={collapsed ? label : undefined}>
+          <NavLink
+            key={to}
+            to={to}
+            title={collapsed ? label : undefined}
+          >
             <Icon />
-            {!collapsed && <span className="menu-label">{label}</span>}
+
+            {!collapsed && (
+              <span className="menu-label">
+                {label}
+              </span>
+            )}
           </NavLink>
         ))}
-
       </nav>
 
       {/* MODO ESCURO / CLARO */}
@@ -136,18 +136,23 @@ function Sidebar() {
       <button
         className="theme-toggle"
         onClick={alternarTema}
-        title={tema === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+        title={tema === "light"
+          ? "Ativar modo escuro"
+          : "Ativar modo claro"
+        }
       >
         {tema === "light" ? <IconMoon /> : <IconSun />}
+
         {!collapsed && (
-          <span>{tema === "light" ? "Modo escuro" : "Modo claro"}</span>
+          <span>
+            {tema === "light" ? "Modo escuro" : "Modo claro"}
+          </span>
         )}
       </button>
 
-     {/* USUÁRIO */}
+      {/* USUÁRIO */}
 
       <div className="sidebar-user">
-
         <Link
           to="/perfil-monitor"
           className="sidebar-user-link"
@@ -163,13 +168,17 @@ function Sidebar() {
 
           {!collapsed && (
             <div className="sidebar-user-info">
-              <strong>{usuario?.nome || "Visitante"}</strong>
+              <strong>
+                {usuario?.nome || "Visitante"}
+              </strong>
+
               <span>Monitor</span>
             </div>
           )}
         </Link>
 
-        {/* Botão separado para alterar a foto */}
+        {/* BOTÃO PARA ALTERAR FOTO */}
+
         <button
           type="button"
           className="sidebar-avatar-edit"
@@ -187,10 +196,9 @@ function Sidebar() {
           onChange={escolherAvatar}
           style={{ display: "none" }}
         />
-
       </div>
 
-      {/* SAIR */}
+      {/* ENCERRAR SESSÃO */}
 
       <button
         className="logout-button"
@@ -198,7 +206,10 @@ function Sidebar() {
         title="Encerrar Sessão"
       >
         <IconLogout />
-        {!collapsed && <span>Encerrar Sessão</span>}
+
+        {!collapsed && (
+          <span>Encerrar Sessão</span>
+        )}
       </button>
 
     </aside>

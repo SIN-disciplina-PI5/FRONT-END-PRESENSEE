@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 
 import Login from "./pages/Login"
@@ -5,7 +6,7 @@ import Welcome from "./pages/Welcome"
 import CadastroEscola from "./pages/CadastroEscola"
 import Dashboard from "./pages/Dashboard"
 import Alunos from "./pages/Alunos"
-import Alertas from "./pages/Alertas"
+import Calendario from "./pages/Calendario"
 import Frequencia from "./pages/Frequencia"
 import Relatorios from "./pages/Relatorios"
 import Turmas from "./pages/Turmas"
@@ -14,36 +15,35 @@ import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
 import PerfilMonitor from "./pages/PerfilMonitor"
-import { adminRoutes } from "./painel-administrativo/AdminRoutes";
+import { adminRoutes } from "./painel-administrativo/AdminRoutes"
 
 import ProtectedRoute from "./components/ProtectedRoute"
 
 function App() {
   return (
     <BrowserRouter>
+      <Routes>
+        {adminRoutes()}
 
-     <Routes>
-      {adminRoutes()}
+        <Route
+          path="/"
+          element={<Welcome />}
+        />
 
-  <Route
-  path="/"
-  element={<Welcome />}
-/>
+        <Route
+          path="/perfil-monitor"
+          element={<PerfilMonitor />}
+        />
 
-<Route
-  path="/perfil-monitor"
-  element={<PerfilMonitor />}
-/>
+        <Route
+          path="/interno/nova-escola"
+          element={<CadastroEscola />}
+        />
 
-<Route
-  path="/interno/nova-escola"
-  element={<CadastroEscola />}
-/>
-
-  <Route
-    path="/login"
-    element={<Login />}
-  />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
         <Route
           path="/dashboard"
@@ -73,11 +73,11 @@ function App() {
         />
 
         <Route
-         path="/intervencao"
-         element={
-           <ProtectedRoute>
-           <Intervencao />
-          </ProtectedRoute>
+          path="/intervencao"
+          element={
+            <ProtectedRoute>
+              <Intervencao />
+            </ProtectedRoute>
           }
         />
 
@@ -99,13 +99,22 @@ function App() {
           }
         />
 
+        {/* CALENDÁRIO ESCOLAR */}
+
         <Route
-          path="/alertas"
+          path="/calendario"
           element={
             <ProtectedRoute>
-              <Alertas />
+              <Calendario />
             </ProtectedRoute>
           }
+        />
+
+        {/* REDIRECIONAMENTO DA ROTA ANTIGA */}
+
+        <Route
+          path="/alertas"
+          element={<Navigate to="/calendario" replace />}
         />
 
         <Route
@@ -117,8 +126,7 @@ function App() {
           }
         />
 
-
-      <Route
+        <Route
           path="/diario"
           element={
             <ProtectedRoute>
@@ -127,18 +135,15 @@ function App() {
           }
         />
 
-           <Route
-           path="/alunos/:id"
-           element={
-         <ProtectedRoute>
-         <AlunoPerfil />
-        </ProtectedRoute>
-        }
-       />
-
-
+        <Route
+          path="/alunos/:id"
+          element={
+            <ProtectedRoute>
+              <AlunoPerfil />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-
     </BrowserRouter>
   )
 }
