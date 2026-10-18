@@ -916,3 +916,30 @@
   .ce-week .ce-day, .ce-week.ce-five-days .ce-day { height: 72px; min-height: 72px; }
   .ce-calendar-weekmode .ce-week .ce-day, .ce-week.ce-week-expanded .ce-day { height: 130px; min-height: 130px; }
 }
+
+
+/* Autocomplete de alunos e turmas para abono */
+.ce-publicos { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ce-publicos > small { font-size: 11px; color: #7880a2; line-height: 1.5; }
+.ce-publicos-selecionados { display: flex; flex-wrap: wrap; gap: 7px; }
+.ce-publicos-selecionados:empty { display: none; }
+.ce-publico-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; border: 1px solid #d9d0ff; background: #f2eeff; color: #4b25c9; padding: 5px 7px 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; animation: ce-chip-in 180ms ease both; }
+.ce-publico-chip > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ce-publico-chip button { border: 0; background: transparent; color: inherit; font-size: 17px; line-height: 1; padding: 0 2px; }
+.ce-autocomplete { position: relative; }
+.ce-autocomplete > input { width: 100%; min-height: 41px; border: 1px solid #dfe3f0; border-radius: 9px; background: #fff; color: #222b52; padding: 9px 12px; font-size: 12px; }
+.ce-sugestoes { position: absolute; z-index: 25; top: calc(100% + 5px); left: 0; right: 0; max-height: 280px; overflow-y: auto; padding: 6px; background: #fff; border: 1px solid #e1def1; border-radius: 11px; box-shadow: 0 14px 32px rgba(36,24,70,.17); animation: ce-chip-in 160ms ease both; }
+.ce-sugestoes button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-radius: 7px; background: transparent; color: #252b48; padding: 9px; }
+.ce-sugestoes button:hover, .ce-sugestoes button:focus-visible { background: #f4f0ff; }
+.ce-sugestoes button > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; flex: 1; }
+.ce-sugestoes strong { font-size: 12px; }
+.ce-sugestoes small { color: #77809d; font-size: 10px; }
+.ce-sugestao-icone { width: 29px; height: 29px; border-radius: 8px; display: grid; place-items: center; color: #633df2; background: #eee9ff; flex-shrink: 0; }
+.ce-sugestao-adicionar { color: #633df2; font-size: 18px; }
+.ce-sugestao-vazio { margin: 0; padding: 11px; color: #7d839f; font-size: 12px; }
+@keyframes ce-chip-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+[data-theme="dark"] .ce-publico-chip { background: #302658; color: #ded5ff; border-color: #59459d; }
+[data-theme="dark"] .ce-autocomplete > input, [data-theme="dark"] .ce-sugestoes { background: #1b2639; border-color: #30405a; color: #e8edf5; }
+[data-theme="dark"] .ce-sugestoes button { color: #e8edf5; }
+[data-theme="dark"] .ce-sugestoes button:hover, [data-theme="dark"] .ce-sugestoes button:focus-visible { background: #302658; }
+@media (prefers-reduced-motion: reduce) { .ce-publico-chip, .ce-sugestoes { animation: none; } }
