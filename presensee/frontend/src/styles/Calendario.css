@@ -1,0 +1,945 @@
+/* Calendário Escolar | PresenSee */
+.ce-page {
+  width: 100%;
+  max-width: 1540px;
+  margin: 0 auto;
+  color: #10162f;
+  font-family: var(--font-body, Poppins, sans-serif);
+}
+
+.ce-page * {
+  box-sizing: border-box;
+}
+
+.ce-header,
+.ce-heading,
+.ce-top-actions,
+.ce-toolbar,
+.ce-nav,
+.ce-view-switch,
+.ce-list-head,
+.ce-list-filters,
+.ce-form-heading,
+.ce-form-actions,
+.ce-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ce-header {
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.ce-heading {
+  gap: 15px;
+}
+
+.ce-mascote {
+  display: grid;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ded8fc;
+}
+
+.ce-mascote img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ce-heading h1 {
+  margin: 0;
+  font-size: clamp(23px, 2.3vw, 32px);
+  line-height: 1.22;
+  font-weight: 800;
+  color: #633df2;
+}
+
+.ce-heading p,
+.ce-list-head p,
+.ce-info,
+.ce-hint {
+  margin: 5px 0 0;
+  color: #7880a2;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ce-page button,
+.ce-page input,
+.ce-page select,
+.ce-page textarea {
+  font: inherit;
+}
+
+.ce-page button {
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+.ce-page button:focus-visible,
+.ce-page input:focus-visible,
+.ce-page select:focus-visible,
+.ce-page textarea:focus-visible {
+  outline: 2px solid #633df2;
+  outline-offset: 2px;
+}
+
+.ce-btn-primary,
+.ce-btn-outline {
+  min-height: 40px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+.ce-btn-primary {
+  border: 1px solid #633df2;
+  background: #633df2;
+  color: white;
+}
+
+.ce-btn-primary:hover {
+  background: #4b25c9;
+}
+
+.ce-btn-outline {
+  border: 1px solid #dedff0;
+  background: white;
+  color: #4b25c9;
+}
+
+.ce-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 355px);
+  align-items: start;
+  gap: 18px;
+}
+
+.ce-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.ce-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e9e9f2;
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--shadow-card, 0 4px 15px rgba(0, 0, 0, 0.08));
+}
+
+.ce-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 13px;
+}
+
+.ce-toolbar h2 {
+  margin: 0;
+  font-size: 17px;
+  text-transform: capitalize;
+}
+
+.ce-nav button,
+.ce-view-switch button {
+  min-height: 35px;
+  padding: 6px 12px;
+  border: 1px solid #e1e4f1;
+  border-radius: 8px;
+  background: white;
+  color: #313b6a;
+  font-size: 12px;
+}
+
+.ce-nav button:first-child,
+.ce-nav button:nth-child(2) {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ce-view-switch .ativo,
+.ce-segments .ativo {
+  background: #633df2;
+  border-color: #633df2;
+  color: #fff;
+}
+
+.ce-calendar-scroll {
+  overflow-x: auto;
+}
+
+.ce-weekdays,
+.ce-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 625px;
+}
+
+.ce-weekdays span {
+  padding: 9px;
+  border: 1px solid #e8eaf3;
+  border-right: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ce-weekdays span:last-child {
+  border-right: 1px solid #e8eaf3;
+}
+
+.ce-day {
+  display: flex;
+  min-width: 0;
+  height: 79px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid #e8eaf3;
+  border-top: 0;
+  border-right: 0;
+  background: #fff;
+  color: #141a37;
+  text-align: left;
+}
+
+.ce-day:last-child {
+  border-right: 1px solid #e8eaf3;
+}
+
+.ce-day:hover {
+  background: #faf8ff;
+}
+
+.ce-day.ce-selected {
+  outline: 2px solid #633df2;
+  outline-offset: -2px;
+  background: #faf8ff;
+}
+
+.ce-day-out {
+  background: #fafbfe;
+  color: #a5adc3;
+}
+
+.ce-day-number {
+  align-self: flex-end;
+  font-size: 11px;
+}
+
+.ce-day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ce-event-chip {
+  width: 100%;
+  overflow: hidden;
+  padding: 3px 4px;
+  border-left: 3px solid;
+  border-radius: 4px;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-day-events small {
+  font-size: 9px;
+}
+
+.ce-list-calendar {
+  display: grid;
+  gap: 7px;
+  min-height: 150px;
+}
+
+.ce-list-event {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #eef0f7;
+  border-radius: 8px;
+  background: #fafbff;
+  color: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.ce-list-event > span:last-child {
+  margin-left: auto;
+  color: #7880a2;
+}
+
+.ce-hint {
+  padding-top: 5px;
+  font-size: 10px;
+}
+
+.ce-list-head {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 17px;
+}
+
+.ce-list-head h2,
+.ce-form-heading h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.ce-list-filters input,
+.ce-list-filters select,
+.ce-form input,
+.ce-form textarea {
+  min-width: 0;
+  min-height: 39px;
+  padding: 10px 11px;
+  border: 1px solid #dfe3f0;
+  border-radius: 9px;
+  background: white;
+  color: #222b52;
+  font-size: 12px;
+}
+
+.ce-list-filters input {
+  width: 210px;
+}
+
+.ce-list-filters select {
+  max-width: 155px;
+}
+
+.ce-table-scroll {
+  overflow-x: auto;
+}
+
+.ce-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.ce-table th {
+  padding: 12px 10px;
+  background: #f7f8fc;
+  color: #465175;
+  text-align: left;
+}
+
+.ce-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid #eef0f6;
+  color: #5c6688;
+}
+
+.ce-event-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #10162f;
+  font-weight: 600;
+}
+
+.ce-cor {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.ce-pill {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.ce-type {
+  background: #eee9ff;
+  color: #5934df;
+}
+
+.ce-yes {
+  background: #e3f8ee;
+  color: #087d50;
+}
+
+.ce-no {
+  background: #ffe9ec;
+  color: #c22c42;
+}
+
+.ce-row-actions {
+  gap: 5px;
+}
+
+.ce-row-actions button {
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  color: #633df2;
+  font-size: 10px;
+}
+
+.ce-empty {
+  padding: 22px !important;
+  text-align: center;
+}
+
+.ce-form-panel {
+  padding: 20px;
+}
+
+.ce-form-heading {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ce-form-heading > button {
+  border: 0;
+  background: transparent;
+  color: #7e86a4;
+  font-size: 23px;
+}
+
+.ce-form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.ce-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ce-form label input,
+.ce-form label textarea {
+  width: 100%;
+  font-weight: 400;
+}
+
+.ce-form textarea {
+  resize: vertical;
+}
+
+.ce-label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ce-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.ce-type-grid button {
+  min-height: 38px;
+  padding: 7px;
+  border: 1px solid #deddf3;
+  border-radius: 9px;
+  background: #f7f5ff;
+  color: #633df2;
+  font-size: 11px;
+}
+
+.ce-type-grid button.selecionado {
+  border-color: #633df2;
+  box-shadow: inset 0 0 0 1px #633df2;
+}
+
+.ce-segments {
+  display: flex;
+  border: 1px solid #dedff0;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.ce-segments button {
+  flex: 1;
+  padding: 9px 3px;
+  border: 0;
+  background: white;
+  color: #555f89;
+  font-size: 10px;
+}
+
+.ce-segments .ativo {
+  background: #633df2;
+  color: white;
+}
+
+.ce-form-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ce-radio {
+  flex-direction: row !important;
+  align-items: center;
+  margin: 10px 0;
+  font-weight: 400 !important;
+}
+
+.ce-radio input {
+  width: auto !important;
+  accent-color: #633df2;
+}
+
+.ce-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ce-colors button {
+  width: 32px;
+  height: 32px;
+  border: 2px solid white;
+  border-radius: 9px;
+}
+
+.ce-colors button.selecionada {
+  outline: 2px solid #633df2;
+}
+
+.ce-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.ce-error,
+.ce-success {
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.ce-error {
+  background: #ffe9ee;
+  color: #b4233a;
+}
+
+.ce-success {
+  background: #e2f8ed;
+  color: #087b50;
+}
+
+.ce-picker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.ce-picker-days button {
+  min-height: 30px;
+  border: 1px solid #e4e5f1;
+  border-radius: 6px;
+  background: white;
+  color: #25275d;
+  font-size: 11px;
+}
+
+.ce-picker-days button.marcado {
+  background: #633df2;
+  color: white;
+}
+
+.ce-closed {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 60px 15px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.ce-atestados {
+  padding-top: 15px;
+  border-top: 1px solid #e9e9f2;
+}
+
+.ce-atestados h3 {
+  font-size: 13px;
+}
+
+.ce-atestados p {
+  font-size: 11px;
+}
+
+[data-theme="dark"] .ce-page {
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .ce-card {
+  border-color: #263449;
+  background: #141b2d;
+}
+
+[data-theme="dark"] .ce-day,
+[data-theme="dark"] .ce-nav button,
+[data-theme="dark"] .ce-view-switch button,
+[data-theme="dark"] .ce-list-event,
+[data-theme="dark"] .ce-segments button,
+[data-theme="dark"] .ce-picker-days button,
+[data-theme="dark"] .ce-btn-outline {
+  border-color: #30405a;
+  background: #1b2639;
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .ce-day.ce-selected,
+[data-theme="dark"] .ce-day:hover {
+  background: #282344;
+}
+
+[data-theme="dark"] .ce-view-switch .ativo,
+[data-theme="dark"] .ce-segments .ativo,
+[data-theme="dark"] .ce-picker-days .marcado {
+  background: #633df2;
+  color: #fff;
+}
+
+[data-theme="dark"] .ce-weekdays span,
+[data-theme="dark"] .ce-day {
+  border-color: #30405a;
+}
+
+[data-theme="dark"] .ce-table th {
+  background: #111827;
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .ce-table td {
+  border-color: #263449;
+  color: #b9c5d9;
+}
+
+[data-theme="dark"] .ce-event-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .ce-form input,
+[data-theme="dark"] .ce-form textarea,
+[data-theme="dark"] .ce-list-filters input,
+[data-theme="dark"] .ce-list-filters select {
+  border-color: #30405a;
+  background: #1b2639;
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .ce-heading p,
+[data-theme="dark"] .ce-info,
+[data-theme="dark"] .ce-hint,
+[data-theme="dark"] .ce-list-head p {
+  color: #a8b3c2;
+}
+
+@media (max-width: 1180px) {
+  .ce-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .ce-header,
+  .ce-list-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ce-toolbar {
+    justify-content: center;
+  }
+
+  .ce-top-actions,
+  .ce-list-filters {
+    flex-wrap: wrap;
+  }
+
+  .ce-heading h1 {
+    font-size: 22px;
+  }
+}
+
+/* =========================================================
+   Refinamento: calendário amplo, semana útil e animações
+   ========================================================= */
+
+.ce-layout {
+  grid-template-columns: minmax(0, 1fr);
+  transition: grid-template-columns 240ms ease;
+}
+
+.ce-layout.ce-layout-open {
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 355px);
+}
+
+.ce-calendar-content {
+  animation: ce-calendar-enter 280ms ease both;
+}
+
+.ce-form-panel {
+  animation: ce-panel-enter 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ce-weekdays,
+.ce-week {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.ce-weekdays.ce-five-days,
+.ce-week.ce-five-days {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-width: 500px;
+}
+
+.ce-day {
+  cursor: pointer;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.ce-day:focus-visible {
+  outline: 2px solid #633df2;
+  outline-offset: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+.ce-day.ce-today .ce-day-number {
+  display: grid;
+  place-items: center;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: #633df2;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.ce-event-chip {
+  display: block;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.ce-event-chip:hover {
+  transform: translateX(2px);
+  filter: saturate(1.2);
+}
+
+.ce-nav button:hover,
+.ce-view-switch button:hover,
+.ce-list-event:hover,
+.ce-row-actions button:hover {
+  transform: translateY(-2px);
+}
+
+.ce-card {
+  transition: box-shadow 200ms ease;
+}
+
+.ce-card:hover {
+  box-shadow: 0 8px 24px rgba(75, 37, 201, 0.09);
+}
+
+.ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) {
+  min-width: 625px;
+}
+
+.ce-week.ce-five-days .ce-day {
+  min-height: 120px;
+  height: auto;
+}
+
+.ce-view-switch {
+  flex-wrap: wrap;
+}
+
+@keyframes ce-calendar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ce-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-theme="dark"] .ce-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .ce-day.ce-today .ce-day-number {
+  background: #22d3c5;
+  color: #0b1220;
+}
+
+@media (max-width: 1180px) {
+  .ce-layout.ce-layout-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ce-form-panel {
+    animation-name: ce-calendar-enter;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ce-page *,
+  .ce-page *::before,
+  .ce-page *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================
+   Calendário visual V3 — legibilidade e ocupação da tela
+   ========================================================== */
+.ce-calendar { padding: 20px 20px 14px; overflow: hidden; }
+.ce-toolbar { gap: 15px 20px; padding-bottom: 16px; margin-bottom: 0; border-bottom: 1px solid #ececf5; }
+.ce-period-title { font-size: 19px !important; color: #242042; letter-spacing: -.3px; }
+.ce-nav { gap: 6px; }
+.ce-nav button { border-radius: 10px; font-weight: 700; }
+.ce-view-switch { padding: 4px; border: 1px solid #eae7f6; border-radius: 12px; background: #f7f5fe; gap: 3px; }
+.ce-view-switch button { min-height: 33px; background: transparent; border: 0; padding: 7px 12px; border-radius: 9px; }
+.ce-view-switch button.ativo { box-shadow: 0 2px 7px #633df229; }
+.ce-calendar-scroll { width: 100%; overflow-x: auto; padding-top: 12px; }
+.ce-weekdays, .ce-week, .ce-weekdays.ce-five-days, .ce-week.ce-five-days, .ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) { min-width: 0; }
+.ce-weekdays { overflow: hidden; border: 1px solid #eaeaf3; border-bottom: 0; border-radius: 11px 11px 0 0; background: #f7f7fc; }
+.ce-weekdays span { border: 0; padding: 12px 6px; font-size: 12px; font-weight: 700; color: #676c88; }
+.ce-weekdays span:last-child { border: 0; }
+.ce-week { border-left: 1px solid #eaeaf3; }
+.ce-week:last-child { border-bottom: 1px solid #eaeaf3; border-radius: 0 0 11px 11px; overflow: hidden; }
+.ce-day { height: clamp(94px, 9.5vw, 122px); padding: 9px 8px; border-color: #eaeaf3; border-right: 1px solid #eaeaf3; gap: 8px; position: relative; transition: background-color .2s ease, box-shadow .2s ease; }
+.ce-day:last-child { border-right: 1px solid #eaeaf3; }
+.ce-day:hover { background: #f4f0ff; box-shadow: inset 0 0 0 1px #c9baff; z-index: 1; }
+.ce-day.ce-selected { background: #f7f3ff; outline: 2px solid #8d73f6; outline-offset: -2px; z-index: 2; }
+.ce-day-out { background: #f8f8fc; }
+.ce-day-head { display: flex; justify-content: flex-end; gap: 5px; align-items: center; min-height: 24px; }
+.ce-day-number { align-self: auto; display: grid; place-items: center; min-width: 23px; height: 23px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.ce-day-caption { font-size: 11px; color: #8c91a8; }
+.ce-day-events { gap: 4px; }
+.ce-event-chip { display: block; min-height: 22px; width: 100%; border-radius: 6px; padding: 5px 6px; font-size: 10px; font-weight: 600; line-height: 1.2; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ce-event-chip:hover { transform: translateY(-1px); filter: brightness(.97); }
+.ce-more-events { display: block; color: #6352a1; font-weight: 600; padding-left: 5px; }
+.ce-calendar-weekmode .ce-day, .ce-week.ce-week-expanded .ce-day, .ce-week.ce-five-days .ce-day { min-height: 205px; height: auto; }
+.ce-week.ce-week-expanded .ce-event-chip { min-height: 30px; padding: 8px; font-size: 11px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ce-calendar-footer { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding-top: 11px; }
+.ce-calendar-footer > span { white-space: nowrap; font-size: 11px; font-weight: 600; color: #796ca3; }
+.ce-hint { margin: 0; }
+[data-theme="dark"] .ce-toolbar { border-color: #30405a; }
+[data-theme="dark"] .ce-period-title { color: #f1f5f9; }
+[data-theme="dark"] .ce-view-switch { border-color: #30405a; background: #1b2639; }
+[data-theme="dark"] .ce-weekdays { background: #192235; border-color: #30405a; }
+[data-theme="dark"] .ce-weekdays span { color: #bdc7dc; }
+[data-theme="dark"] .ce-week { border-color: #30405a; }
+[data-theme="dark"] .ce-day { border-color: #30405a; }
+[data-theme="dark"] .ce-day-out { background: #111a2b; }
+[data-theme="dark"] .ce-day.ce-selected { background: #282344; }
+[data-theme="dark"] .ce-day-caption { color: #a8b3c2; }
+@media (max-width: 1100px) {
+  .ce-layout.ce-layout-open { grid-template-columns: minmax(0,1fr); }
+  .ce-toolbar { justify-content: space-between; }
+  .ce-weekdays, .ce-week, .ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) { min-width: 600px; }
+  .ce-weekdays.ce-five-days, .ce-week.ce-five-days { min-width: 440px; }
+}
+@media (max-width: 760px) {
+  .ce-calendar { padding: 12px; }
+  .ce-toolbar { align-items: flex-start; }
+  .ce-period-title { order: -1; flex-basis: 100%; }
+  .ce-day { height: 100px; }
+  .ce-calendar-footer { flex-wrap: wrap; }
+}
+
+/* Ajuste compacto: mês completo e semana útil sem fins de semana. */
+.ce-page { max-width: 1400px; }
+.ce-calendar { padding: 15px 16px 12px; }
+.ce-toolbar { padding-bottom: 10px; gap: 10px; }
+.ce-calendar-scroll { padding-top: 8px; }
+.ce-weekdays span { padding: 8px 4px; font-size: 11px; }
+.ce-week .ce-day { height: 76px; min-height: 76px; padding: 5px 7px; gap: 3px; }
+.ce-day-head { min-height: 18px; }
+.ce-day-number { min-width: 20px; height: 20px; font-size: 11px; }
+.ce-week .ce-event-chip { min-height: 17px; padding: 3px 5px; font-size: 9px; line-height: 1.2; }
+.ce-week.ce-five-days .ce-day { height: 76px; min-height: 76px; }
+.ce-calendar-weekmode .ce-week .ce-day, .ce-week.ce-week-expanded .ce-day { height: 148px; min-height: 148px; }
+.ce-week.ce-week-expanded .ce-event-chip { min-height: 24px; padding: 5px 7px; font-size: 10px; }
+.ce-day { cursor: pointer; }
+.ce-day:active { transform: scale(.996); }
+@media (max-width: 760px) {
+  .ce-week .ce-day, .ce-week.ce-five-days .ce-day { height: 72px; min-height: 72px; }
+  .ce-calendar-weekmode .ce-week .ce-day, .ce-week.ce-week-expanded .ce-day { height: 130px; min-height: 130px; }
+}
+
+
+/* Autocomplete de alunos e turmas para abono */
+.ce-publicos { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ce-publicos > small { font-size: 11px; color: #7880a2; line-height: 1.5; }
+.ce-publicos-selecionados { display: flex; flex-wrap: wrap; gap: 7px; }
+.ce-publicos-selecionados:empty { display: none; }
+.ce-publico-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; border: 1px solid #d9d0ff; background: #f2eeff; color: #4b25c9; padding: 5px 7px 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; animation: ce-chip-in 180ms ease both; }
+.ce-publico-chip > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ce-publico-chip button { border: 0; background: transparent; color: inherit; font-size: 17px; line-height: 1; padding: 0 2px; }
+.ce-autocomplete { position: relative; }
+.ce-autocomplete > input { width: 100%; min-height: 41px; border: 1px solid #dfe3f0; border-radius: 9px; background: #fff; color: #222b52; padding: 9px 12px; font-size: 12px; }
+.ce-sugestoes { position: absolute; z-index: 25; top: calc(100% + 5px); left: 0; right: 0; max-height: 280px; overflow-y: auto; padding: 6px; background: #fff; border: 1px solid #e1def1; border-radius: 11px; box-shadow: 0 14px 32px rgba(36,24,70,.17); animation: ce-chip-in 160ms ease both; }
+.ce-sugestoes button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-radius: 7px; background: transparent; color: #252b48; padding: 9px; }
+.ce-sugestoes button:hover, .ce-sugestoes button:focus-visible { background: #f4f0ff; }
+.ce-sugestoes button > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; flex: 1; }
+.ce-sugestoes strong { font-size: 12px; }
+.ce-sugestoes small { color: #77809d; font-size: 10px; }
+.ce-sugestao-icone { width: 29px; height: 29px; border-radius: 8px; display: grid; place-items: center; color: #633df2; background: #eee9ff; flex-shrink: 0; }
+.ce-sugestao-adicionar { color: #633df2; font-size: 18px; }
+.ce-sugestao-vazio { margin: 0; padding: 11px; color: #7d839f; font-size: 12px; }
+@keyframes ce-chip-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+[data-theme="dark"] .ce-publico-chip { background: #302658; color: #ded5ff; border-color: #59459d; }
+[data-theme="dark"] .ce-autocomplete > input, [data-theme="dark"] .ce-sugestoes { background: #1b2639; border-color: #30405a; color: #e8edf5; }
+[data-theme="dark"] .ce-sugestoes button { color: #e8edf5; }
+[data-theme="dark"] .ce-sugestoes button:hover, [data-theme="dark"] .ce-sugestoes button:focus-visible { background: #302658; }
+@media (prefers-reduced-motion: reduce) { .ce-publico-chip, .ce-sugestoes { animation: none; } }
