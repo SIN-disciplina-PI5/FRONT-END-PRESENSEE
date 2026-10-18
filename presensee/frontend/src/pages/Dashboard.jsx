@@ -19,6 +19,7 @@ import { IconAlunos, IconAlertas, MascotAvatar } from "../components/Icons"
 import api from "../services/api"
 import { getToken, getUsuario } from "../services/auth"
 import "../styles/Dashboard.css"
+import NotificacoesHome from "../components/NotificacoesHome"
 
 const DADOS_DEMONSTRACAO = {
   totalAlunos: 350,
@@ -301,10 +302,14 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="pd-mes-atual" aria-label={`Mês atual: ${obterMesAtual()}`}>
-            <IconCalendario />
-            <span>{obterMesAtual()}</span>
-          </div>
+          <div className="pnot-header-actions">
+     <NotificacoesHome />
+     <div className="pd-mes-atual" aria-label={`Mês atual: ${obterMesAtual()}`}>
+       <IconCalendario />
+       <span>{obterMesAtual()}</span>
+     </div>
+   </div>
+
         </header>
 
         {carregando ? (
