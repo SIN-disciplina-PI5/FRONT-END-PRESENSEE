@@ -688,3 +688,231 @@
     font-size: 22px;
   }
 }
+
+/* =========================================================
+   Refinamento: calendário amplo, semana útil e animações
+   ========================================================= */
+
+.ce-layout {
+  grid-template-columns: minmax(0, 1fr);
+  transition: grid-template-columns 240ms ease;
+}
+
+.ce-layout.ce-layout-open {
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 355px);
+}
+
+.ce-calendar-content {
+  animation: ce-calendar-enter 280ms ease both;
+}
+
+.ce-form-panel {
+  animation: ce-panel-enter 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ce-weekdays,
+.ce-week {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.ce-weekdays.ce-five-days,
+.ce-week.ce-five-days {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-width: 500px;
+}
+
+.ce-day {
+  cursor: pointer;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.ce-day:focus-visible {
+  outline: 2px solid #633df2;
+  outline-offset: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+.ce-day.ce-today .ce-day-number {
+  display: grid;
+  place-items: center;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: #633df2;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.ce-event-chip {
+  display: block;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.ce-event-chip:hover {
+  transform: translateX(2px);
+  filter: saturate(1.2);
+}
+
+.ce-nav button:hover,
+.ce-view-switch button:hover,
+.ce-list-event:hover,
+.ce-row-actions button:hover {
+  transform: translateY(-2px);
+}
+
+.ce-card {
+  transition: box-shadow 200ms ease;
+}
+
+.ce-card:hover {
+  box-shadow: 0 8px 24px rgba(75, 37, 201, 0.09);
+}
+
+.ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) {
+  min-width: 625px;
+}
+
+.ce-week.ce-five-days .ce-day {
+  min-height: 120px;
+  height: auto;
+}
+
+.ce-view-switch {
+  flex-wrap: wrap;
+}
+
+@keyframes ce-calendar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ce-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-theme="dark"] .ce-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .ce-day.ce-today .ce-day-number {
+  background: #22d3c5;
+  color: #0b1220;
+}
+
+@media (max-width: 1180px) {
+  .ce-layout.ce-layout-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ce-form-panel {
+    animation-name: ce-calendar-enter;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ce-page *,
+  .ce-page *::before,
+  .ce-page *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================
+   Calendário visual V3 — legibilidade e ocupação da tela
+   ========================================================== */
+.ce-calendar { padding: 20px 20px 14px; overflow: hidden; }
+.ce-toolbar { gap: 15px 20px; padding-bottom: 16px; margin-bottom: 0; border-bottom: 1px solid #ececf5; }
+.ce-period-title { font-size: 19px !important; color: #242042; letter-spacing: -.3px; }
+.ce-nav { gap: 6px; }
+.ce-nav button { border-radius: 10px; font-weight: 700; }
+.ce-view-switch { padding: 4px; border: 1px solid #eae7f6; border-radius: 12px; background: #f7f5fe; gap: 3px; }
+.ce-view-switch button { min-height: 33px; background: transparent; border: 0; padding: 7px 12px; border-radius: 9px; }
+.ce-view-switch button.ativo { box-shadow: 0 2px 7px #633df229; }
+.ce-calendar-scroll { width: 100%; overflow-x: auto; padding-top: 12px; }
+.ce-weekdays, .ce-week, .ce-weekdays.ce-five-days, .ce-week.ce-five-days, .ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) { min-width: 0; }
+.ce-weekdays { overflow: hidden; border: 1px solid #eaeaf3; border-bottom: 0; border-radius: 11px 11px 0 0; background: #f7f7fc; }
+.ce-weekdays span { border: 0; padding: 12px 6px; font-size: 12px; font-weight: 700; color: #676c88; }
+.ce-weekdays span:last-child { border: 0; }
+.ce-week { border-left: 1px solid #eaeaf3; }
+.ce-week:last-child { border-bottom: 1px solid #eaeaf3; border-radius: 0 0 11px 11px; overflow: hidden; }
+.ce-day { height: clamp(94px, 9.5vw, 122px); padding: 9px 8px; border-color: #eaeaf3; border-right: 1px solid #eaeaf3; gap: 8px; position: relative; transition: background-color .2s ease, box-shadow .2s ease; }
+.ce-day:last-child { border-right: 1px solid #eaeaf3; }
+.ce-day:hover { background: #f4f0ff; box-shadow: inset 0 0 0 1px #c9baff; z-index: 1; }
+.ce-day.ce-selected { background: #f7f3ff; outline: 2px solid #8d73f6; outline-offset: -2px; z-index: 2; }
+.ce-day-out { background: #f8f8fc; }
+.ce-day-head { display: flex; justify-content: flex-end; gap: 5px; align-items: center; min-height: 24px; }
+.ce-day-number { align-self: auto; display: grid; place-items: center; min-width: 23px; height: 23px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.ce-day-caption { font-size: 11px; color: #8c91a8; }
+.ce-day-events { gap: 4px; }
+.ce-event-chip { display: block; min-height: 22px; width: 100%; border-radius: 6px; padding: 5px 6px; font-size: 10px; font-weight: 600; line-height: 1.2; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ce-event-chip:hover { transform: translateY(-1px); filter: brightness(.97); }
+.ce-more-events { display: block; color: #6352a1; font-weight: 600; padding-left: 5px; }
+.ce-calendar-weekmode .ce-day, .ce-week.ce-week-expanded .ce-day, .ce-week.ce-five-days .ce-day { min-height: 205px; height: auto; }
+.ce-week.ce-week-expanded .ce-event-chip { min-height: 30px; padding: 8px; font-size: 11px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ce-calendar-footer { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding-top: 11px; }
+.ce-calendar-footer > span { white-space: nowrap; font-size: 11px; font-weight: 600; color: #796ca3; }
+.ce-hint { margin: 0; }
+[data-theme="dark"] .ce-toolbar { border-color: #30405a; }
+[data-theme="dark"] .ce-period-title { color: #f1f5f9; }
+[data-theme="dark"] .ce-view-switch { border-color: #30405a; background: #1b2639; }
+[data-theme="dark"] .ce-weekdays { background: #192235; border-color: #30405a; }
+[data-theme="dark"] .ce-weekdays span { color: #bdc7dc; }
+[data-theme="dark"] .ce-week { border-color: #30405a; }
+[data-theme="dark"] .ce-day { border-color: #30405a; }
+[data-theme="dark"] .ce-day-out { background: #111a2b; }
+[data-theme="dark"] .ce-day.ce-selected { background: #282344; }
+[data-theme="dark"] .ce-day-caption { color: #a8b3c2; }
+@media (max-width: 1100px) {
+  .ce-layout.ce-layout-open { grid-template-columns: minmax(0,1fr); }
+  .ce-toolbar { justify-content: space-between; }
+  .ce-weekdays, .ce-week, .ce-week:not(.ce-five-days):has(> .ce-day:nth-child(7)) { min-width: 600px; }
+  .ce-weekdays.ce-five-days, .ce-week.ce-five-days { min-width: 440px; }
+}
+@media (max-width: 760px) {
+  .ce-calendar { padding: 12px; }
+  .ce-toolbar { align-items: flex-start; }
+  .ce-period-title { order: -1; flex-basis: 100%; }
+  .ce-day { height: 100px; }
+  .ce-calendar-footer { flex-wrap: wrap; }
+}
+
+/* Ajuste compacto: mês completo e semana útil sem fins de semana. */
+.ce-page { max-width: 1400px; }
+.ce-calendar { padding: 15px 16px 12px; }
+.ce-toolbar { padding-bottom: 10px; gap: 10px; }
+.ce-calendar-scroll { padding-top: 8px; }
+.ce-weekdays span { padding: 8px 4px; font-size: 11px; }
+.ce-week .ce-day { height: 76px; min-height: 76px; padding: 5px 7px; gap: 3px; }
+.ce-day-head { min-height: 18px; }
+.ce-day-number { min-width: 20px; height: 20px; font-size: 11px; }
+.ce-week .ce-event-chip { min-height: 17px; padding: 3px 5px; font-size: 9px; line-height: 1.2; }
+.ce-week.ce-five-days .ce-day { height: 76px; min-height: 76px; }
+.ce-calendar-weekmode .ce-week .ce-day, .ce-week.ce-week-expanded .ce-day { height: 148px; min-height: 148px; }
+.ce-week.ce-week-expanded .ce-event-chip { min-height: 24px; padding: 5px 7px; font-size: 10px; }
+.ce-day { cursor: pointer; }
+.ce-day:active { transform: scale(.996); }
+@media (max-width: 760px) {
+  .ce-week .ce-day, .ce-week.ce-five-days .ce-day { height: 72px; min-height: 72px; }
+  .ce-calendar-weekmode .ce-week .ce-day, .ce-week.ce-week-expanded .ce-day { height: 130px; min-height: 130px; }
+}
