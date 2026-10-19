@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../services/auth";
+import { ALUNOS_INICIAIS } from "../pages/Alunos";
 import "../styles/NotificacoesHome.css";
 
 
@@ -9,6 +10,7 @@ const EXEMPLOS = [
     id: "demo-alerta-1",
     titulo: "Faltas consecutivas",
     estudante: "Gabriel Soares",
+    matricula: "006",
     descricao: "O estudante acumulou 4 faltas consecutivas.",
     nivel: "alto",
     quando: "Hoje",
@@ -17,6 +19,7 @@ const EXEMPLOS = [
     id: "demo-alerta-2",
     titulo: "Frequência em atenção",
     estudante: "Pedro Henrique",
+    matricula: "005",
     descricao: "A frequência do estudante está abaixo do esperado.",
     nivel: "medio",
     quando: "Ontem",
@@ -25,6 +28,7 @@ const EXEMPLOS = [
     id: "demo-alerta-3",
     titulo: "Acompanhamento recomendado",
     estudante: "Marcos Heitor",
+    matricula: "003",
     descricao: "Revise os indicadores de presença deste estudante.",
     nivel: "medio",
     quando: "Esta semana",
@@ -46,7 +50,21 @@ export default function NotificacoesHome({ notificacoes }) {
   const navigate = useNavigate();
   const areaRef = useRef(null);
   const isDemo = getToken() === "token-demo";
-  const alertas = Array.isArray(notificacoes) ? notificacoes : isDemo ? EXEMPLOS : [];
+  // Resolva cada alerta com a mesma lista usada em Alunos.jsx.
+  // Caso um registro não exista, não crie automaticamente um perfil fictício.
+  const fonte = Array.isArray(notificacoes) ? notificacoes : isDemo ? EXEMPLOS : [];
+  const alertas = fonte.map((alerta) => {
+    const matricula = String(alerta.matricula ?? alerta.alunoId ?? "").trim();
+    const aluno = ALUNOS_INICIAIS.find((item) =>
+      (matricula && String(item.matricula) === matricula) ||
+      (!matricula && alerta.estudante && item.nome.toLocaleLowerCase("pt-BR") === String(alerta.estudante).toLocaleLowerCase("pt-BR"))
+    );
+    return {
+      ...alerta,
+      matricula: aluno?.matricula ?? null,
+      estudante: aluno?.nome ?? alerta.estudante,
+    };
+  });
   const [aberto, setAberto] = useState(false);
   const [lidos, setLidos] = useState([]);
   const naoLidos = alertas.filter((alerta) => !lidos.includes(alerta.id)).length;
@@ -72,7 +90,15 @@ export default function NotificacoesHome({ notificacoes }) {
   function visualizar(alerta) {
     setLidos((anteriores) => [...new Set([...anteriores, alerta.id])]);
     setAberto(false);
-    navigate("/alunos");
+    // O perfil usa a matrícula na rota /alunos/:id.
+    // A matrícula é confirmada contra os alunos exibidos na página Alunos.
+    const idAluno = alerta.matricula;
+    if (idAluno !== undefined && idAluno !== null && String(idAluno).trim()) {
+      navigate(`/alunos/${encodeURIComponent(String(idAluno))}`);
+    } else {
+      // Sem identificador confiável, não tentamos adivinhar pelo nome.
+      navigate("/alunos");
+    }
   }
 
   return (

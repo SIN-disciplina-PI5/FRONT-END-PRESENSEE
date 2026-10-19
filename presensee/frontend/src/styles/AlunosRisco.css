@@ -1,0 +1,98 @@
+/* =====================================================
+   PRESENSEE — CARTÕES DE RISCO E FREQUÊNCIA
+   Contorno colorido apenas no cartão selecionado.
+   Importar após Alunos.css.
+===================================================== */
+
+.alunos-page button.alunos-resumo-card {
+  width: 100%;
+  border: 2px solid transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.alunos-page button.alunos-resumo-card:hover {
+  transform: translateY(-2px);
+}
+
+/* O cartão mantém a borda neutra se não está selecionado. */
+.alunos-page button.alunos-resumo-card:not(.selecionado) {
+  border-color: var(--color-border, #e2e2ea);
+  outline: none;
+}
+
+.alunos-page button.alunos-resumo-card.total.selecionado {
+  border-color: #633df2;
+  box-shadow: 0 5px 20px rgba(99, 61, 242, 0.18);
+}
+
+.alunos-page button.alunos-resumo-card.baixo.selecionado {
+  border-color: #16a765;
+  box-shadow: 0 5px 20px rgba(22, 167, 101, 0.18);
+}
+
+.alunos-page button.alunos-resumo-card.medio.selecionado {
+  border-color: #e5a900;
+  box-shadow: 0 5px 20px rgba(229, 169, 0, 0.18);
+}
+
+.alunos-page button.alunos-resumo-card.alto.selecionado {
+  border-color: #ea3e4e;
+  box-shadow: 0 5px 20px rgba(234, 62, 78, 0.18);
+}
+
+/* Destaque de teclado, sem modificar a cor do risco selecionado. */
+.alunos-page button.alunos-resumo-card:focus-visible {
+  outline: 2px solid #9880ff;
+  outline-offset: 3px;
+}
+
+/* Barras de frequência: verde >= 90%, amarelo 75–89%, vermelho < 75%.
+   A classe baixo/medio/alto é atribuída pelo JSX. */
+.alunos-page progress.alunos-progresso.baixo {
+  accent-color: #16a765;
+}
+.alunos-page progress.alunos-progresso.medio {
+  accent-color: #e5a900;
+}
+.alunos-page progress.alunos-progresso.alto {
+  accent-color: #ea3e4e;
+}
+
+.alunos-page progress.alunos-progresso.baixo::-webkit-progress-value {
+  background-color: #16a765;
+}
+.alunos-page progress.alunos-progresso.medio::-webkit-progress-value {
+  background-color: #e5a900;
+}
+.alunos-page progress.alunos-progresso.alto::-webkit-progress-value {
+  background-color: #ea3e4e;
+}
+
+.alunos-page progress.alunos-progresso.baixo::-moz-progress-bar {
+  background-color: #16a765;
+}
+.alunos-page progress.alunos-progresso.medio::-moz-progress-bar {
+  background-color: #e5a900;
+}
+.alunos-page progress.alunos-progresso.alto::-moz-progress-bar {
+  background-color: #ea3e4e;
+}
+
+/* Modo escuro: cartão inativo continua neutro. */
+[data-theme="dark"] .alunos-page button.alunos-resumo-card:not(.selecionado) {
+  border-color: var(--color-border, #303954);
+}
+
+[data-theme="dark"] .alunos-page button.alunos-resumo-card.total.selecionado {
+  border-color: #9880ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alunos-page button.alunos-resumo-card {
+    transition: none;
+  }
+}
