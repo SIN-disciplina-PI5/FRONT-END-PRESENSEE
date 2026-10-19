@@ -1,4 +1,3 @@
-/* PresenSee | Refinamento da listagem de Alunos — preserva os estilos de modais */
 .alunos-page {
     width: 100%;
     max-width: none;
@@ -7,38 +6,38 @@
     box-sizing: border-box;
     color: #111827;
 }
-
+ 
 .alunos-page .alunos-header {
     margin-bottom: 22px;
 }
-
+ 
 .alunos-page .alunos-header h1 {
     margin: 0 0 4px;
     font-size: clamp(22px, 2vw, 29px);
     color: #4b25c9;
     font-weight: 750;
 }
-
+ 
 .alunos-page .alunos-header h2 {
     margin: 0;
     color: #4b25c9;
     font-size: 21px;
 }
-
+ 
 .alunos-page .alunos-header p {
     margin: 8px 0 0;
     font-size: 13px;
     font-weight: 400;
     color: #667085;
 }
-
+ 
 .alunos-resumo {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
-
+ 
 .alunos-resumo-card {
     min-width: 0;
     min-height: 110px;
@@ -51,27 +50,27 @@
     box-sizing: border-box;
     background: #fff;
 }
-
+ 
 .alunos-resumo-card.total {
     border-color: #e1d9ff;
     background: #f8f6ff;
 }
-
+ 
 .alunos-resumo-card.baixo {
     border-color: #d7f1e2;
     background: #f4fcf7;
 }
-
+ 
 .alunos-resumo-card.medio {
     border-color: #ffebc3;
     background: #fffbf1;
 }
-
+ 
 .alunos-resumo-card.alto {
     border-color: #ffd6da;
     background: #fff6f7;
 }
-
+ 
 .alunos-resumo-icone {
     display: grid;
     place-items: center;
@@ -83,45 +82,45 @@
     color: #633df2;
     font-size: 28px;
 }
-
+ 
 .alunos-resumo-card.baixo .alunos-resumo-icone {
     background: #def7e8;
     color: #17b765;
 }
-
+ 
 .alunos-resumo-card.medio .alunos-resumo-icone {
     background: #fff0c9;
     color: #e9ac00;
 }
-
+ 
 .alunos-resumo-card.alto .alunos-resumo-icone {
     background: #ffe2e5;
     color: #eb334d;
 }
-
+ 
 .alunos-resumo-card>div {
     display: flex;
     flex-direction: column;
     gap: 3px;
     min-width: 0;
 }
-
+ 
 .alunos-resumo-card strong {
     font-size: 27px;
     line-height: 1;
     color: #101828;
 }
-
+ 
 .alunos-resumo-card b {
     font-size: 13px;
     color: #29304b;
 }
-
+ 
 .alunos-resumo-card small {
     color: #7b849b;
     font-size: 11px;
 }
-
+ 
 .alunos-filtros-panel {
     display: grid;
     grid-template-columns: minmax(220px, 2.4fr) repeat(3, minmax(115px, 1fr));
@@ -133,21 +132,21 @@
     background: #fff;
     box-shadow: 0 5px 24px #1a174b0b;
 }
-
+ 
 .alunos-busca {
     position: relative;
     display: flex;
     align-items: center;
     min-width: 0;
 }
-
+ 
 .alunos-busca>span {
     position: absolute;
     left: 14px;
     color: #787a99;
     font-size: 25px;
 }
-
+ 
 .alunos-page .search-aluno {
     width: 100%;
     height: 43px;
@@ -158,20 +157,20 @@
     background: #fff;
     font-size: 13px;
 }
-
+ 
 .alunos-filtro {
     display: flex;
     flex-direction: column;
     gap: 7px;
     min-width: 0;
 }
-
+ 
 .alunos-filtro label {
     color: #2b3151;
     font-weight: 650;
     font-size: 12px;
 }
-
+ 
 .alunos-filtro select, .alunos-por-pagina select {
     width: 100%;
     height: 43px;
@@ -183,43 +182,43 @@
     font-size: 12px;
     cursor: pointer;
 }
-
+ 
 .alunos-tabela-panel {
     border-radius: 15px;
     background: #fff;
     box-shadow: 0 5px 25px #1a174b0e;
     overflow: hidden;
 }
-
+ 
 .alunos-tabela-scroll {
     overflow-x: auto;
 }
-
+ 
 .alunos-page .students-table {
     width: 100%;
     min-width: 710px;
     border-radius: 0;
     box-shadow: none;
 }
-
+ 
 .alunos-page .students-table th {
     padding: 15px 16px;
     background: #111827;
     color: #fff;
     font-size: 12px;
 }
-
+ 
 .alunos-page .students-table td {
     height: 62px;
     padding: 10px 16px;
     color: #253047;
     font-size: 13px;
 }
-
+ 
 .alunos-page .students-table tbody tr {
     cursor: default;
 }
-
+ 
 .alunos-ordenar {
     background: transparent;
     border: 0;
@@ -228,19 +227,19 @@
     cursor: pointer;
     padding: 0;
 }
-
+ 
 .alunos-ordenar span {
     margin-left: 6px;
     opacity: .7;
 }
-
+ 
 .alunos-nome {
     display: flex;
     align-items: center;
     gap: 12px;
     white-space: nowrap;
 }
-
+ 
 .alunos-avatar {
     display: grid;
     flex: 0 0 37px;
@@ -253,7 +252,7 @@
     font-weight: 700;
     font-size: 12px;
 }
-
+ 
 .alunos-turma-tag {
     display: inline-block;
     padding: 7px 12px;
@@ -262,19 +261,19 @@
     background: #eee9ff;
     font-weight: 700;
 }
-
+ 
 .alunos-frequencia {
     display: flex;
     align-items: center;
     gap: 12px;
     min-width: 140px;
 }
-
+ 
 .alunos-frequencia>span {
     flex: 0 0 38px;
     font-weight: 600;
 }
-
+ 
 .alunos-progresso {
     flex: 1;
     height: 10px;
@@ -283,25 +282,25 @@
     overflow: hidden;
     background: #e8eaf1;
 }
-
+ 
 .alunos-progresso i {
     display: block;
     height: 100%;
     border-radius: inherit;
 }
-
+ 
 .alunos-progresso i.baixo {
     background: #20c36b;
 }
-
+ 
 .alunos-progresso i.medio {
     background: #edb600;
 }
-
+ 
 .alunos-progresso i.alto {
     background: #f02e42;
 }
-
+ 
 .alunos-page .risk-status {
     display: inline-flex;
     gap: 8px;
@@ -309,28 +308,28 @@
     padding: 7px 12px;
     font-weight: 650;
 }
-
+ 
 .alunos-page .risk-status.baixo {
     color: #13824f;
     background: #e2f8eb;
 }
-
+ 
 .alunos-page .risk-status.médio {
     color: #a66c00;
     background: #fff4d4;
 }
-
+ 
 .alunos-page .risk-status.alto {
     color: #d9233a;
     background: #ffe7e9;
 }
-
+ 
 .alunos-page .risk-status .risk-dot {
     width: 9px;
     height: 9px;
     flex: 0 0 9px;
 }
-
+ 
 .alunos-ver {
     border: 0;
     padding: 9px 11px;
@@ -342,23 +341,23 @@
     cursor: pointer;
     white-space: nowrap;
 }
-
+ 
 .alunos-ver:hover {
     background: #e3dbff;
 }
-
+ 
 .alunos-ver span {
     margin-left: 6px;
     font-size: 18px;
     vertical-align: middle;
 }
-
+ 
 .alunos-vazio {
     text-align: center;
     padding: 30px !important;
     color: #667085 !important;
 }
-
+ 
 .alunos-paginacao {
     display: flex;
     justify-content: space-between;
@@ -369,13 +368,13 @@
     color: #667085;
     font-size: 12px;
 }
-
+ 
 .alunos-paginas {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
+ 
 .alunos-paginas button {
     width: 30px;
     height: 30px;
@@ -386,12 +385,12 @@
     background: #f1edff;
     font-size: 20px;
 }
-
+ 
 .alunos-paginas button:disabled {
     opacity: .35;
     cursor: not-allowed;
 }
-
+ 
 .alunos-paginas strong {
     display: grid;
     place-items: center;
@@ -401,127 +400,91 @@
     background: #633df2;
     color: #fff;
 }
-
+ 
 .alunos-por-pagina {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
+ 
 .alunos-por-pagina select {
     width: 65px;
     height: 32px;
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-header h2 {
     color: #a990ff;
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-header p {
     color: #aab6c8;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card, [data-theme="dark"] .alunos-filtros-panel, [data-theme="dark"] .alunos-tabela-panel {
     background: #141b2d;
     border-color: #2a3850;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card strong, [data-theme="dark"] .alunos-resumo-card b, [data-theme="dark"] .alunos-filtro label {
     color: #f4f6fb;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card small {
     color: #aab6c8;
 }
-
+ 
 [data-theme="dark"] .alunos-filtro select, [data-theme="dark"] .alunos-por-pagina select {
     background: #1b2639;
     color: #e9edff;
     border-color: #414363;
 }
-
+ 
 [data-theme="dark"] .alunos-page .students-table {
     background: #141b2d;
 }
-
+ 
 [data-theme="dark"] .alunos-paginacao {
     color: #b8c2d1;
 }
-
-@media(max-width: 1100px) {
-    .alunos-resumo {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-    .alunos-filtros-panel {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-    }
-}
-
-@media(max-width: 650px) {
-    .alunos-resumo {
-        grid-template-columns: 1fr 1fr;
-        gap: 9px;
-    }
-    .alunos-resumo-card {
-        padding: 12px;
-        min-height: 95px;
-        gap: 10px;
-    }
-    .alunos-resumo-icone {
-        flex-basis: 34px;
-        width: 34px;
-        height: 34px;
-        font-size: 21px;
-    }
-    .alunos-resumo-card strong {
-        font-size: 22px;
-    }
-    .alunos-filtros-panel {
-        grid-template-columns: 1fr;
-    }
-    .alunos-paginacao {
-        justify-content: center;
-    }
-}
-
+ 
 .alunos-page progress.alunos-progresso {
     appearance: none;
     -webkit-appearance: none;
     border: 0;
     height: 10px;
 }
-
+ 
 .alunos-page progress.alunos-progresso::-webkit-progress-bar {
     background: #e8eaf1;
     border-radius: 20px;
 }
-
+ 
 .alunos-page progress.alunos-progresso::-webkit-progress-value {
     background: #20c36b;
     border-radius: 20px;
 }
-
+ 
 .alunos-page progress.alunos-progresso.medio::-webkit-progress-value {
     background: #edb600;
 }
-
+ 
 .alunos-page progress.alunos-progresso.alto::-webkit-progress-value {
     background: #f02e42;
 }
-
+ 
 .alunos-page progress.alunos-progresso::-moz-progress-bar {
     background: #20c36b;
     border-radius: 20px;
 }
-
+ 
 .alunos-page progress.alunos-progresso.medio::-moz-progress-bar {
     background: #edb600;
 }
-
+ 
 .alunos-page progress.alunos-progresso.alto::-moz-progress-bar {
     background: #f02e42;
 }
-
+ 
 /* Modais de aluno, frequência, notas e ocorrências */
 .student-modal-overlay {
     position:fixed;
@@ -533,7 +496,7 @@
     padding:18px;
     background:rgba(8,13,30,.55)
 }
-
+ 
 .student-modal {
     position:relative;
     width:min(620px,96vw);
@@ -546,7 +509,7 @@
     box-shadow:0 18px 60px #0003;
     color:#172033
 }
-
+ 
 .close-modal {
     position:absolute;
     top:10px;
@@ -557,7 +520,7 @@
     color:#667085;
     cursor:pointer
 }
-
+ 
 .student-modal-header {
     display:flex;
     align-items:center;
@@ -565,18 +528,18 @@
     margin-bottom:20px;
     padding-right:17px
 }
-
+ 
 .student-modal-header h2 {
     font-size:18px;
     margin:0
 }
-
+ 
 .student-modal-header p {
     font-size:12px;
     color:#667085;
     margin:3px 0 0
 }
-
+ 
 .student-avatar {
     display:grid;
     place-items:center;
@@ -587,7 +550,7 @@
     background:#eee8ff;
     font-size:22px
 }
-
+ 
 .modal-risk {
     margin-left:auto;
     padding:7px 10px;
@@ -596,29 +559,29 @@
     font-weight:700;
     white-space:nowrap
 }
-
+ 
 .modal-risk.baixo {
     background:#e3f8e9;
     color:#168438
 }
-
+ 
 .modal-risk.médio {
     background:#fff4cf;
     color:#a87800
 }
-
+ 
 .modal-risk.alto {
     background:#ffe3e3;
     color:#c40000
 }
-
+ 
 .student-summary {
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:10px;
     margin:22px 0
 }
-
+ 
 .student-summary>div,.student-summary>button {
     min-height:83px;
     background:#f5f5fa;
@@ -630,50 +593,50 @@
     justify-content:center;
     gap:6px
 }
-
+ 
 .student-summary strong {
     font-size:24px;
     color:#171b31
 }
-
+ 
 .student-summary span {
     font-size:11px;
     color:#666
 }
-
+ 
 .frequency-summary {
     cursor:pointer
 }
-
+ 
 .frequency-summary strong {
     color:#633df2
 }
-
+ 
 .frequency-summary:hover {
     background:#eee9ff
 }
-
+ 
 .risk-reason {
     margin-bottom:20px
 }
-
+ 
 .risk-reason h3 {
     font-size:14px;
     margin-bottom:12px
 }
-
+ 
 .risk-reason div {
     font-size:12px;
     color:#667085;
     margin:7px 0
 }
-
+ 
 .student-actions {
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:10px
 }
-
+ 
 .student-actions button {
     border:1px solid #ddd5fb;
     border-radius:10px;
@@ -681,17 +644,17 @@
     padding:13px 8px;
     cursor:pointer
 }
-
+ 
 .student-actions button:hover {
     background:#f4f1ff
 }
-
+ 
 .student-actions button span {
     display:block;
     margin-top:5px;
     font-size:12px
 }
-
+ 
 .frequency-title {
     display:flex;
     justify-content:space-between;
@@ -699,12 +662,12 @@
     gap:15px;
     margin:15px 0
 }
-
+ 
 .frequency-title h2,.detail-title {
     font-size:20px;
     margin:0 0 10px
 }
-
+ 
 .frequency-month-select,.notes-filter select {
     padding:8px;
     border-radius:8px;
@@ -712,7 +675,7 @@
     background:#fff;
     color:#172033
 }
-
+ 
 .frequency-circle {
     display:grid;
     place-items:center;
@@ -723,20 +686,20 @@
     height:76px;
     font-weight:700
 }
-
+ 
 .frequency-week,.frequency-grid {
     display:grid;
     grid-template-columns:repeat(5,minmax(0,1fr));
     gap:8px;
     text-align:center
 }
-
+ 
 .frequency-week {
     font-size:12px;
     color:#667085;
     margin:12px 0
 }
-
+ 
 .frequency-day {
     display:flex;
     flex-direction:column;
@@ -744,23 +707,23 @@
     gap:3px;
     padding:5px
 }
-
+ 
 .day-number {
     font-size:12px
 }
-
+ 
 .day-status {
     font-size:21px
 }
-
+ 
 .day-status.presente {
     color:#1bbd66
 }
-
+ 
 .day-status.falta {
     color:#e13a4b
 }
-
+ 
 .back-frequency {
     margin-top:18px;
     background:#633df2;
@@ -770,13 +733,13 @@
     border-radius:8px;
     cursor:pointer
 }
-
+ 
 .alunos-modal-aviso {
     font-size:11px;
     color:#80889b;
     margin:12px 0
 }
-
+ 
 .notes-filter {
     display:flex;
     align-items:center;
@@ -784,18 +747,18 @@
     font-size:12px;
     margin:12px 0
 }
-
+ 
 .notes-table-wrapper {
     overflow:auto;
     border:1px solid #eee;
     border-radius:10px
 }
-
+ 
 .notes-table {
     border-collapse:collapse;
     width:100%
 }
-
+ 
 .notes-table th {
     background:#111827;
     color:#fff;
@@ -803,46 +766,46 @@
     font-size:12px;
     padding:11px
 }
-
+ 
 .notes-table td {
     font-size:12px;
     border-bottom:1px solid #eee;
     padding:11px
 }
-
+ 
 .note-badge {
     padding:4px 7px;
     border-radius:6px;
     font-weight:700
 }
-
+ 
 .nota-alta {
     background:#dcfce7;
     color:#166534
 }
-
+ 
 .nota-media {
     background:#fef3c7;
     color:#92400e
 }
-
+ 
 .nota-baixa {
     background:#fee2e2;
     color:#b91c1c
 }
-
+ 
 .trend.subindo {
     color:#15803d
 }
-
+ 
 .trend.caindo {
     color:#dc2626
 }
-
+ 
 .trend.estavel {
     color:#667085
 }
-
+ 
 .notes-average {
     margin-top:12px;
     padding:14px;
@@ -851,24 +814,24 @@
     display:flex;
     justify-content:space-between
 }
-
+ 
 .notes-average strong {
     color:#4b25c9
 }
-
+ 
 .empty-message {
     text-align:center;
     color:#667085;
     padding:24px
 }
-
+ 
 .occurrences-list {
     display:flex;
     flex-direction:column;
     gap:10px;
     margin-top:15px
 }
-
+ 
 .occurrence-item {
     display:flex;
     gap:12px;
@@ -876,87 +839,72 @@
     border-radius:10px;
     padding:14px
 }
-
+ 
 .occurrence-icon {
     font-size:23px
 }
-
+ 
 .occurrence-content {
     flex:1
 }
-
+ 
 .occurrence-top {
     display:flex;
     justify-content:space-between;
     gap:8px;
     font-size:12px
 }
-
+ 
 .occurrence-top span {
     color:#667085
 }
-
+ 
 .occurrence-content p {
     font-size:12px;
     color:#667085;
     margin:7px 0 0
 }
-
+ 
 [data-theme="dark"] .student-modal {
     background:#141b2d;
     color:#e8edf5
 }
-
+ 
 [data-theme="dark"] .student-modal-header p,[data-theme="dark"] .alunos-modal-aviso {
     color:#a8b3c2
 }
-
+ 
 [data-theme="dark"] .student-summary>div,[data-theme="dark"] .student-summary>button,[data-theme="dark"] .occurrence-item {
     background:#1b2639;
     color:#e8edf5
 }
-
+ 
 [data-theme="dark"] .student-summary strong,[data-theme="dark"] .occurrence-top strong {
     color:#fff
 }
-
+ 
 [data-theme="dark"] .student-actions button,[data-theme="dark"] .frequency-month-select,[data-theme="dark"] .notes-filter select {
     background:#1b2639;
     color:#e8edf5;
     border-color:#35445c
 }
-
+ 
 [data-theme="dark"] .notes-table td {
     color:#e8edf5;
     border-color:#2a3850
 }
-
+ 
 [data-theme="dark"] .notes-average {
     background:#211b3b
 }
-
-@media(max-width:600px) {
-    .student-summary {
-        grid-template-columns:1fr 1fr 1fr
-    }
-    .student-modal {
-        padding:18px
-    }
-    .occurrence-top {
-        flex-direction:column
-    }
-    .alunos-resumo-card b {
-        font-size:11px
-    }
-}
-
+ 
 /* Ações e data da tabela, conforme referência visual */
 .alunos-acoes {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
+ 
 .alunos-acao {
     width: 36px;
     height: 36px;
@@ -970,43 +918,43 @@
     cursor: pointer;
     transition: background 0.2s, transform 0.2s;
 }
-
+ 
 .alunos-acao:hover {
     background: #e6dfff;
     transform: translateY(-1px);
 }
-
+ 
 .alunos-atualizacao {
     color: #7b849b !important;
     white-space: nowrap;
 }
-
+ 
 .alunos-page .students-table {
     min-width: 900px;
 }
-
+ 
 .alunos-page .students-table th {
     background: #f8f9fe;
     color: #303854;
 }
-
+ 
 [data-theme="dark"] .alunos-page .students-table th {
     background: #111827;
     color: #f8fafc;
 }
-
+ 
 [data-theme="dark"] .alunos-acao {
     background: #282044;
     color: #bba8ff;
 }
-
-
+ 
+ 
 /* ===========================================================
    ALUNOS | Identidade visual da Dashboard PresenSee (pd-)
    Reutiliza cores, tipografia, espaçamentos e superfícies.
    Regras isoladas da página para não modificar outras telas.
    =========================================================== */
-
+ 
 .alunos-page {
     max-width: 1540px;
     padding: 0;
@@ -1014,21 +962,21 @@
     font-family: var(--font-body, Poppins, sans-serif);
     color: #10162f;
 }
-
+ 
 .alunos-page * {
     box-sizing: border-box;
 }
-
+ 
 .alunos-page .alunos-header {
     margin-bottom: 24px;
 }
-
+ 
 .alunos-header-usuario {
     display: flex;
     align-items: center;
     gap: 16px;
 }
-
+ 
 .alunos-header-mascote {
     display: grid;
     width: 62px;
@@ -1039,13 +987,13 @@
     border-radius: 50%;
     background: #ded8fc;
 }
-
+ 
 .alunos-header-mascote img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
+ 
 .alunos-page .alunos-header h1 {
     margin: 0;
     color: #4b25c9;
@@ -1054,14 +1002,14 @@
     line-height: 1.2;
     letter-spacing: -0.9px;
 }
-
+ 
 .alunos-page .alunos-header h2 {
     margin: 3px 0 0;
     color: #4b25c9;
     font-size: 20px;
     font-weight: 700;
 }
-
+ 
 .alunos-page .alunos-header p {
     margin: 5px 0 0;
     color: #7880a2;
@@ -1069,12 +1017,12 @@
     font-weight: 400;
     line-height: 1.4;
 }
-
+ 
 .alunos-resumo {
     gap: 17px;
     margin-bottom: 19px;
 }
-
+ 
 .alunos-resumo-card {
     min-height: 104px;
     padding: 17px 20px;
@@ -1083,32 +1031,32 @@
     box-shadow: var(--shadow-card, 0 4px 15px rgba(0, 0, 0, 0.08));
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
-
+ 
 .alunos-resumo-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 9px 24px rgba(68, 49, 151, 0.13);
 }
-
+ 
 .alunos-resumo-card.total {
     border-color: #ded5ff;
     background: linear-gradient(110deg, #f8f6ff, #fff 78%);
 }
-
+ 
 .alunos-resumo-card.baixo {
     border-color: #ccefe0;
     background: linear-gradient(110deg, #f0fcf5, #fff 78%);
 }
-
+ 
 .alunos-resumo-card.medio {
     border-color: #ffe6ac;
     background: linear-gradient(110deg, #fffaf0, #fff 78%);
 }
-
+ 
 .alunos-resumo-card.alto {
     border-color: #ffd4d7;
     background: linear-gradient(110deg, #fff5f6, #fff 78%);
 }
-
+ 
 .alunos-resumo-icone {
     width: 58px;
     height: 58px;
@@ -1117,19 +1065,19 @@
     background: #e9e1ff;
     color: #633df2;
 }
-
+ 
 .alunos-resumo-card.baixo .alunos-resumo-icone {
     background: #dcf8e9;
 }
-
+ 
 .alunos-resumo-card.medio .alunos-resumo-icone {
     background: #fff0cf;
 }
-
+ 
 .alunos-resumo-card.alto .alunos-resumo-icone {
     background: #ffe2e5;
 }
-
+ 
 .alunos-resumo-ponto {
     display: block;
     width: 22px;
@@ -1137,37 +1085,37 @@
     border-radius: 50%;
     background: currentColor;
 }
-
+ 
 .alunos-resumo-card strong {
     color: #633df2;
     font-size: clamp(26px, 2.4vw, 35px);
     font-weight: 800;
     line-height: 1.12;
 }
-
+ 
 .alunos-resumo-card.baixo strong {
     color: #11ba7a;
 }
-
+ 
 .alunos-resumo-card.medio strong {
     color: #ee9d00;
 }
-
+ 
 .alunos-resumo-card.alto strong {
     color: #e6263c;
 }
-
+ 
 .alunos-resumo-card b {
     color: #10162f;
     font-size: 13px;
     font-weight: 600;
 }
-
+ 
 .alunos-resumo-card small {
     color: #7880a2;
     font-size: 11px;
 }
-
+ 
 .alunos-filtros-panel,
 .alunos-tabela-panel {
     border: 1px solid #e9e9f2;
@@ -1175,25 +1123,25 @@
     background: #fff;
     box-shadow: var(--shadow-card, 0 4px 15px rgba(0, 0, 0, 0.08));
 }
-
+ 
 .alunos-filtros-panel {
     gap: 14px;
     margin-bottom: 19px;
     padding: 17px 20px;
 }
-
+ 
 .alunos-search-icon {
     display: grid;
     width: 20px;
     height: 20px;
     place-items: center;
 }
-
+ 
 .alunos-search-icon svg {
     width: 20px;
     height: 20px;
 }
-
+ 
 .alunos-page .search-aluno,
 .alunos-filtro select {
     height: 44px;
@@ -1204,24 +1152,24 @@
     font-family: inherit;
     font-size: 12px;
 }
-
+ 
 .alunos-page .search-aluno:focus-visible,
 .alunos-filtro select:focus-visible,
 .alunos-page button:focus-visible {
     outline: 2px solid #633df2;
     outline-offset: 2px;
 }
-
+ 
 .alunos-filtro label {
     color: #25275d;
     font-weight: 600;
 }
-
+ 
 .alunos-page .students-table {
     min-width: 860px;
     background: #fff;
 }
-
+ 
 .alunos-page .students-table th {
     padding: 16px;
     border-bottom: 1px solid #e9e9f2;
@@ -1231,152 +1179,120 @@
     font-size: 12px;
     font-weight: 700;
 }
-
+ 
 .alunos-page .students-table td {
     height: 63px;
     border-bottom: 1px solid #eef0f6;
     color: #25275d;
     font-size: 12px;
 }
-
+ 
 .alunos-page .students-table tbody tr:hover {
     background: #f8f6ff;
 }
-
+ 
 .alunos-avatar {
     background: #e9e1ff;
     color: #633df2;
 }
-
+ 
 .alunos-turma-tag {
     background: #f0ecff;
     color: #633df2;
 }
-
+ 
 .alunos-acao {
     color: #633df2;
     background: #f2efff;
 }
-
+ 
 .alunos-acao:hover {
     background: #e6dfff;
 }
-
+ 
 .alunos-paginacao {
     border-top: 1px solid #eef0f6;
 }
-
+ 
 .alunos-paginas button,
 .alunos-paginas strong {
     font-family: inherit;
 }
-
+ 
 /* Mesma paleta do modo escuro da Dashboard */
 [data-theme="dark"] .alunos-page,
 [data-theme="dark"] .alunos-page .alunos-header h1 {
     color: #e8edf5;
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-header h2 {
     color: #22d3c5;
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-header p,
 [data-theme="dark"] .alunos-resumo-card small {
     color: #a8b3c2;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card {
     background: linear-gradient(110deg, #141b2d, #0f1626 78%);
     border-color: #22304a;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card.baixo {
     background: linear-gradient(110deg, #102a25, #0f1626 78%);
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card.medio {
     background: linear-gradient(110deg, #241d0f, #0f1626 78%);
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card.alto {
     background: linear-gradient(110deg, #2a1414, #0f1626 78%);
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card b {
     color: #cbd5e1;
 }
-
+ 
 [data-theme="dark"] .alunos-resumo-card.total strong,
 [data-theme="dark"] .alunos-resumo-card.total .alunos-resumo-icone {
     color: #22d3c5;
 }
-
+ 
 [data-theme="dark"] .alunos-filtros-panel,
 [data-theme="dark"] .alunos-tabela-panel,
 [data-theme="dark"] .alunos-page .students-table {
     background: #141b2d;
     border-color: #22304a;
 }
-
+ 
 [data-theme="dark"] .alunos-page .students-table th {
     background: #111827;
     color: #f8fafc;
     border-color: #2a3850;
 }
-
+ 
 [data-theme="dark"] .alunos-page .students-table td {
     color: #e8edf5;
     border-color: #2a3850;
 }
-
+ 
 [data-theme="dark"] .alunos-page .students-table tbody tr:hover {
     background: #1a2437;
 }
-
+ 
 [data-theme="dark"] .alunos-page .search-aluno,
 [data-theme="dark"] .alunos-filtro select {
     background: #1b2639;
     color: #e8edf5;
     border-color: #35445c;
 }
-
+ 
 [data-theme="dark"] .alunos-filtro label {
     color: #cbd5e1;
 }
-
-@media (max-width: 1150px) {
-    .alunos-resumo-card {
-        padding: 13px;
-        gap: 11px;
-    }
-
-    .alunos-resumo-icone {
-        width: 49px;
-        height: 49px;
-        flex-basis: 49px;
-    }
-}
-
-@media (max-width: 680px) {
-    .alunos-header-usuario {
-        align-items: flex-start;
-    }
-
-    .alunos-header-mascote {
-        width: 48px;
-        height: 48px;
-    }
-
-    .alunos-page .alunos-header h1 {
-        font-size: 23px;
-    }
-
-    .alunos-resumo {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
+ 
 /* =========================================================
    Cards do resumo como filtros interativos
    ========================================================= */
@@ -1388,69 +1304,452 @@
     appearance: none;
     -webkit-appearance: none;
 }
-
+ 
 .alunos-page .alunos-resumo-info {
     display: flex;
     flex-direction: column;
     gap: 3px;
     min-width: 0;
 }
-
+ 
 .alunos-page .alunos-resumo-card.selecionado {
     border-width: 2px;
     padding: 16px 19px;
     box-shadow: 0 7px 20px rgba(75, 37, 201, 0.13);
 }
-
+ 
 .alunos-page .alunos-resumo-card.total.selecionado {
     border-color: #633df2;
 }
-
+ 
 .alunos-page .alunos-resumo-card.baixo.selecionado {
     border-color: #11ba7a;
 }
-
+ 
 .alunos-page .alunos-resumo-card.medio.selecionado {
     border-color: #ee9d00;
 }
-
+ 
 .alunos-page .alunos-resumo-card.alto.selecionado {
     border-color: #e6263c;
 }
-
+ 
 .alunos-page .alunos-resumo-card:focus-visible {
     outline: 3px solid #633df2;
     outline-offset: 3px;
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-resumo-card.selecionado {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
-
+ 
 [data-theme="dark"] .alunos-page .alunos-resumo-card.total.selecionado {
     border-color: #22d3c5;
 }
-
-@media (max-width: 1150px) {
-    .alunos-page .alunos-resumo-card.selecionado {
-        padding: 12px;
-    }
-}
-
+ 
 /* Alinhamento vertical da busca com os campos de seleção */
 .alunos-filtros-panel {
     align-items: end;
 }
-
+ 
 .alunos-filtros-panel .alunos-busca {
     align-self: end;
     height: 44px;
     min-height: 44px;
     margin: 0;
 }
-
+ 
 .alunos-filtros-panel .search-aluno {
     display: block;
     height: 44px;
     margin: 0;
+}
+ 
+ 
+/* ===========================================================
+   RESPONSIVIDADE | Alunos
+   =========================================================== */
+ 
+/* ---------- Ajustes fluidos (todas as telas) ---------- */
+.alunos-page {
+    min-width: 0;
+}
+ 
+.alunos-page .alunos-header p {
+    max-width: 70ch;
+}
+ 
+.alunos-tabela-panel {
+    min-width: 0;
+    max-width: 100%;
+}
+ 
+.alunos-tabela-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+ 
+.alunos-nome strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 28ch;
+}
+ 
+.student-modal-overlay {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+ 
+.student-modal {
+    overscroll-behavior: contain;
+}
+ 
+@supports (height: 100dvh) {
+    .student-modal {
+        max-height: 90dvh;
+    }
+}
+ 
+.notes-table-wrapper {
+    -webkit-overflow-scrolling: touch;
+}
+ 
+.notes-table {
+    min-width: 440px;
+}
+ 
+.occurrence-content {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+ 
+/* ---------- Notebooks pequenos / sidebar aberta (≤ 1280px) ---------- */
+@media (max-width: 1280px) {
+    .alunos-filtros-panel {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+ 
+    .alunos-filtros-panel .alunos-busca {
+        grid-column: 1 / -1;
+    }
+ 
+    .alunos-resumo-card {
+        padding: 15px;
+        gap: 13px;
+    }
+ 
+    .alunos-page .alunos-resumo-card.selecionado {
+        padding: 14px;
+    }
+ 
+    .alunos-resumo-icone {
+        width: 50px;
+        height: 50px;
+        flex-basis: 50px;
+    }
+}
+ 
+/* ---------- Tablets landscape (≤ 1100px) ---------- */
+@media (max-width: 1100px) {
+    .alunos-resumo {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+ 
+    .alunos-page .students-table {
+        min-width: 780px;
+    }
+}
+ 
+/* ---------- Tablets (≤ 992px) ---------- */
+@media (max-width: 992px) {
+    /* oculta "Última atualização" para ganhar espaço */
+   
+ 
+    .alunos-page .students-table {
+        min-width: 620px;
+    }
+ 
+    .alunos-nome strong {
+        max-width: 22ch;
+    }
+}
+ 
+/* ---------- Tablets portrait / celulares grandes (≤ 768px) ---------- */
+@media (max-width: 768px) {
+    .alunos-page .alunos-header {
+        margin-bottom: 18px;
+    }
+ 
+    .alunos-filtros-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 15px;
+        gap: 12px;
+    }
+ 
+    .alunos-filtros-panel .alunos-busca {
+        grid-column: 1 / -1;
+    }
+ 
+    /* 16px evita o zoom automático do iOS ao focar nos campos */
+    .alunos-page .search-aluno,
+    .alunos-filtro select,
+    .alunos-por-pagina select {
+        font-size: 16px;
+    }
+ 
+    .alunos-page .students-table th,
+    .alunos-page .students-table td {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+ 
+    .alunos-paginacao {
+        justify-content: center;
+        text-align: center;
+        padding: 14px;
+    }
+ 
+    .alunos-paginacao > span {
+        width: 100%;
+    }
+ 
+    .student-modal-header {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+ 
+    .frequency-title {
+        flex-wrap: wrap;
+    }
+ 
+    .student-actions {
+        gap: 8px;
+    }
+}
+ 
+/* ---------- Celulares (≤ 650px) ---------- */
+@media (max-width: 650px) {
+    .alunos-header-usuario {
+        align-items: flex-start;
+    }
+ 
+    .alunos-header-mascote {
+        width: 48px;
+        height: 48px;
+    }
+ 
+    .alunos-page .alunos-header h1 {
+        font-size: 23px;
+    }
+ 
+    .alunos-resumo {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        margin-bottom: 14px;
+    }
+ 
+    .alunos-resumo-card,
+    .alunos-page .alunos-resumo-card.selecionado {
+        padding: 12px;
+        min-height: 92px;
+        gap: 10px;
+    }
+ 
+    .alunos-resumo-icone {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        border-radius: 11px;
+        font-size: 21px;
+    }
+ 
+    .alunos-resumo-ponto {
+        width: 16px;
+        height: 16px;
+    }
+ 
+    .alunos-resumo-card strong {
+        font-size: 22px;
+    }
+ 
+    .alunos-resumo-card b {
+        font-size: 12px;
+    }
+ 
+    .alunos-resumo-card small {
+        font-size: 10px;
+    }
+ 
+    .alunos-filtros-panel {
+        grid-template-columns: 1fr;
+    }
+ 
+    .alunos-page .students-table {
+        min-width: 520px;
+    }
+ 
+    .alunos-nome strong {
+        max-width: 18ch;
+    }
+}
+ 
+/* ---------- Celulares pequenos (≤ 600px) — modal como bottom sheet ---------- */
+@media (max-width: 600px) {
+    .student-modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+ 
+    .student-modal {
+        width: 100%;
+        max-height: 92vh;
+        padding: 18px 16px;
+        padding-bottom: max(18px, env(safe-area-inset-bottom));
+        border-radius: 18px 18px 0 0;
+    }
+ 
+    @supports (height: 100dvh) {
+        .student-modal {
+            max-height: 92dvh;
+        }
+    }
+ 
+    .student-modal-header .modal-risk {
+        margin-left: 0;
+    }
+ 
+    .student-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+ 
+    .student-summary > div,
+    .student-summary > button {
+        min-height: 74px;
+        padding: 6px 4px;
+        text-align: center;
+    }
+ 
+    .student-summary strong {
+        font-size: 20px;
+    }
+ 
+    .occurrence-top {
+        flex-direction: column;
+    }
+ 
+    .frequency-week,
+    .frequency-grid {
+        gap: 4px;
+    }
+ 
+    .frequency-day {
+        padding: 3px 0;
+    }
+ 
+    .notes-table th,
+    .notes-table td {
+        padding: 9px 7px;
+    }
+}
+ 
+/* ---------- Telas muito pequenas (≤ 420px) ---------- */
+@media (max-width: 420px) {
+    .alunos-page .students-table {
+        min-width: 460px;
+    }
+ 
+    /* coluna do aluno fixa ao rolar a tabela na horizontal */
+    .alunos-page .students-table th:first-child,
+    .alunos-page .students-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+    }
+ 
+    .alunos-page .students-table td:first-child {
+        background: #fff;
+    }
+ 
+    .alunos-page .students-table th:first-child {
+        background: #f8f9fe;
+    }
+ 
+    .alunos-page .students-table tbody tr:hover td:first-child {
+        background: #f8f6ff;
+    }
+ 
+    [data-theme="dark"] .alunos-page .students-table td:first-child {
+        background: #141b2d;
+    }
+ 
+    [data-theme="dark"] .alunos-page .students-table th:first-child {
+        background: #111827;
+    }
+ 
+    [data-theme="dark"] .alunos-page .students-table tbody tr:hover td:first-child {
+        background: #1a2437;
+    }
+ 
+    .student-summary {
+        grid-template-columns: 1fr;
+    }
+ 
+    .student-summary > div,
+    .student-summary > button {
+        flex-direction: row;
+        justify-content: space-between;
+        min-height: 54px;
+        padding: 10px 16px;
+    }
+ 
+    .student-actions {
+        grid-template-columns: 1fr;
+    }
+ 
+    .alunos-paginas {
+        gap: 6px;
+    }
+}
+ 
+/* ---------- ≤ 340px ---------- */
+@media (max-width: 340px) {
+    .alunos-resumo {
+        grid-template-columns: 1fr;
+    }
+}
+ 
+/* ---------- Dispositivos de toque: alvos de 40px+ ---------- */
+@media (pointer: coarse) {
+    .alunos-acao {
+        width: 40px;
+        height: 40px;
+    }
+ 
+    .alunos-paginas button,
+    .alunos-paginas strong {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+    }
+ 
+    .close-modal {
+        width: 44px;
+        height: 44px;
+        top: 4px;
+        right: 8px;
+    }
+ 
+    .back-frequency {
+        padding: 12px 18px;
+    }
+}
+ 
+/* ---------- Preferência por menos movimento ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .alunos-page *,
+    .student-modal * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
