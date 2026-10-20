@@ -303,7 +303,10 @@
  
 .alunos-page .risk-status {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
+    min-width: 92px;
     border-radius: 25px;
     padding: 7px 12px;
     font-weight: 650;
@@ -325,11 +328,19 @@
 }
  
 .alunos-page .risk-status .risk-dot {
-    width: 9px;
-    height: 9px;
-    flex: 0 0 9px;
+    display: none;
 }
  
+
+.alunos-page .students-table th:nth-child(4),
+.alunos-page .students-table td:nth-child(4),
+.alunos-page .students-table th:nth-child(5),
+.alunos-page .students-table td:nth-child(5),
+.alunos-page .students-table th:nth-child(6) {
+    text-align: center;
+}
+
+
 .alunos-ver {
     border: 0;
     padding: 9px 11px;
@@ -902,6 +913,7 @@
 .alunos-acoes {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 }
  
@@ -1690,6 +1702,8 @@
     [data-theme="dark"] .alunos-page .students-table tbody tr:hover td:first-child {
         background: #1a2437;
     }
+
+    
  
     .student-summary {
         grid-template-columns: 1fr;
