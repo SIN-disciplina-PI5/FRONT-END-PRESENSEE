@@ -1,0 +1,89 @@
+/* Mobile-only overrides. Desktop styles are intentionally untouched. */
+.mobile-appbar, .mobile-sidebar-backdrop { display: none; }
+@media (min-width: 768px) { .mobile-sidebar-holder { display: contents; } }
+@media (max-width: 767px) {
+  html, body, #root { max-width: 100%; width: 100%; }
+  .layout { display: block; min-height: 100dvh; }
+  .layout > .content { padding: 16px 14px 32px; min-width: 0; width: 100%; max-width: 100%; overflow-x: clip; }
+  .mobile-appbar { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 110; height: 62px; background: var(--card-bg, #fff); border-bottom: 1px solid var(--border-color, #ede7fa); padding: 0 16px; }
+  .mobile-menu-trigger { flex-shrink: 0; display: grid; place-items: center; height: 42px; width: 42px; border: 0; border-radius: 10px; background: #eeeaff; color: #5330d1; cursor: pointer; }
+  .mobile-brand { font-weight: 850; font-size: 21px; font-style: italic; color: #4b25c9; white-space: nowrap; }
+  .mobile-brand span { color: #38bdf8; }
+  .mobile-sidebar-backdrop { display: block; position: fixed; inset: 0; z-index: 120; width: 100%; height: 100%; background: #0d103b88; border: 0; cursor: pointer; }
+  .mobile-sidebar-holder .sidebar, .mobile-sidebar-holder .sidebar.collapsed { position: fixed; left: 0; top: 0; z-index: 121; width: min(285px, 85vw); max-width: 85vw; height: 100dvh; padding: 20px 14px; transform: translateX(-105%); visibility: hidden; transition: transform .2s ease, visibility .2s ease; }
+  .mobile-sidebar-holder.mobile-open .sidebar { transform: translateX(0); visibility: visible; }
+  .mobile-sidebar-holder .sidebar .collapse-toggle { display: none; }
+  .mobile-sidebar-holder .sidebar-menu a { min-height: 44px; }
+  .mobile-sidebar-holder .sidebar.collapsed { align-items: stretch; }
+  .mobile-sidebar-holder .sidebar.collapsed .sidebar-top { justify-content: space-between; }
+  .mobile-sidebar-holder .sidebar.collapsed .sidebar-menu a { justify-content: flex-start; padding: 10px; }
+  :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) { max-width: 100%; min-width: 0; width: 100%; }
+  .pd-dashboard { height: auto !important; min-height: auto !important; overflow: visible !important; }
+  .pd-cabecalho { flex-wrap: wrap; gap: 12px; }
+  .pd-indicadores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .pd-indicadores > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .pd-indicadores > * { min-width: 0; padding: 12px; }
+  .pd-grade-principal, .pd-grade-inferior { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .pd-painel { padding: 14px !important; min-width: 0; }
+  .pd-painel-cabecalho { flex-wrap: wrap; gap: 8px; }
+  .pd-grafico-evolucao, .pd-grafico-inferior { width: 100%; min-width: 0; min-height: 180px; }
+  .pd-grafico-circular { max-width: 100%; margin-inline: auto; }
+  .alunos-page { padding: 0 0 24px; }
+  .alunos-resumo { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .alunos-resumo-card { min-height: 95px; gap: 8px; padding: 10px; }
+  .alunos-resumo-icone { flex-basis: 36px; width: 36px; height: 36px; font-size: 20px; }
+  .alunos-resumo-card strong { font-size: 23px; }
+  .alunos-filtros-panel { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 14px; }
+  .alunos-filtros-panel > * { width: 100%; min-width: 0; }
+  .alunos-tabela-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .students-table { min-width: 680px; }
+  .ce-header { flex-direction: column; align-items: stretch; }
+  .ce-top-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .ce-top-actions button { min-width: 0; white-space: normal; padding-inline: 5px; }
+  .ce-layout { grid-template-columns: minmax(0,1fr); }
+  .ce-toolbar { flex-wrap: wrap; gap: 10px; }
+  .ce-view-switch { display: flex; width: 100%; justify-content: space-between; gap: 4px; }
+  .ce-view-switch button { flex: 1; min-width: 0; padding-inline: 3px; font-size: 11px !important; }
+  .ce-card { padding: 12px; min-width: 0; }
+  .ce-calendar-scroll { max-width: 100%; overflow-x: auto; }
+  .ce-day { min-width: 0; overflow: hidden; }
+  .ce-day-events, .ce-event-chip { max-width: 100%; overflow: hidden; }
+  .ce-event-chip { text-overflow: ellipsis; white-space: nowrap; }
+  .ce-list-head, .ce-list-filters { flex-direction: column; align-items: stretch; }
+  .ce-list-filters > * { width: 100%; }
+  .ce-table-scroll { overflow-x: auto; }
+  .ce-table { min-width: 670px; }
+  .dw-cabecalho { flex-wrap: wrap; }
+  .dw-indicadores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .dw-indicador { gap: 8px; padding: 12px; }
+  .dw-indicador-icone { flex-basis: 36px; width: 36px; height: 36px; }
+  .dw-grade-principal { grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .dw-card { padding: 15px 13px; min-width: 0; }
+  .dw-form-rodape { flex-direction: column; align-items: stretch; }
+  .dw-botao-salvar { width: 100%; justify-content: center; min-height: 44px; }
+  .intervencao-header { flex-direction: column; align-items: stretch; }
+  .intervencao-botao-principal { min-height: 44px; justify-content: center; }
+  .intervencao-resumo { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .intervencao-resumo > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .intervencao-filtros { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .intervencao-filtros > * { width: 100%; min-width: 0; }
+  .intervencao-item { flex-wrap: wrap; gap: 10px; }
+  .intervencao-item-info { min-width: 0; flex: 1 1 65%; }
+  .intervencao-modal { max-width: calc(100vw - 28px); max-height: 90dvh; overflow-y: auto; }
+  .turmas-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .turmas-tabela-container { overflow-x: auto; }
+  .classes-table { min-width: 760px; }
+  .relatorios-page { padding: 0 0 24px; }
+  .report-filtros { grid-template-columns: minmax(0,1fr); padding: 15px; gap: 14px; }
+  .report-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; width: 100%; }
+  .report-button { width: 100%; padding-inline: 7px; }
+  .report-cards { grid-template-columns: 1fr; gap: 10px; }
+  .report-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .report-table { min-width: 580px; }
+}
+@media (max-width: 360px) {
+  .layout > .content { padding-inline: 10px; }
+  .mobile-brand { font-size: 19px; }
+  .alunos-resumo-card { padding: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .mobile-sidebar-holder .sidebar { transition: none; } }
