@@ -87,3 +87,64 @@
   .alunos-resumo-card { padding: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .mobile-sidebar-holder .sidebar { transition: none; } }
+
+/* v2: tabelas transformadas em cartões sem duplicar lógica React */
+@media (max-width: 767px) {
+  .alunos-tabela-panel, .turmas-tabela-container, .report-table-container { background: transparent; border: 0; box-shadow: none; padding: 0; }
+  .alunos-tabela-scroll, .turmas-tabela-container, .report-table-scroll { overflow: visible; }
+  .students-table, .classes-table, .report-table { display: block; width: 100%; min-width: 0 !important; border: 0; background: transparent; }
+  .students-table thead, .classes-table thead, .report-table thead { display: none; }
+  .students-table tbody, .classes-table tbody, .report-table tbody { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .students-table tbody tr, .classes-table tbody tr, .report-table tbody tr { display: grid; width: 100%; min-width: 0; border: 1px solid var(--border-color,#e6e0f1); border-radius: 16px; background: var(--card-bg,#fff); box-shadow: 0 5px 17px #21204a0d; padding: 14px; gap: 10px; }
+  .students-table tbody td, .classes-table tbody td, .report-table tbody td { display: block; width: 100%; min-width: 0; border: 0; padding: 0; background: none; }
+  .students-table tbody tr { grid-template-columns: 1fr auto; align-items: center; }
+  .students-table tbody td:nth-child(1) { grid-column: 1; }
+  .students-table tbody td:nth-child(2) { grid-column: 2; }
+  .students-table tbody td:nth-child(3) { grid-column: 1 / -1; }
+  .students-table tbody td:nth-child(3)::before { content: 'Frequência'; color: var(--text-secondary,#78809b); font-size: 12px; }
+  .students-table .alunos-frequencia { width: 100%; max-width: 100%; }
+  .students-table .alunos-progresso { max-width: 100%; width: 100%; }
+  .students-table tbody td:nth-child(4) { grid-column: 1; grid-row: 3; }
+  .students-table tbody td:nth-child(5) { display: none; }
+  .students-table tbody td:nth-child(6) { grid-column: 2; grid-row: 3; justify-self: end; }
+  .students-table .alunos-acoes { justify-content: flex-end; }
+  .classes-table tbody tr { grid-template-columns: minmax(0,1fr) auto auto; gap: 9px; }
+  .classes-table tbody td:first-child { grid-column: 1 / -1; font-size: 18px; }
+  .classes-table tbody td:nth-child(2), .classes-table tbody td:nth-child(3), .classes-table tbody td:nth-child(4) { font-size: 12px; color: var(--text-secondary,#69718c); }
+  .classes-table tbody td:nth-child(5) { grid-column: 1 / -1; }
+  .classes-table tbody td:nth-child(5)::before { content: 'Frequência'; display: block; margin-bottom: 5px; font-size: 12px; color: var(--text-secondary,#78809b); }
+  .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) { display: flex; align-items: center; gap: 8px; }
+  .classes-table tbody td:nth-child(6)::before { content: 'Em atenção'; font-size: 12px; color: var(--text-secondary,#78809b); }
+  .classes-table tbody td:nth-child(7)::before { content: 'Alto risco'; font-size: 12px; color: var(--text-secondary,#78809b); }
+  .classes-table tbody td:nth-child(6) { grid-column: 1 / 3; }
+  .classes-table tbody td:nth-child(7) { grid-column: 3; }
+  .report-table tbody tr { grid-template-columns: minmax(0,1fr) auto; align-items: center; }
+  .report-table tbody td:nth-child(1) { grid-column: 1; font-weight: 700; }
+  .report-table tbody td:nth-child(2) { grid-column: 2; color: var(--text-secondary,#78809b); }
+  .report-table tbody td:nth-child(3) { grid-column: 1 / -1; }
+  .report-table tbody td:nth-child(3) .report-frequency { width: 100%; display: flex; gap: 10px; align-items: center; }
+  .report-table tbody td:nth-child(3) .report-frequency-bar { flex: 1; min-width: 0; }
+  .dw-card-titulo, .dw-card-titulo-com-link { flex-wrap: wrap; }
+  .dw-card-registros, .dw-card-anotacoes { min-width: 0; }
+  .dw-registro, .dw-nota-recente { min-width: 0; overflow-wrap: anywhere; }
+  .intervencao-item { padding: 13px; }
+  .intervencao-aluno-linha { flex-wrap: wrap; }
+  .ce-period-title { text-align: center; }
+  .ce-calendar { overflow: hidden; }
+  .ce-day-head { justify-content: flex-end; }
+  .ce-day-events { min-width: 0; }
+  .ce-table-scroll { max-width: 100%; }
+  .student-modal-overlay, .intervencao-modal-fundo { padding: 12px; }
+  .student-modal { width: min(100%, 480px); max-height: 90dvh; overflow-y: auto; }
+  .mobile-sidebar-holder.mobile-open .sidebar { box-shadow: 12px 0 42px #0f103644; }
+  [data-theme='dark'] .mobile-appbar { background: var(--card-bg,#182237); }
+  [data-theme='dark'] .mobile-menu-trigger { background: #332b60; color: #dacfff; }
+  [data-theme='dark'] .students-table tbody tr, [data-theme='dark'] .classes-table tbody tr, [data-theme='dark'] .report-table tbody tr { background: var(--card-bg,#1b2539); border-color: var(--border-color,#35415e); }
+}
+@media (max-width: 380px) {
+  .layout > .content { padding-inline: 10px; }
+  .alunos-resumo-card { flex-direction: column; align-items: flex-start; }
+  .alunos-resumo-icone { flex: none; }
+  .classes-table tbody tr { grid-template-columns: minmax(0,1fr) auto; }
+  .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) { grid-column: 1 / -1; }
+}
