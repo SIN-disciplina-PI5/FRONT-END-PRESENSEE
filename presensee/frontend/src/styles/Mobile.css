@@ -148,3 +148,95 @@
   .classes-table tbody tr { grid-template-columns: minmax(0,1fr) auto; }
   .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) { grid-column: 1 / -1; }
 }
+
+/* v3 — refinamentos de interface, exclusivos para smartphones */
+.mobile-drawer-top { display: none; }
+@media (max-width: 767px) {
+  .mobile-appbar { height: 60px; padding-inline: max(14px, env(safe-area-inset-left)); padding-right: max(14px,env(safe-area-inset-right)); }
+  .layout > .content { padding-bottom: max(36px, env(safe-area-inset-bottom)); }
+  .mobile-sidebar-holder { position: static; }
+  .mobile-drawer-top { display: flex; position: fixed; z-index: 123; top: 0; left: 0; width: min(285px, 85vw); height: 60px; padding: 10px 14px; justify-content: space-between; align-items: center; color: #fff; background: var(--color-sidebar,#4b25c9); transform: translateX(-105%); visibility: hidden; transition: transform .2s ease,visibility .2s ease; }
+  .mobile-sidebar-holder.mobile-open .mobile-drawer-top { transform: translateX(0); visibility: visible; }
+  .mobile-drawer-top strong { font-size: 20px; font-style: italic; }
+  .mobile-drawer-top strong span { color: #7ad9ff; }
+  .mobile-drawer-close { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 9px; font-size: 29px; color: white; background: #ffffff20; cursor: pointer; }
+  .mobile-sidebar-holder .sidebar,.mobile-sidebar-holder .sidebar.collapsed { padding-top: 72px; }
+  .mobile-sidebar-holder .sidebar-top { display: none; }
+  .mobile-sidebar-holder .sidebar-menu { padding-bottom: 10px; }
+  .mobile-menu-trigger:focus-visible,.mobile-drawer-close:focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
+  .layout :is(button,select,input,textarea) { touch-action: manipulation; }
+  .layout :is(input[type='text'],input[type='search'],input[type='date'],select,textarea) { max-width: 100%; min-width: 0; font-size: 16px; }
+  .layout :is(.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) :is(h1) { line-height: 1.18; overflow-wrap: anywhere; }
+  .layout :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) { padding-top: 4px; }
+  /* Dashboard — cards naturally size to content; no clipped charts */
+  .pd-dashboard, .pd-grade-inferior,.pd-grade-principal { overflow: visible; }
+  .pd-indicadores,.pd-grade-principal,.pd-grade-inferior { margin-bottom: 14px; }
+  .pd-indicadores > *, .pd-painel { height: auto; max-height: none; }
+  .pd-painel .recharts-responsive-container { min-width: 0 !important; max-width: 100%; }
+  .pd-grafico-evolucao,.pd-grafico-inferior { overflow: hidden; }
+  .pd-legenda-risco { flex-wrap: wrap; gap: 7px; }
+  .pd-seletor-periodo { max-width: 100%; }
+  /* Alunos — prioritize scanning, and retain update date instead of hiding it. */
+  .alunos-page .alunos-filtros-panel { align-items: stretch; }
+  .alunos-filtros-panel :is(input,select) { width: 100%; min-height: 44px; }
+  .students-table tbody tr { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; }
+  .students-table tbody td:first-child { min-width: 0; }
+  .students-table .alunos-nome { min-width: 0; overflow-wrap: anywhere; }
+  .students-table tbody td:nth-child(5) { display: block; grid-column: 1 / -1; grid-row: 4; color: var(--text-secondary,#858ca0); font-size: 11px; }
+  .students-table tbody td:nth-child(5)::before { content: 'Atualizado: '; }
+  .students-table tbody td:nth-child(6) { grid-row: 3; }
+  .students-table .alunos-acao { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; }
+  .alunos-paginacao { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  /* Calendar — compact day numbers and visible event indicators */
+  .ce-header { gap: 14px; }
+  .ce-heading { min-width: 0; align-items: center; }
+  .ce-heading > div:last-child { min-width: 0; }
+  .ce-top-actions button { min-height: 44px; }
+  .ce-toolbar { align-items: center; }
+  .ce-calendar .ce-weekdays { font-size: 10px; }
+  .ce-calendar .ce-day { padding: 3px 2px; min-height: 47px; }
+  .ce-calendar .ce-day-number { font-size: 12px; }
+  .ce-calendar .ce-event-chip { height: 5px; min-height: 5px; border-radius: 10px; font-size: 0; padding: 0; margin-block: 2px; }
+  .ce-calendar .ce-day-caption { display: none; }
+  .ce-form-panel { overflow-wrap: anywhere; }
+  .ce-form :is(input,select,textarea) { max-width: 100%; width: 100%; }
+  .ce-form-actions { flex-wrap: wrap; }
+  .ce-form-actions button { flex: 1 1 140px; min-height: 44px; }
+  /* Diário + Intervenções — adaptable controls */
+  .dw-cabecalho h1,.intervencao-header h1 { font-size: 25px; }
+  .dw-cabecalho-identidade { align-items: flex-start; }
+  .dw-data-hoje { white-space: normal; }
+  .dw-indicador { min-width: 0; overflow-wrap: anywhere; }
+  .dw-card-titulo > div,.dw-card-titulo-texto { min-width: 0; }
+  .dw-form-anotacao textarea { min-height: 130px; }
+  .dw-botao-salvar { min-height: 46px; }
+  .dw-card-pendencias,.dw-lista-pendencias { min-width: 0; }
+  .dw-pendencia-texto { overflow-wrap: anywhere; }
+  .intervencao-lista-cabecalho { flex-wrap: wrap; }
+  .intervencao-lista-card { padding: 14px; }
+  .intervencao-busca :is(input,select) { width: 100%; }
+  .intervencao-ver-detalhes { min-height: 42px; }
+  /* Turmas and reports — readable card labels */
+  .classes-table tbody td:nth-child(2)::before { content: 'Curso: '; }
+  .classes-table tbody td:nth-child(3)::before { content: 'Alunos: '; }
+  .classes-table tbody td:nth-child(4)::before { content: 'Turno: '; }
+  .report-table tbody td:nth-child(2)::before { content: 'Alunos / indicador: '; font-size: 11px; }
+  .report-table tbody tr { gap: 12px; }
+  .report-section-header { flex-wrap: wrap; }
+  .report-actions button { min-height: 44px; }
+  .report-table tbody td:nth-child(3) { overflow-wrap: anywhere; }
+  /* Accessible dialogs */
+  .student-modal-overlay,.intervencao-modal-fundo { align-items: center; }
+  .student-modal,.intervencao-modal { width: 100%; max-width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 30px); overflow-y: auto; overscroll-behavior: contain; }
+  [data-theme='dark'] .mobile-drawer-top { background: #0f1e2e; }
+}
+@media (max-width: 390px) {
+  .ce-calendar .ce-day { min-height: 41px; }
+  .ce-calendar .ce-day-number { font-size: 11px; }
+  .pd-indicadores { grid-template-columns: minmax(0,1fr); }
+  .pd-indicadores > :last-child:nth-child(odd) { grid-column: auto; }
+  .alunos-resumo-card strong { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-top { transition: none !important; }
+}
