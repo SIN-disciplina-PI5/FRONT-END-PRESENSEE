@@ -4,23 +4,17 @@
   box-sizing: border-box;
 }
 
-/* =========================
-   PÁGINA / FUNDO
-========================= */
-
 .login-page {
   position: relative;
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 40px;
   padding: 60px 20px;
-
   background: linear-gradient(135deg, #4b25c9 0%, #6c3df2 45%, #2dd4bf 100%);
   background-image:
     radial-gradient(circle, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
@@ -60,10 +54,6 @@
   50% { transform: translateY(-22px) scale(1.04); }
 }
 
-/* =========================
-   TOPO / LOGO
-========================= */
-
 .login-topbar {
   position: absolute;
   top: 30px;
@@ -92,62 +82,47 @@
   font-size: 24px;
 }
 
-.login-logo span {
-  color: #2dd4bf;
-}
-
-/* =========================
-   PAINÉIS (scan + card)
-========================= */
+.login-logo span { color: #2dd4bf; }
 
 .login-panels {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap:200px;
+  gap: 200px;
   flex-wrap: wrap;
   justify-content: center;
 }
-
-/* =========================
-   PAINEL DE SCAN — efeito vidro fosco
-========================= */
 
 .scan-panel {
   width: 430px;
   min-height: 560px;
   padding: 50px 38px;
   border-radius: 32px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   background: rgba(28, 20, 66, 0.5);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   border: 1px solid rgba(255, 255, 255, 0.16);
-
   box-shadow:
     0 30px 70px rgba(10, 5, 40, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
-
   text-align: center;
   color: white;
-
   animation: entrarEsquerda 0.6s ease-out;
 }
 
 @keyframes entrarEsquerda {
   from { opacity: 0; transform: translateX(-24px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .scan-frame {
   position: relative;
- width: 280px;
+  width: 280px;
   height: 280px;
   margin: 0 auto 30px;
 }
@@ -177,7 +152,7 @@
 
 @keyframes pulsarRosto {
   0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
-  50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.06); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
 }
 
 .scan-eye {
@@ -211,11 +186,11 @@
 }
 
 @keyframes varrer {
-  0%   { top: 6%;  opacity: 0; }
-  12%  { opacity: 1; }
-  50%  { top: 92%; opacity: 1; }
-  88%  { opacity: 1; }
-  100% { top: 6%;  opacity: 0; }
+  0% { top: 6%; opacity: 0; }
+  12% { opacity: 1; }
+  50% { top: 92%; opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 6%; opacity: 0; }
 }
 
 .scan-panel h3 {
@@ -244,13 +219,11 @@
   animation: aparecerBadge 4.8s ease-in-out infinite;
 }
 
-.scan-badge b {
-  color: #2dd4bf;
-}
+.scan-badge b { color: #2dd4bf; }
 
 @keyframes aparecerBadge {
   0%, 100% { opacity: 0.45; }
-  60%      { opacity: 1; }
+  60% { opacity: 1; }
 }
 
 .scan-dot {
@@ -264,28 +237,22 @@
 
 @keyframes pulsarPonto {
   0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.4); }
+  50% { transform: scale(1.4); }
 }
-
-/* =========================
-   CARTÃO DE LOGIN
-========================= */
 
 .login-card {
   width: 400px;
   padding: 44px 40px;
   border-radius: 32px;
-
   background-color: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(10px);
   box-shadow: 0 30px 70px rgba(10, 5, 40, 0.4);
-
   animation: entrarDireita 0.6s ease-out;
 }
 
 @keyframes entrarDireita {
   from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .login-card h1 {
@@ -294,9 +261,7 @@
   font-size: 30px;
 }
 
-.login-card h1 span {
-  color: #633df2;
-}
+.login-card h1 span { color: #633df2; }
 
 .login-subtitle {
   color: #8a8a99;
@@ -341,9 +306,7 @@ form label {
   cursor: pointer;
 }
 
-.show-password:hover {
-  text-decoration: underline;
-}
+.show-password:hover { text-decoration: underline; }
 
 .login-button {
   width: 100%;
@@ -375,9 +338,7 @@ form label {
   padding: 0;
 }
 
-.create-account:hover {
-  text-decoration: underline;
-}
+.create-account:hover { text-decoration: underline; }
 
 .error-message {
   margin-bottom: 15px;
@@ -389,37 +350,12 @@ form label {
   font-size: 13px;
 }
 
-/* =========================
-   RESPONSIVIDADE
-========================= */
-
 @media (max-width: 920px) {
-
-  .login-topbar {
-    position: static;
-    margin-bottom: 10px;
-  }
-
-  .login-page {
-    padding-top: 30px;
-  }
-
-  .scan-panel {
-    width: 90%;
-    width: 420px;
-  height: 590px;
-  }
-
-  .login-card {
-    width: 90%;
-    max-width: 400px;
-  }
+  .login-topbar { position: static; margin-bottom: 10px; }
+  .login-page { padding-top: 30px; }
+  .scan-panel { width: 90%; width: 420px; height: 590px; }
+  .login-card { width: 90%; max-width: 400px; }
 }
-
-/* =========================
-   QUADRADOS DECORATIVOS DA MARCA
-========================= */
-
 
 .login-shape {
   position: absolute;
@@ -472,15 +408,168 @@ form label {
 
 @keyframes flutuarQuadrado1 {
   0%, 100% { transform: rotate(-15deg) translateY(0); }
-  50%      { transform: rotate(-9deg) translateY(-18px); }
+  50% { transform: rotate(-9deg) translateY(-18px); }
 }
 
 @keyframes flutuarQuadrado2 {
   0%, 100% { transform: rotate(20deg) translateY(0); }
-  50%      { transform: rotate(14deg) translateY(14px); }
+  50% { transform: rotate(14deg) translateY(14px); }
 }
 
 @keyframes flutuarQuadrado3 {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-14px); }
+  50% { transform: translateY(-14px); }
+}
+
+@media (max-width: 767px) {
+  .login-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 22px;
+    padding: max(22px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    overflow-x: clip;
+    overflow-y: auto;
+    isolation: isolate;
+  }
+
+  .login-topbar {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .login-ring-deco { width: 25px; height: 25px; }
+  .login-logo { font-size: 24px; }
+
+  .login-panels {
+    width: 100%;
+    max-width: 430px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 18px;
+    margin: auto 0;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 430px;
+    padding: clamp(22px, 6vw, 32px);
+    border-radius: 24px;
+    animation: entrarDireita 0.45s ease-out;
+  }
+
+  .login-card h1 { font-size: clamp(27px, 7vw, 32px); }
+  .login-subtitle { font-size: 14px; line-height: 1.5; margin-bottom: 22px; }
+
+  .login-card form {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .login-card form label { font-size: 14px; margin-bottom: 8px; }
+
+  .login-input {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    font-size: 16px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .login-card .show-password {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin: -4px 0 16px;
+    font-size: 14px;
+  }
+
+  .login-button {
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+
+  .create-account {
+    min-height: 44px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .error-message { font-size: 13px; line-height: 1.45; }
+
+  .scan-panel {
+    width: 100%;
+    max-width: 430px;
+    min-height: auto;
+    height: auto;
+    padding: 18px 20px;
+    border-radius: 22px;
+    gap: 4px;
+  }
+
+  .scan-frame {
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 8px;
+  }
+
+  .scan-corner { width: 17px; height: 17px; border-width: 3px; }
+  .scan-face { gap: 6px; }
+  .scan-eye { width: 6px; height: 6px; }
+  .scan-smile { width: 22px; height: 9px; top: 14px; border-bottom-width: 2px; }
+  .scan-panel h3 { font-size: 14px; max-width: 300px; margin-bottom: 2px; }
+  .scan-panel p { font-size: 11px; margin-bottom: 5px; }
+  .scan-badge { padding: 6px 12px; font-size: 12px; }
+  .scan-dot { width: 7px; height: 7px; }
+
+  .login-blob-bg { pointer-events: none; }
+  .blob-a { width: 220px; height: 220px; right: -65px; top: -70px; }
+  .blob-b { width: 200px; height: 200px; left: -70px; bottom: -60px; }
+  .shape-fill-1 { width: 105px; height: 105px; left: -28px; top: 22%; opacity: 0.3; }
+  .shape-fill-2 { width: 110px; height: 110px; right: -40px; bottom: 9%; opacity: 0.3; }
+  .shape-ring { width: 75px; height: 75px; right: -18px; top: 8%; border-width: 12px; }
+  .shape-outline { width: 55px; height: 55px; left: -20px; bottom: 14%; }
+
+  .login-page input,
+  .login-page button {
+    max-width: 100%;
+  }
+
+  .login-page button,
+  .login-page input { -webkit-tap-highlight-color: transparent; }
+}
+
+@media (max-width: 767px) and (max-height: 700px) {
+  .login-page { gap: 14px; }
+  .login-panels { margin: 0; }
+  .scan-panel { padding: 12px 16px; }
+  .scan-frame { display: none; }
+}
+
+@media (max-width: 350px) {
+  .login-page { padding-left: 12px; padding-right: 12px; }
+  .login-card { padding: 20px 18px; border-radius: 20px; }
+  .scan-panel { padding: 12px 14px; }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .login-page .login-card,
+  .login-page .scan-panel,
+  .login-page .login-shape,
+  .login-page .login-blob-bg,
+  .login-page .scan-line,
+  .login-page .scan-face,
+  .login-page .scan-dot,
+  .login-page .scan-badge { animation: none; }
 }
