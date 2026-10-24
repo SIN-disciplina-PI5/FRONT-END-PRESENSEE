@@ -1,242 +1,980 @@
-/* Mobile-only overrides. Desktop styles are intentionally untouched. */
-.mobile-appbar, .mobile-sidebar-backdrop { display: none; }
-@media (min-width: 768px) { .mobile-sidebar-holder { display: contents; } }
+.mobile-appbar, .mobile-sidebar-backdrop {
+    display: none;
+}
+@media (min-width: 768px) {
+    .mobile-sidebar-holder {
+        display: contents;
+    }
+}
 @media (max-width: 767px) {
-  html, body, #root { max-width: 100%; width: 100%; }
-  .layout { display: block; min-height: 100dvh; }
-  .layout > .content { padding: 16px 14px 32px; min-width: 0; width: 100%; max-width: 100%; overflow-x: clip; }
-  .mobile-appbar { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 110; height: 62px; background: var(--card-bg, #fff); border-bottom: 1px solid var(--border-color, #ede7fa); padding: 0 16px; }
-  .mobile-menu-trigger { flex-shrink: 0; display: grid; place-items: center; height: 42px; width: 42px; border: 0; border-radius: 10px; background: #eeeaff; color: #5330d1; cursor: pointer; }
-  .mobile-brand { font-weight: 850; font-size: 21px; font-style: italic; color: #4b25c9; white-space: nowrap; }
-  .mobile-brand span { color: #38bdf8; }
-  .mobile-sidebar-backdrop { display: block; position: fixed; inset: 0; z-index: 120; width: 100%; height: 100%; background: #0d103b88; border: 0; cursor: pointer; }
-  .mobile-sidebar-holder .sidebar, .mobile-sidebar-holder .sidebar.collapsed { position: fixed; left: 0; top: 0; z-index: 121; width: min(285px, 85vw); max-width: 85vw; height: 100dvh; padding: 20px 14px; transform: translateX(-105%); visibility: hidden; transition: transform .2s ease, visibility .2s ease; }
-  .mobile-sidebar-holder.mobile-open .sidebar { transform: translateX(0); visibility: visible; }
-  .mobile-sidebar-holder .sidebar .collapse-toggle { display: none; }
-  .mobile-sidebar-holder .sidebar-menu a { min-height: 44px; }
-  .mobile-sidebar-holder .sidebar.collapsed { align-items: stretch; }
-  .mobile-sidebar-holder .sidebar.collapsed .sidebar-top { justify-content: space-between; }
-  .mobile-sidebar-holder .sidebar.collapsed .sidebar-menu a { justify-content: flex-start; padding: 10px; }
-  :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) { max-width: 100%; min-width: 0; width: 100%; }
-  .pd-dashboard { height: auto !important; min-height: auto !important; overflow: visible !important; }
-  .pd-cabecalho { flex-wrap: wrap; gap: 12px; }
-  .pd-indicadores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-  .pd-indicadores > :last-child:nth-child(odd) { grid-column: 1 / -1; }
-  .pd-indicadores > * { min-width: 0; padding: 12px; }
-  .pd-grade-principal, .pd-grade-inferior { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
-  .pd-painel { padding: 14px !important; min-width: 0; }
-  .pd-painel-cabecalho { flex-wrap: wrap; gap: 8px; }
-  .pd-grafico-evolucao, .pd-grafico-inferior { width: 100%; min-width: 0; min-height: 180px; }
-  .pd-grafico-circular { max-width: 100%; margin-inline: auto; }
-  .alunos-page { padding: 0 0 24px; }
-  .alunos-resumo { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-  .alunos-resumo-card { min-height: 95px; gap: 8px; padding: 10px; }
-  .alunos-resumo-icone { flex-basis: 36px; width: 36px; height: 36px; font-size: 20px; }
-  .alunos-resumo-card strong { font-size: 23px; }
-  .alunos-filtros-panel { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 14px; }
-  .alunos-filtros-panel > * { width: 100%; min-width: 0; }
-  .alunos-tabela-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .students-table { min-width: 680px; }
-  .ce-header { flex-direction: column; align-items: stretch; }
-  .ce-top-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
-  .ce-top-actions button { min-width: 0; white-space: normal; padding-inline: 5px; }
-  .ce-layout { grid-template-columns: minmax(0,1fr); }
-  .ce-toolbar { flex-wrap: wrap; gap: 10px; }
-  .ce-view-switch { display: flex; width: 100%; justify-content: space-between; gap: 4px; }
-  .ce-view-switch button { flex: 1; min-width: 0; padding-inline: 3px; font-size: 11px !important; }
-  .ce-card { padding: 12px; min-width: 0; }
-  .ce-calendar-scroll { max-width: 100%; overflow-x: auto; }
-  .ce-day { min-width: 0; overflow: hidden; }
-  .ce-day-events, .ce-event-chip { max-width: 100%; overflow: hidden; }
-  .ce-event-chip { text-overflow: ellipsis; white-space: nowrap; }
-  .ce-list-head, .ce-list-filters { flex-direction: column; align-items: stretch; }
-  .ce-list-filters > * { width: 100%; }
-  .ce-table-scroll { overflow-x: auto; }
-  .ce-table { min-width: 670px; }
-  .dw-cabecalho { flex-wrap: wrap; }
-  .dw-indicadores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-  .dw-indicador { gap: 8px; padding: 12px; }
-  .dw-indicador-icone { flex-basis: 36px; width: 36px; height: 36px; }
-  .dw-grade-principal { grid-template-columns: minmax(0,1fr); gap: 14px; }
-  .dw-card { padding: 15px 13px; min-width: 0; }
-  .dw-form-rodape { flex-direction: column; align-items: stretch; }
-  .dw-botao-salvar { width: 100%; justify-content: center; min-height: 44px; }
-  .intervencao-header { flex-direction: column; align-items: stretch; }
-  .intervencao-botao-principal { min-height: 44px; justify-content: center; }
-  .intervencao-resumo { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .intervencao-resumo > :last-child:nth-child(odd) { grid-column: 1 / -1; }
-  .intervencao-filtros { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .intervencao-filtros > * { width: 100%; min-width: 0; }
-  .intervencao-item { flex-wrap: wrap; gap: 10px; }
-  .intervencao-item-info { min-width: 0; flex: 1 1 65%; }
-  .intervencao-modal { max-width: calc(100vw - 28px); max-height: 90dvh; overflow-y: auto; }
-  .turmas-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .turmas-tabela-container { overflow-x: auto; }
-  .classes-table { min-width: 760px; }
-  .relatorios-page { padding: 0 0 24px; }
-  .report-filtros { grid-template-columns: minmax(0,1fr); padding: 15px; gap: 14px; }
-  .report-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; width: 100%; }
-  .report-button { width: 100%; padding-inline: 7px; }
-  .report-cards { grid-template-columns: 1fr; gap: 10px; }
-  .report-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .report-table { min-width: 580px; }
+    html, body, #root {
+        max-width: 100%;
+        width: 100%;
+    }
+    .layout {
+        display: block;
+        min-height: 100dvh;
+    }
+    .layout > .content {
+        padding: 16px 14px 32px;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+    .mobile-appbar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 110;
+        height: 62px;
+        background: var(--card-bg, #fff);
+        border-bottom: 1px solid var(--border-color, #ede7fa);
+        padding: 0 16px;
+    }
+    .mobile-menu-trigger {
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        height: 42px;
+        width: 42px;
+        border: 0;
+        border-radius: 10px;
+        background: #eeeaff;
+        color: #5330d1;
+        cursor: pointer;
+    }
+    .mobile-brand {
+        font-weight: 850;
+        font-size: 21px;
+        font-style: italic;
+        color: #4b25c9;
+        white-space: nowrap;
+    }
+    .mobile-brand span {
+        color: #38bdf8;
+    }
+    .mobile-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        width: 100%;
+        height: 100%;
+        background: #0d103b88;
+        border: 0;
+        cursor: pointer;
+    }
+    .mobile-sidebar-holder .sidebar, .mobile-sidebar-holder .sidebar.collapsed {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 121;
+        width: min(285px, 85vw);
+        max-width: 85vw;
+        height: 100dvh;
+        padding: 20px 14px;
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform .2s ease, visibility .2s ease;
+    }
+    .mobile-sidebar-holder.mobile-open .sidebar {
+        transform: translateX(0);
+        visibility: visible;
+    }
+    .mobile-sidebar-holder .sidebar .collapse-toggle {
+        display: none;
+    }
+    .mobile-sidebar-holder .sidebar-menu a {
+        min-height: 44px;
+    }
+    .mobile-sidebar-holder .sidebar.collapsed {
+        align-items: stretch;
+    }
+    .mobile-sidebar-holder .sidebar.collapsed .sidebar-top {
+        justify-content: space-between;
+    }
+    .mobile-sidebar-holder .sidebar.collapsed .sidebar-menu a {
+        justify-content: flex-start;
+        padding: 10px;
+    }
+    :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) {
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+    }
+    .pd-dashboard {
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+    }
+    .pd-cabecalho {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .pd-indicadores {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 10px;
+    }
+    .pd-indicadores > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .pd-indicadores > * {
+        min-width: 0;
+        padding: 12px;
+    }
+    .pd-grade-principal, .pd-grade-inferior {
+        display: grid;
+        grid-template-columns: minmax(0,1fr);
+        gap: 14px;
+    }
+    .pd-painel {
+        padding: 14px !important;
+        min-width: 0;
+    }
+    .pd-painel-cabecalho {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .pd-grafico-evolucao, .pd-grafico-inferior {
+        width: 100%;
+        min-width: 0;
+        min-height: 180px;
+    }
+    .pd-grafico-circular {
+        max-width: 100%;
+        margin-inline: auto;
+    }
+    .alunos-page {
+        padding: 0 0 24px;
+    }
+    .alunos-resumo {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 10px;
+    }
+    .alunos-resumo-card {
+        min-height: 95px;
+        gap: 8px;
+        padding: 10px;
+    }
+    .alunos-resumo-icone {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+    .alunos-resumo-card strong {
+        font-size: 23px;
+    }
+    .alunos-filtros-panel {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 14px;
+    }
+    .alunos-filtros-panel > * {
+        width: 100%;
+        min-width: 0;
+    }
+    .alunos-tabela-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .students-table {
+        min-width: 680px;
+    }
+    .ce-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ce-top-actions {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 8px;
+    }
+    .ce-top-actions button {
+        min-width: 0;
+        white-space: normal;
+        padding-inline: 5px;
+    }
+    .ce-layout {
+        grid-template-columns: minmax(0,1fr);
+    }
+    .ce-toolbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .ce-view-switch {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+    }
+    .ce-view-switch button {
+        flex: 1;
+        min-width: 0;
+        padding-inline: 3px;
+        font-size: 11px !important;
+    }
+    .ce-card {
+        padding: 12px;
+        min-width: 0;
+    }
+    .ce-calendar-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    .ce-day {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .ce-day-events, .ce-event-chip {
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .ce-event-chip {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .ce-list-head, .ce-list-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ce-list-filters > * {
+        width: 100%;
+    }
+    .ce-table-scroll {
+        overflow-x: auto;
+    }
+    .ce-table {
+        min-width: 670px;
+    }
+    .dw-cabecalho {
+        flex-wrap: wrap;
+    }
+    .dw-indicadores {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 10px;
+    }
+    .dw-indicador {
+        gap: 8px;
+        padding: 12px;
+    }
+    .dw-indicador-icone {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+    }
+    .dw-grade-principal {
+        grid-template-columns: minmax(0,1fr);
+        gap: 14px;
+    }
+    .dw-card {
+        padding: 15px 13px;
+        min-width: 0;
+    }
+    .dw-form-rodape {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .dw-botao-salvar {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+    .intervencao-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .intervencao-botao-principal {
+        min-height: 44px;
+        justify-content: center;
+    }
+    .intervencao-resumo {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .intervencao-resumo > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .intervencao-filtros {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .intervencao-filtros > * {
+        width: 100%;
+        min-width: 0;
+    }
+    .intervencao-item {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .intervencao-item-info {
+        min-width: 0;
+        flex: 1 1 65%;
+    }
+    .intervencao-modal {
+        max-width: calc(100vw - 28px);
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+    .turmas-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .turmas-tabela-container {
+        overflow-x: auto;
+    }
+    .classes-table {
+        min-width: 760px;
+    }
+    .relatorios-page {
+        padding: 0 0 24px;
+    }
+    .report-filtros {
+        grid-template-columns: minmax(0,1fr);
+        padding: 15px;
+        gap: 14px;
+    }
+    .report-actions {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 8px;
+        width: 100%;
+    }
+    .report-button {
+        width: 100%;
+        padding-inline: 7px;
+    }
+    .report-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .report-table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .report-table {
+        min-width: 580px;
+    }
 }
 @media (max-width: 360px) {
-  .layout > .content { padding-inline: 10px; }
-  .mobile-brand { font-size: 19px; }
-  .alunos-resumo-card { padding: 8px; }
-}
-@media (prefers-reduced-motion: reduce) { .mobile-sidebar-holder .sidebar { transition: none; } }
-
-/* v2: tabelas transformadas em cartões sem duplicar lógica React */
-@media (max-width: 767px) {
-  .alunos-tabela-panel, .turmas-tabela-container, .report-table-container { background: transparent; border: 0; box-shadow: none; padding: 0; }
-  .alunos-tabela-scroll, .turmas-tabela-container, .report-table-scroll { overflow: visible; }
-  .students-table, .classes-table, .report-table { display: block; width: 100%; min-width: 0 !important; border: 0; background: transparent; }
-  .students-table thead, .classes-table thead, .report-table thead { display: none; }
-  .students-table tbody, .classes-table tbody, .report-table tbody { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
-  .students-table tbody tr, .classes-table tbody tr, .report-table tbody tr { display: grid; width: 100%; min-width: 0; border: 1px solid var(--border-color,#e6e0f1); border-radius: 16px; background: var(--card-bg,#fff); box-shadow: 0 5px 17px #21204a0d; padding: 14px; gap: 10px; }
-  .students-table tbody td, .classes-table tbody td, .report-table tbody td { display: block; width: 100%; min-width: 0; border: 0; padding: 0; background: none; }
-  .students-table tbody tr { grid-template-columns: 1fr auto; align-items: center; }
-  .students-table tbody td:nth-child(1) { grid-column: 1; }
-  .students-table tbody td:nth-child(2) { grid-column: 2; }
-  .students-table tbody td:nth-child(3) { grid-column: 1 / -1; }
-  .students-table tbody td:nth-child(3)::before { content: 'Frequência'; color: var(--text-secondary,#78809b); font-size: 12px; }
-  .students-table .alunos-frequencia { width: 100%; max-width: 100%; }
-  .students-table .alunos-progresso { max-width: 100%; width: 100%; }
-  .students-table tbody td:nth-child(4) { grid-column: 1; grid-row: 3; }
-  .students-table tbody td:nth-child(5) { display: none; }
-  .students-table tbody td:nth-child(6) { grid-column: 2; grid-row: 3; justify-self: end; }
-  .students-table .alunos-acoes { justify-content: flex-end; }
-  .classes-table tbody tr { grid-template-columns: minmax(0,1fr) auto auto; gap: 9px; }
-  .classes-table tbody td:first-child { grid-column: 1 / -1; font-size: 18px; }
-  .classes-table tbody td:nth-child(2), .classes-table tbody td:nth-child(3), .classes-table tbody td:nth-child(4) { font-size: 12px; color: var(--text-secondary,#69718c); }
-  .classes-table tbody td:nth-child(5) { grid-column: 1 / -1; }
-  .classes-table tbody td:nth-child(5)::before { content: 'Frequência'; display: block; margin-bottom: 5px; font-size: 12px; color: var(--text-secondary,#78809b); }
-  .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) { display: flex; align-items: center; gap: 8px; }
-  .classes-table tbody td:nth-child(6)::before { content: 'Em atenção'; font-size: 12px; color: var(--text-secondary,#78809b); }
-  .classes-table tbody td:nth-child(7)::before { content: 'Alto risco'; font-size: 12px; color: var(--text-secondary,#78809b); }
-  .classes-table tbody td:nth-child(6) { grid-column: 1 / 3; }
-  .classes-table tbody td:nth-child(7) { grid-column: 3; }
-  .report-table tbody tr { grid-template-columns: minmax(0,1fr) auto; align-items: center; }
-  .report-table tbody td:nth-child(1) { grid-column: 1; font-weight: 700; }
-  .report-table tbody td:nth-child(2) { grid-column: 2; color: var(--text-secondary,#78809b); }
-  .report-table tbody td:nth-child(3) { grid-column: 1 / -1; }
-  .report-table tbody td:nth-child(3) .report-frequency { width: 100%; display: flex; gap: 10px; align-items: center; }
-  .report-table tbody td:nth-child(3) .report-frequency-bar { flex: 1; min-width: 0; }
-  .dw-card-titulo, .dw-card-titulo-com-link { flex-wrap: wrap; }
-  .dw-card-registros, .dw-card-anotacoes { min-width: 0; }
-  .dw-registro, .dw-nota-recente { min-width: 0; overflow-wrap: anywhere; }
-  .intervencao-item { padding: 13px; }
-  .intervencao-aluno-linha { flex-wrap: wrap; }
-  .ce-period-title { text-align: center; }
-  .ce-calendar { overflow: hidden; }
-  .ce-day-head { justify-content: flex-end; }
-  .ce-day-events { min-width: 0; }
-  .ce-table-scroll { max-width: 100%; }
-  .student-modal-overlay, .intervencao-modal-fundo { padding: 12px; }
-  .student-modal { width: min(100%, 480px); max-height: 90dvh; overflow-y: auto; }
-  .mobile-sidebar-holder.mobile-open .sidebar { box-shadow: 12px 0 42px #0f103644; }
-  [data-theme='dark'] .mobile-appbar { background: var(--card-bg,#182237); }
-  [data-theme='dark'] .mobile-menu-trigger { background: #332b60; color: #dacfff; }
-  [data-theme='dark'] .students-table tbody tr, [data-theme='dark'] .classes-table tbody tr, [data-theme='dark'] .report-table tbody tr { background: var(--card-bg,#1b2539); border-color: var(--border-color,#35415e); }
-}
-@media (max-width: 380px) {
-  .layout > .content { padding-inline: 10px; }
-  .alunos-resumo-card { flex-direction: column; align-items: flex-start; }
-  .alunos-resumo-icone { flex: none; }
-  .classes-table tbody tr { grid-template-columns: minmax(0,1fr) auto; }
-  .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) { grid-column: 1 / -1; }
-}
-
-/* v3 — refinamentos de interface, exclusivos para smartphones */
-.mobile-drawer-top { display: none; }
-@media (max-width: 767px) {
-  .mobile-appbar { height: 60px; padding-inline: max(14px, env(safe-area-inset-left)); padding-right: max(14px,env(safe-area-inset-right)); }
-  .layout > .content { padding-bottom: max(36px, env(safe-area-inset-bottom)); }
-  .mobile-sidebar-holder { position: static; }
-  .mobile-drawer-top { display: flex; position: fixed; z-index: 123; top: 0; left: 0; width: min(285px, 85vw); height: 60px; padding: 10px 14px; justify-content: space-between; align-items: center; color: #fff; background: var(--color-sidebar,#4b25c9); transform: translateX(-105%); visibility: hidden; transition: transform .2s ease,visibility .2s ease; }
-  .mobile-sidebar-holder.mobile-open .mobile-drawer-top { transform: translateX(0); visibility: visible; }
-  .mobile-drawer-top strong { font-size: 20px; font-style: italic; }
-  .mobile-drawer-top strong span { color: #7ad9ff; }
-  .mobile-drawer-close { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 9px; font-size: 29px; color: white; background: #ffffff20; cursor: pointer; }
-  .mobile-sidebar-holder .sidebar,.mobile-sidebar-holder .sidebar.collapsed { padding-top: 72px; }
-  .mobile-sidebar-holder .sidebar-top { display: none; }
-  .mobile-sidebar-holder .sidebar-menu { padding-bottom: 10px; }
-  .mobile-menu-trigger:focus-visible,.mobile-drawer-close:focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
-  .layout :is(button,select,input,textarea) { touch-action: manipulation; }
-  .layout :is(input[type='text'],input[type='search'],input[type='date'],select,textarea) { max-width: 100%; min-width: 0; font-size: 16px; }
-  .layout :is(.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) :is(h1) { line-height: 1.18; overflow-wrap: anywhere; }
-  .layout :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) { padding-top: 4px; }
-  /* Dashboard — cards naturally size to content; no clipped charts */
-  .pd-dashboard, .pd-grade-inferior,.pd-grade-principal { overflow: visible; }
-  .pd-indicadores,.pd-grade-principal,.pd-grade-inferior { margin-bottom: 14px; }
-  .pd-indicadores > *, .pd-painel { height: auto; max-height: none; }
-  .pd-painel .recharts-responsive-container { min-width: 0 !important; max-width: 100%; }
-  .pd-grafico-evolucao,.pd-grafico-inferior { overflow: hidden; }
-  .pd-legenda-risco { flex-wrap: wrap; gap: 7px; }
-  .pd-seletor-periodo { max-width: 100%; }
-  /* Alunos — prioritize scanning, and retain update date instead of hiding it. */
-  .alunos-page .alunos-filtros-panel { align-items: stretch; }
-  .alunos-filtros-panel :is(input,select) { width: 100%; min-height: 44px; }
-  .students-table tbody tr { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; }
-  .students-table tbody td:first-child { min-width: 0; }
-  .students-table .alunos-nome { min-width: 0; overflow-wrap: anywhere; }
-  .students-table tbody td:nth-child(5) { display: block; grid-column: 1 / -1; grid-row: 4; color: var(--text-secondary,#858ca0); font-size: 11px; }
-  .students-table tbody td:nth-child(5)::before { content: 'Atualizado: '; }
-  .students-table tbody td:nth-child(6) { grid-row: 3; }
-  .students-table .alunos-acao { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; }
-  .alunos-paginacao { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-  /* Calendar — compact day numbers and visible event indicators */
-  .ce-header { gap: 14px; }
-  .ce-heading { min-width: 0; align-items: center; }
-  .ce-heading > div:last-child { min-width: 0; }
-  .ce-top-actions button { min-height: 44px; }
-  .ce-toolbar { align-items: center; }
-  .ce-calendar .ce-weekdays { font-size: 10px; }
-  .ce-calendar .ce-day { padding: 3px 2px; min-height: 47px; }
-  .ce-calendar .ce-day-number { font-size: 12px; }
-  .ce-calendar .ce-event-chip { height: 5px; min-height: 5px; border-radius: 10px; font-size: 0; padding: 0; margin-block: 2px; }
-  .ce-calendar .ce-day-caption { display: none; }
-  .ce-form-panel { overflow-wrap: anywhere; }
-  .ce-form :is(input,select,textarea) { max-width: 100%; width: 100%; }
-  .ce-form-actions { flex-wrap: wrap; }
-  .ce-form-actions button { flex: 1 1 140px; min-height: 44px; }
-  /* Diário + Intervenções — adaptable controls */
-  .dw-cabecalho h1,.intervencao-header h1 { font-size: 25px; }
-  .dw-cabecalho-identidade { align-items: flex-start; }
-  .dw-data-hoje { white-space: normal; }
-  .dw-indicador { min-width: 0; overflow-wrap: anywhere; }
-  .dw-card-titulo > div,.dw-card-titulo-texto { min-width: 0; }
-  .dw-form-anotacao textarea { min-height: 130px; }
-  .dw-botao-salvar { min-height: 46px; }
-  .dw-card-pendencias,.dw-lista-pendencias { min-width: 0; }
-  .dw-pendencia-texto { overflow-wrap: anywhere; }
-  .intervencao-lista-cabecalho { flex-wrap: wrap; }
-  .intervencao-lista-card { padding: 14px; }
-  .intervencao-busca :is(input,select) { width: 100%; }
-  .intervencao-ver-detalhes { min-height: 42px; }
-  /* Turmas and reports — readable card labels */
-  .classes-table tbody td:nth-child(2)::before { content: 'Curso: '; }
-  .classes-table tbody td:nth-child(3)::before { content: 'Alunos: '; }
-  .classes-table tbody td:nth-child(4)::before { content: 'Turno: '; }
-  .report-table tbody td:nth-child(2)::before { content: 'Alunos / indicador: '; font-size: 11px; }
-  .report-table tbody tr { gap: 12px; }
-  .report-section-header { flex-wrap: wrap; }
-  .report-actions button { min-height: 44px; }
-  .report-table tbody td:nth-child(3) { overflow-wrap: anywhere; }
-  /* Accessible dialogs */
-  .student-modal-overlay,.intervencao-modal-fundo { align-items: center; }
-  .student-modal,.intervencao-modal { width: 100%; max-width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 30px); overflow-y: auto; overscroll-behavior: contain; }
-  [data-theme='dark'] .mobile-drawer-top { background: #0f1e2e; }
-}
-@media (max-width: 390px) {
-  .ce-calendar .ce-day { min-height: 41px; }
-  .ce-calendar .ce-day-number { font-size: 11px; }
-  .pd-indicadores { grid-template-columns: minmax(0,1fr); }
-  .pd-indicadores > :last-child:nth-child(odd) { grid-column: auto; }
-  .alunos-resumo-card strong { font-size: 21px; }
+    .layout > .content {
+        padding-inline: 10px;
+    }
+    .mobile-brand {
+        font-size: 19px;
+    }
+    .alunos-resumo-card {
+        padding: 8px;
+    }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mobile-drawer-top { transition: none !important; }
+    .mobile-sidebar-holder .sidebar {
+        transition: none;
+    }
+}
+@media (max-width: 767px) {
+    .alunos-tabela-panel, .turmas-tabela-container, .report-table-container {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+    .alunos-tabela-scroll, .turmas-tabela-container, .report-table-scroll {
+        overflow: visible;
+    }
+    .students-table, .classes-table, .report-table {
+        display: block;
+        width: 100%;
+        min-width: 0 !important;
+        border: 0;
+        background: transparent;
+    }
+    .students-table thead, .classes-table thead, .report-table thead {
+        display: none;
+    }
+    .students-table tbody, .classes-table tbody, .report-table tbody {
+        display: grid;
+        grid-template-columns: minmax(0,1fr);
+        gap: 12px;
+    }
+    .students-table tbody tr, .classes-table tbody tr, .report-table tbody tr {
+        display: grid;
+        width: 100%;
+        min-width: 0;
+        border: 1px solid var(--border-color,#e6e0f1);
+        border-radius: 16px;
+        background: var(--card-bg,#fff);
+        box-shadow: 0 5px 17px #21204a0d;
+        padding: 14px;
+        gap: 10px;
+    }
+    .students-table tbody td, .classes-table tbody td, .report-table tbody td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        padding: 0;
+        background: none;
+    }
+    .students-table tbody tr {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+    }
+    .students-table tbody td:nth-child(1) {
+        grid-column: 1;
+    }
+    .students-table tbody td:nth-child(2) {
+        grid-column: 2;
+    }
+    .students-table tbody td:nth-child(3) {
+        grid-column: 1 / -1;
+    }
+    .students-table tbody td:nth-child(3)::before {
+        content: 'Frequência';
+        color: var(--text-secondary,#78809b);
+        font-size: 12px;
+    }
+    .students-table .alunos-frequencia {
+        width: 100%;
+        max-width: 100%;
+    }
+    .students-table .alunos-progresso {
+        max-width: 100%;
+        width: 100%;
+    }
+    .students-table tbody td:nth-child(4) {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    .students-table tbody td:nth-child(5) {
+        display: none;
+    }
+    .students-table tbody td:nth-child(6) {
+        grid-column: 2;
+        grid-row: 3;
+        justify-self: end;
+    }
+    .students-table .alunos-acoes {
+        justify-content: flex-end;
+    }
+    .classes-table tbody tr {
+        grid-template-columns: minmax(0,1fr) auto auto;
+        gap: 9px;
+    }
+    .classes-table tbody td:first-child {
+        grid-column: 1 / -1;
+        font-size: 18px;
+    }
+    .classes-table tbody td:nth-child(2), .classes-table tbody td:nth-child(3), .classes-table tbody td:nth-child(4) {
+        font-size: 12px;
+        color: var(--text-secondary,#69718c);
+    }
+    .classes-table tbody td:nth-child(5) {
+        grid-column: 1 / -1;
+    }
+    .classes-table tbody td:nth-child(5)::before {
+        content: 'Frequência';
+        display: block;
+        margin-bottom: 5px;
+        font-size: 12px;
+        color: var(--text-secondary,#78809b);
+    }
+    .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .classes-table tbody td:nth-child(6)::before {
+        content: 'Em atenção';
+        font-size: 12px;
+        color: var(--text-secondary,#78809b);
+    }
+    .classes-table tbody td:nth-child(7)::before {
+        content: 'Alto risco';
+        font-size: 12px;
+        color: var(--text-secondary,#78809b);
+    }
+    .classes-table tbody td:nth-child(6) {
+        grid-column: 1 / 3;
+    }
+    .classes-table tbody td:nth-child(7) {
+        grid-column: 3;
+    }
+    .report-table tbody tr {
+        grid-template-columns: minmax(0,1fr) auto;
+        align-items: center;
+    }
+    .report-table tbody td:nth-child(1) {
+        grid-column: 1;
+        font-weight: 700;
+    }
+    .report-table tbody td:nth-child(2) {
+        grid-column: 2;
+        color: var(--text-secondary,#78809b);
+    }
+    .report-table tbody td:nth-child(3) {
+        grid-column: 1 / -1;
+    }
+    .report-table tbody td:nth-child(3) .report-frequency {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .report-table tbody td:nth-child(3) .report-frequency-bar {
+        flex: 1;
+        min-width: 0;
+    }
+    .dw-card-titulo, .dw-card-titulo-com-link {
+        flex-wrap: wrap;
+    }
+    .dw-card-registros, .dw-card-anotacoes {
+        min-width: 0;
+    }
+    .dw-registro, .dw-nota-recente {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .intervencao-item {
+        padding: 13px;
+    }
+    .intervencao-aluno-linha {
+        flex-wrap: wrap;
+    }
+    .ce-period-title {
+        text-align: center;
+    }
+    .ce-calendar {
+        overflow: hidden;
+    }
+    .ce-day-head {
+        justify-content: flex-end;
+    }
+    .ce-day-events {
+        min-width: 0;
+    }
+    .ce-table-scroll {
+        max-width: 100%;
+    }
+    .student-modal-overlay, .intervencao-modal-fundo {
+        padding: 12px;
+    }
+    .student-modal {
+        width: min(100%, 480px);
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+    .mobile-sidebar-holder.mobile-open .sidebar {
+        box-shadow: 12px 0 42px #0f103644;
+    }
+    [data-theme='dark'] .mobile-appbar {
+        background: var(--card-bg,#182237);
+    }
+    [data-theme='dark'] .mobile-menu-trigger {
+        background: #332b60;
+        color: #dacfff;
+    }
+    [data-theme='dark'] .students-table tbody tr, [data-theme='dark'] .classes-table tbody tr, [data-theme='dark'] .report-table tbody tr {
+        background: var(--card-bg,#1b2539);
+        border-color: var(--border-color,#35415e);
+    }
+}
+@media (max-width: 380px) {
+    .layout > .content {
+        padding-inline: 10px;
+    }
+    .alunos-resumo-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .alunos-resumo-icone {
+        flex: none;
+    }
+    .classes-table tbody tr {
+        grid-template-columns: minmax(0,1fr) auto;
+    }
+    .classes-table tbody td:nth-child(6), .classes-table tbody td:nth-child(7) {
+        grid-column: 1 / -1;
+    }
+}
+.mobile-drawer-top {
+    display: none;
+}
+@media (max-width: 767px) {
+    .mobile-appbar {
+        height: 60px;
+        padding-inline: max(14px, env(safe-area-inset-left));
+        padding-right: max(14px,env(safe-area-inset-right));
+    }
+    .layout > .content {
+        padding-bottom: max(36px, env(safe-area-inset-bottom));
+    }
+    .mobile-sidebar-holder {
+        position: static;
+    }
+    .mobile-drawer-top {
+        display: flex;
+        position: fixed;
+        z-index: 123;
+        top: 0;
+        left: 0;
+        width: min(285px, 85vw);
+        height: 60px;
+        padding: 10px 14px;
+        justify-content: space-between;
+        align-items: center;
+        color: #fff;
+        background: var(--color-sidebar,#4b25c9);
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform .2s ease,visibility .2s ease;
+    }
+    .mobile-sidebar-holder.mobile-open .mobile-drawer-top {
+        transform: translateX(0);
+        visibility: visible;
+    }
+    .mobile-drawer-top strong {
+        font-size: 20px;
+        font-style: italic;
+    }
+    .mobile-drawer-top strong span {
+        color: #7ad9ff;
+    }
+    .mobile-drawer-close {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 9px;
+        font-size: 29px;
+        color: white;
+        background: #ffffff20;
+        cursor: pointer;
+    }
+    .mobile-sidebar-holder .sidebar,.mobile-sidebar-holder .sidebar.collapsed {
+        padding-top: 72px;
+    }
+    .mobile-sidebar-holder .sidebar-top {
+        display: none;
+    }
+    .mobile-sidebar-holder .sidebar-menu {
+        padding-bottom: 10px;
+    }
+    .mobile-menu-trigger:focus-visible,.mobile-drawer-close:focus-visible {
+        outline: 3px solid #38bdf8;
+        outline-offset: 2px;
+    }
+    .layout :is(button,select,input,textarea) {
+        touch-action: manipulation;
+    }
+    .layout :is(input[type='text'],input[type='search'],input[type='date'],select,textarea) {
+        max-width: 100%;
+        min-width: 0;
+        font-size: 16px;
+    }
+    .layout :is(.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) :is(h1) {
+        line-height: 1.18;
+        overflow-wrap: anywhere;
+    }
+    .layout :is(.pd-dashboard,.alunos-page,.ce-page,.diario-workspace,.intervencao-page,.turmas-page,.relatorios-page) {
+        padding-top: 4px;
+    }
+  .pd-dashboard, .pd-grade-inferior,.pd-grade-principal {
+        overflow: visible;
+    }
+    .pd-indicadores,.pd-grade-principal,.pd-grade-inferior {
+        margin-bottom: 14px;
+    }
+    .pd-indicadores > *, .pd-painel {
+        height: auto;
+        max-height: none;
+    }
+    .pd-painel .recharts-responsive-container {
+        min-width: 0 !important;
+        max-width: 100%;
+    }
+    .pd-grafico-evolucao,.pd-grafico-inferior {
+        overflow: hidden;
+    }
+    .pd-legenda-risco {
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+    .pd-seletor-periodo {
+        max-width: 100%;
+    }
+  .alunos-page .alunos-filtros-panel {
+        align-items: stretch;
+    }
+    .alunos-filtros-panel :is(input,select) {
+        width: 100%;
+        min-height: 44px;
+    }
+    .students-table tbody tr {
+        grid-template-columns: minmax(0,1fr) auto;
+        column-gap: 8px;
+    }
+    .students-table tbody td:first-child {
+        min-width: 0;
+    }
+    .students-table .alunos-nome {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .students-table tbody td:nth-child(5) {
+        display: block;
+        grid-column: 1 / -1;
+        grid-row: 4;
+        color: var(--text-secondary,#858ca0);
+        font-size: 11px;
+    }
+    .students-table tbody td:nth-child(5)::before {
+        content: 'Atualizado: ';
+    }
+    .students-table tbody td:nth-child(6) {
+        grid-row: 3;
+    }
+    .students-table .alunos-acao {
+        min-width: 40px;
+        min-height: 40px;
+        display: inline-grid;
+        place-items: center;
+    }
+    .alunos-paginacao {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+  .ce-header {
+        gap: 14px;
+    }
+    .ce-heading {
+        min-width: 0;
+        align-items: center;
+    }
+    .ce-heading > div:last-child {
+        min-width: 0;
+    }
+    .ce-top-actions button {
+        min-height: 44px;
+    }
+    .ce-toolbar {
+        align-items: center;
+    }
+    .ce-calendar .ce-weekdays {
+        font-size: 10px;
+    }
+    .ce-calendar .ce-day {
+        padding: 3px 2px;
+        min-height: 47px;
+    }
+    .ce-calendar .ce-day-number {
+        font-size: 12px;
+    }
+    .ce-calendar .ce-event-chip {
+        height: 5px;
+        min-height: 5px;
+        border-radius: 10px;
+        font-size: 0;
+        padding: 0;
+        margin-block: 2px;
+    }
+    .ce-calendar .ce-day-caption {
+        display: none;
+    }
+    .ce-form-panel {
+        overflow-wrap: anywhere;
+    }
+    .ce-form :is(input,select,textarea) {
+        max-width: 100%;
+        width: 100%;
+    }
+    .ce-form-actions {
+        flex-wrap: wrap;
+    }
+    .ce-form-actions button {
+        flex: 1 1 140px;
+        min-height: 44px;
+    }
+  .dw-cabecalho h1,.intervencao-header h1 {
+        font-size: 25px;
+    }
+    .dw-cabecalho-identidade {
+        align-items: flex-start;
+    }
+    .dw-data-hoje {
+        white-space: normal;
+    }
+    .dw-indicador {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .dw-card-titulo > div,.dw-card-titulo-texto {
+        min-width: 0;
+    }
+    .dw-form-anotacao textarea {
+        min-height: 130px;
+    }
+    .dw-botao-salvar {
+        min-height: 46px;
+    }
+    .dw-card-pendencias,.dw-lista-pendencias {
+        min-width: 0;
+    }
+    .dw-pendencia-texto {
+        overflow-wrap: anywhere;
+    }
+    .intervencao-lista-cabecalho {
+        flex-wrap: wrap;
+    }
+    .intervencao-lista-card {
+        padding: 14px;
+    }
+    .intervencao-busca :is(input,select) {
+        width: 100%;
+    }
+    .intervencao-ver-detalhes {
+        min-height: 42px;
+    }
+  .classes-table tbody td:nth-child(2)::before {
+        content: 'Curso: ';
+    }
+    .classes-table tbody td:nth-child(3)::before {
+        content: 'Alunos: ';
+    }
+    .classes-table tbody td:nth-child(4)::before {
+        content: 'Turno: ';
+    }
+    .report-table tbody td:nth-child(2)::before {
+        content: 'Alunos / indicador: ';
+        font-size: 11px;
+    }
+    .report-table tbody tr {
+        gap: 12px;
+    }
+    .report-section-header {
+        flex-wrap: wrap;
+    }
+    .report-actions button {
+        min-height: 44px;
+    }
+    .report-table tbody td:nth-child(3) {
+        overflow-wrap: anywhere;
+    }
+  .student-modal-overlay,.intervencao-modal-fundo {
+        align-items: center;
+    }
+    .student-modal,.intervencao-modal {
+        width: 100%;
+        max-width: min(520px, calc(100vw - 24px));
+        max-height: calc(100dvh - 30px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    [data-theme='dark'] .mobile-drawer-top {
+        background: #0f1e2e;
+    }
+}
+@media (max-width: 390px) {
+    .ce-calendar .ce-day {
+        min-height: 41px;
+    }
+    .ce-calendar .ce-day-number {
+        font-size: 11px;
+    }
+    .pd-indicadores {
+        grid-template-columns: minmax(0,1fr);
+    }
+    .pd-indicadores > :last-child:nth-child(odd) {
+        grid-column: auto;
+    }
+    .alunos-resumo-card strong {
+        font-size: 21px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mobile-drawer-top {
+        transition: none !important;
+    }
+}
+@media (max-width: 767px) {
+    .ce-page .ce-layout.ce-layout-open {
+        display: block;
+    }
+    .ce-page .ce-layout .ce-form-panel {
+        position: fixed !important;
+        z-index: 1302 !important;
+        inset: auto 0 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: auto !important;
+        max-height: min(92dvh, 92vh) !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        border-radius: 18px 18px 0 0 !important;
+        overflow: auto !important;
+        overscroll-behavior: contain;
+        padding: 16px 16px max(16px, env(safe-area-inset-bottom)) !important;
+        box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 -10px 40px rgba(0,0,0,.22);
+        animation: ce-mobile-v4-in .18s ease-out both;
+    }
+    .ce-mobile-dialog-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1301;
+        background: rgba(9, 13, 29, .58);
+        border: 0;
+        width: 100%;
+        height: 100%;
+        cursor: default;
+    }
+    .ce-page .ce-form-panel .ce-form-heading {
+        position: sticky;
+        top: -16px;
+        z-index: 2;
+        background: var(--card-bg, #fff);
+        padding: 6px 0 12px;
+    }
+    .ce-page .ce-form-panel .ce-form-heading > button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    .ce-page .ce-form-panel .ce-form-actions {
+        position: sticky;
+        bottom: calc(-16px - env(safe-area-inset-bottom));
+        z-index: 2;
+        padding: 12px 0 8px;
+        background: var(--card-bg, #fff);
+    }
+    .ce-page .ce-form-panel :is(input, select, textarea) {
+        max-width: 100%;
+        min-width: 0;
+        font-size: 16px;
+    }
+    .ce-page .ce-form-panel :is(.ce-form-dates, .ce-type-grid, .ce-segments) {
+        min-width: 0;
+    }
+    @keyframes ce-mobile-v4-in {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ce-page .ce-layout .ce-form-panel {
+        animation: none !important;
+    }
 }

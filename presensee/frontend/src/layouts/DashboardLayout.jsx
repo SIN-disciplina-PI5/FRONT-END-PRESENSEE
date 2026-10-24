@@ -9,6 +9,8 @@ function DashboardLayout({ children }) {
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
   const menuWasOpen = useRef(false);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
+  const calendarDialogRef = useRef(null);
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
@@ -20,7 +22,6 @@ function DashboardLayout({ children }) {
     }
     menuWasOpen.current = true;
     const oldOverflow = document.body.style.overflow;
-
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const onKeyDown = (event) => {
@@ -32,6 +33,59 @@ function DashboardLayout({ children }) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [mobileOpen]);
+
+  
+  useEffect(() => {
+    if (!location.pathname.toLowerCase().includes("calendario")) return undefined;
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+    const update = () => {
+      const active = mobileQuery.matches && !!document.querySelector(".ce-page .ce-layout .ce-form-panel");
+      setCalendarDialogOpen(active);
+    };
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, { childList: true, subtree: true });
+    mobileQuery.addEventListener("change", update);
+    update();
+    return () => {
+      observer.disconnect();
+      mobileQuery.removeEventListener("change", update);
+      setCalendarDialogOpen(false);
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!calendarDialogOpen) return undefined;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const panel = document.querySelector(".ce-page .ce-layout .ce-form-panel");
+    calendarDialogRef.current = panel;
+    const previouslyFocused = document.activeElement;
+    if (panel) {
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("tabindex", "-1");
+      panel.focus({ preventScroll: true });
+    }
+    function onEscape(event) {
+      if (event.key !== "Escape" || !window.matchMedia("(max-width: 767px)").matches) return;
+      event.preventDefault();
+      event.stopPropagation();
+      panel?.querySelector('.ce-form-heading button[aria-label="Fechar painel"]')?.click();
+    }
+    document.addEventListener("keydown", onEscape, true);
+    return () => {
+      document.removeEventListener("keydown", onEscape, true);
+      document.body.style.overflow = oldOverflow;
+      panel?.removeAttribute("role");
+      panel?.removeAttribute("aria-modal");
+      panel?.removeAttribute("tabindex");
+      previouslyFocused?.focus?.({ preventScroll: true });
+    };
+  }, [calendarDialogOpen]);
+
+  const closeCalendarDialog = () => {
+    document.querySelector('.ce-page .ce-form-panel .ce-form-heading button[aria-label="Fechar painel"]')?.click();
+  };
 
   return (
     <div className="layout">
@@ -53,6 +107,7 @@ function DashboardLayout({ children }) {
         <Sidebar mobileOpen={mobileOpen} />
       </div>
       <main className="content">{children}</main>
+      {calendarDialogOpen && <button type="button" className="ce-mobile-dialog-backdrop" onClick={closeCalendarDialog} aria-label="Fechar formulário do calendário" />}
     </div>
   );
 }
