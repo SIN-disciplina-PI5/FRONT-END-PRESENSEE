@@ -1,0 +1,159 @@
+.intervencao-seletor-aluno {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.intervencao-seletor-aluno > label {
+  color: #5135c9;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.intervencao-seletor-aluno > select {
+  width: 100%;
+  min-height: 44px;
+}
+
+.intervencao-combobox {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.intervencao-busca-aluno-campo {
+  position: relative;
+}
+
+.intervencao-busca-aluno-campo > span {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f86a1;
+  pointer-events: none;
+  font-size: 22px;
+}
+
+.intervencao-busca-aluno-campo input {
+  width: 100%;
+  min-height: 46px;
+  padding-left: 43px;
+  font-size: 15px;
+}
+
+.intervencao-sugestoes-alunos {
+  position: absolute;
+  z-index: 150;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  max-height: min(255px, 34dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 12px;
+  border: 1px solid #dfe2f0;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(25, 28, 68, 0.18);
+}
+
+.intervencao-sugestoes-alunos button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #eef0f7;
+  background: transparent;
+  text-align: left;
+  padding: 11px 13px;
+  color: #252842;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.intervencao-sugestoes-alunos button:last-child {
+  border-bottom: 0;
+}
+
+.intervencao-sugestoes-alunos button:hover,
+.intervencao-sugestoes-alunos button.ativo {
+  background: #f1edff;
+}
+
+.intervencao-sugestoes-alunos button span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.intervencao-sugestoes-alunos button small {
+  color: #7168a1;
+  white-space: nowrap;
+}
+
+.intervencao-sem-alunos {
+  padding: 14px;
+  margin: 0;
+  color: #777d91;
+  font-size: 14px;
+}
+
+.intervencao-aluno-selecionado {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: #f0ebff;
+  color: #4731aa;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.intervencao-aluno-selecionado button {
+  margin-left: auto;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 19px;
+}
+
+@media (max-width: 767px) {
+  .intervencao-busca-aluno-campo input,
+  .intervencao-seletor-aluno > select {
+    font-size: 16px;
+  }
+  .intervencao-sugestoes-alunos {
+    max-height: min(210px, 30dvh);
+  }
+}
+
+[data-theme="dark"] .intervencao-sugestoes-alunos,
+.dark .intervencao-sugestoes-alunos {
+  background: #1e2c40;
+  border-color: #465d77;
+}
+
+[data-theme="dark"] .intervencao-sugestoes-alunos button,
+.dark .intervencao-sugestoes-alunos button {
+  color: #eff4ff;
+  border-bottom-color: #405269;
+}
+
+[data-theme="dark"] .intervencao-sugestoes-alunos button:hover,
+[data-theme="dark"] .intervencao-sugestoes-alunos button.ativo,
+.dark .intervencao-sugestoes-alunos button:hover,
+.dark .intervencao-sugestoes-alunos button.ativo {
+  background: #354366;
+}
+
+[data-theme="dark"] .intervencao-aluno-selecionado,
+.dark .intervencao-aluno-selecionado {
+  background: #354366;
+  color: #ebecff;
+}
