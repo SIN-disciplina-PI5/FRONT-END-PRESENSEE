@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../services/auth";
-import { ALUNOS_INICIAIS } from "../pages/Alunos";
 import "../styles/NotificacoesHome.css";
-
 
 const EXEMPLOS = [
   {
@@ -50,21 +48,15 @@ export default function NotificacoesHome({ notificacoes }) {
   const navigate = useNavigate();
   const areaRef = useRef(null);
   const isDemo = getToken() === "token-demo";
-  // Resolva cada alerta com a mesma lista usada em Alunos.jsx.
-  // Caso um registro não exista, não crie automaticamente um perfil fictício.
-  const fonte = Array.isArray(notificacoes) ? notificacoes : isDemo ? EXEMPLOS : [];
-  const alertas = fonte.map((alerta) => {
-    const matricula = String(alerta.matricula ?? alerta.alunoId ?? "").trim();
-    const aluno = ALUNOS_INICIAIS.find((item) =>
-      (matricula && String(item.matricula) === matricula) ||
-      (!matricula && alerta.estudante && item.nome.toLocaleLowerCase("pt-BR") === String(alerta.estudante).toLocaleLowerCase("pt-BR"))
-    );
-    return {
-      ...alerta,
-      matricula: aluno?.matricula ?? null,
-      estudante: aluno?.nome ?? alerta.estudante,
-    };
-  });
+  
+  const fonte = Array.isArray(notificacoes) && notificacoes.length > 0 ? notificacoes : isDemo ? EXEMPLOS : [];
+  
+  const alertas = fonte.map((alerta) => ({
+    ...alerta,
+    matricula: String(alerta.matricula ?? alerta.alunoId ?? "").trim() || null,
+    estudante: alerta.estudante || alerta.alunoNome || "Estudante",
+  }));
+  
   const [aberto, setAberto] = useState(false);
   const [lidos, setLidos] = useState([]);
   const naoLidos = alertas.filter((alerta) => !lidos.includes(alerta.id)).length;
@@ -90,13 +82,10 @@ export default function NotificacoesHome({ notificacoes }) {
   function visualizar(alerta) {
     setLidos((anteriores) => [...new Set([...anteriores, alerta.id])]);
     setAberto(false);
-    // O perfil usa a matrícula na rota /alunos/:id.
-    // A matrícula é confirmada contra os alunos exibidos na página Alunos.
     const idAluno = alerta.matricula;
-    if (idAluno !== undefined && idAluno !== null && String(idAluno).trim()) {
+    if (idAluno) {
       navigate(`/alunos/${encodeURIComponent(String(idAluno))}`);
     } else {
-      // Sem identificador confiável, não tentamos adivinhar pelo nome.
       navigate("/alunos");
     }
   }

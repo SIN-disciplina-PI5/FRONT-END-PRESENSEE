@@ -1,13 +1,42 @@
-import DashboardLayout from "../layouts/DashboardLayout";
-import "../styles/Turmas.css";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { obterIndicadoresEscolares } from "../services/indicadoresEscolares";
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../services/api";
+import "../styles/Turmas.css";
 
 function Turmas() {
   const navigate = useNavigate();
+  const [turmas, setTurmas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [turmaSelecionada, setTurmaSelecionada] = useState(null);
-  const turmas = useMemo(() => obterIndicadoresEscolares().turmas, []);
+
+  useEffect(() => {
+    async function carregarTurmas() {
+      try {
+        // Substitua '/turmas' por '/classes' caso sua rota backend esteja em inglês
+        const response = await api.get("/turmas");
+        
+        const turmasFormatadas = response.data.map((turma) => ({
+          id: turma.id,
+          nome: turma.name || turma.nome || "Sem Nome",
+          curso: turma.course || turma.curso || "Ensino Médio",
+          alunos: turma._count?.students || turma.alunos || 0,
+          turno: turma.shift || turma.turno || "Manhã",
+          frequencia: turma.attendanceRate || turma.frequencia || 100,
+          atencao: turma.attentionStudents || turma.atencao || 0,
+          altoRisco: turma.highRiskStudents || turma.altoRisco || 0
+        }));
+        
+        setTurmas(turmasFormatadas);
+      } catch (error) {
+        console.error("Erro ao buscar turmas:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarTurmas();
+  }, []);
 
   function abrirTurma(turma) {
     setTurmaSelecionada(turma);
@@ -25,8 +54,18 @@ function Turmas() {
             <h1>Turmas</h1>
             <p>Consulte as turmas e acompanhe seus indicadores.</p>
           </div>
-          <span className="turmas-total">{turmas.length} turmas cadastradas</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span className="turmas-total">{turmas.length} turmas cadastradas</span>
+            <button 
+              className="admin-btn" 
+              onClick={() => navigate("/turmas/nova")}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#633df2', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              + Nova Turma
+            </button>
+          </div>
         </div>
+        
         <div className="turmas-tabela-container">
           <table className="classes-table">
             <thead>
@@ -36,46 +75,53 @@ function Turmas() {
               </tr>
             </thead>
             <tbody>
-              {turmas.map((turma) => (
-                <tr
-                  key={turma.nome}
-                  onClick={() => abrirTurma(turma)}
-                  className="turma-row"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      abrirTurma(turma);
-                    }
-                  }}
-                  aria-label={`Ver detalhes da turma ${turma.nome}`}
-                >
-                  <td className="turma-nome">{turma.nome}</td>
-                  <td>{turma.curso}</td>
-                  <td>{turma.alunos}</td>
-                  <td>{turma.turno}</td>
-                  <td>
-                    <div className="turma-frequencia">
-                      <span>{turma.frequencia}%</span>
-                      <div className="turma-frequencia-barra">
-                        <div
-                          className={`turma-frequencia-preenchimento ${
-                            turma.frequencia < 75
-                              ? "frequencia-baixa"
-                              : turma.frequencia < 90 ? "frequencia-media" : "frequencia-alta"
-                          }`}
-                          style={{ width: `${turma.frequencia}%` }}
-                        />
+              {loading ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>Carregando turmas...</td></tr>
+              ) : turmas.length > 0 ? (
+                turmas.map((turma) => (
+                  <tr
+                    key={turma.id || turma.nome}
+                    onClick={() => abrirTurma(turma)}
+                    className="turma-row"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        abrirTurma(turma);
+                      }
+                    }}
+                    aria-label={`Ver detalhes da turma ${turma.nome}`}
+                  >
+                    <td className="turma-nome">{turma.nome}</td>
+                    <td>{turma.curso}</td>
+                    <td>{turma.alunos}</td>
+                    <td>{turma.turno}</td>
+                    <td>
+                      <div className="turma-frequencia">
+                        <span>{turma.frequencia}%</span>
+                        <div className="turma-frequencia-barra">
+                          <div
+                            className={`turma-frequencia-preenchimento ${
+                              turma.frequencia < 75
+                                ? "frequencia-baixa"
+                                : turma.frequencia < 90 ? "frequencia-media" : "frequencia-alta"
+                            }`}
+                            style={{ width: `${turma.frequencia}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td><span className="turma-indicador atencao">{turma.atencao}</span></td>
-                  <td><span className="turma-indicador alto-risco">{turma.altoRisco}</span></td>
-                </tr>
-              ))}
+                    </td>
+                    <td><span className="turma-indicador atencao">{turma.atencao}</span></td>
+                    <td><span className="turma-indicador alto-risco">{turma.altoRisco}</span></td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>Nenhuma turma cadastrada.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
+        
         {turmaSelecionada && (
           <div className="student-modal-overlay" onClick={fecharTurma}>
             <div

@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 
 import Login from "./pages/Login"
@@ -10,6 +9,7 @@ import Calendario from "./pages/Calendario"
 import Frequencia from "./pages/Frequencia"
 import Relatorios from "./pages/Relatorios"
 import Turmas from "./pages/Turmas"
+import NovaTurma from "./pages/NovaTurma"
 import NovoAluno from "./pages/NovoAluno"
 import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
@@ -86,6 +86,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Turmas />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/turmas/nova"
+          element={
+            <ProtectedRoute>
+              <NovaTurma />
             </ProtectedRoute>
           }
         />

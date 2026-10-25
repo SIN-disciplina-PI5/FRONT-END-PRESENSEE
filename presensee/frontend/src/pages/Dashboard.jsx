@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Area, AreaChart, CartesianGrid, Bar, BarChart, Cell, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -6,7 +6,7 @@ import {
 import DashboardLayout from "../layouts/DashboardLayout";
 import { IconAlunos, IconAlertas, MascotAvatar } from "../components/Icons";
 import { getUsuario } from "../services/auth";
-import { obterIndicadoresEscolares } from "../services/indicadoresEscolares";
+import api from "../services/api";
 import NotificacoesHome from "../components/NotificacoesHome";
 import "../styles/Dashboard.css";
 
@@ -57,7 +57,7 @@ function TooltipGrafico({ active, payload, label, unidade = "%" }) {
 }
 
 function GraficoFrequencia({ dados, eixo = "dia", campo = "frequencia", unidade = "%" }) {
-  if (!dados.length) return <p className="pd-sem-dados">Sem dados disponíveis.</p>;
+  if (!dados || !dados.length) return <p className="pd-sem-dados">Sem dados disponíveis.</p>;
   const valores = dados.map((item) => Number(item[campo]) || 0);
   const maximo = campo === "frequencia" ? 100 : Math.max(1, ...valores) + 2;
   return (
@@ -78,20 +78,45 @@ function GraficoFrequencia({ dados, eixo = "dia", campo = "frequencia", unidade 
 function Dashboard() {
   const usuario = getUsuario();
   const avatar = localStorage.getItem("avatarUsuario") || "";
-  const dados = useMemo(() => obterIndicadoresEscolares(), []);
+  
+  const [dados, setDados] = useState({
+    totalAlunos: 0,
+    alunosRisco: 0,
+    alunosAltoRisco: 0,
+    alunosBaixoRisco: 0,
+    evolucaoRisco: [],
+    taxaFrequenciaGeral: 0,
+    frequenciaPorSemana: [],
+    turmas: []
+  });
+  const [loading, setLoading] = useState(true);
   const [filtroTurma, setFiltroTurma] = useState("Todas");
   const [paginaTurmas, setPaginaTurmas] = useState(0);
   const [mesesExibidos, setMesesExibidos] = useState(4);
 
+  useEffect(() => {
+    async function carregarIndicadores() {
+      try {
+        const response = await api.get("/dashboard");
+        setDados(prev => ({ ...prev, ...response.data }));
+      } catch (error) {
+        console.warn("Rota /dashboard pendente ou erro ao carregar dados.", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregarIndicadores();
+  }, []);
+
   const distribuicao = [
-    { nome: "Alto", valor: dados.alunosAltoRisco, cor: CORES_RISCO.alto },
-    { nome: "Médio", valor: dados.alunosRisco, cor: CORES_RISCO.medio },
-    { nome: "Baixo", valor: dados.alunosBaixoRisco, cor: CORES_RISCO.baixo },
+    { nome: "Alto", valor: dados.alunosAltoRisco || 0, cor: CORES_RISCO.alto },
+    { nome: "Médio", valor: dados.alunosRisco || 0, cor: CORES_RISCO.medio },
+    { nome: "Baixo", valor: dados.alunosBaixoRisco || 0, cor: CORES_RISCO.baixo },
   ];
 
-  const frequenciaPorTurma = dados.turmas;
+  const frequenciaPorTurma = dados.turmas || [];
   const anosDisponiveis = [...new Set(frequenciaPorTurma.map(({ turma }) => String(turma).charAt(0)))].sort();
-  const turmasFiltradas = frequenciaPorTurma.filter(({ turma }) => filtroTurma === "Todas" || turma.startsWith(filtroTurma));
+  const turmasFiltradas = frequenciaPorTurma.filter(({ turma }) => filtroTurma === "Todas" || String(turma).startsWith(filtroTurma));
   const totalPaginas = Math.max(1, Math.ceil(turmasFiltradas.length / TURMAS_POR_PAGINA));
   const paginaAtual = Math.min(paginaTurmas, totalPaginas - 1);
   const turmasVisiveis = turmasFiltradas.slice(paginaAtual * TURMAS_POR_PAGINA, (paginaAtual + 1) * TURMAS_POR_PAGINA);
@@ -101,6 +126,15 @@ function Dashboard() {
     setPaginaTurmas(0);
   }
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="pd-dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <p>Carregando painel...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -110,7 +144,10 @@ function Dashboard() {
             <div className="pd-avatar">
               {avatar ? <img src={avatar} alt="Foto do usuário" /> : <MascotAvatar size={55} />}
             </div>
-            <div><h1>E aí, {usuario?.nome || "Visitante"}!</h1><p>Aqui está um resumo da sua escola hoje.</p></div>
+            <div>
+              <h1>E aí, {usuario?.name || usuario?.nome || "Gestor(a)"}!</h1>
+              <p>Aqui está um resumo da sua escola hoje.</p>
+            </div>
           </div>
           <div className="pnot-header-actions">
             <NotificacoesHome />
@@ -139,23 +176,27 @@ function Dashboard() {
               </label>
             </CabecalhoPainel>
             <div className="pd-grafico-evolucao">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dados.evolucaoRisco.slice(-mesesExibidos)} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="pdRiscoDemo" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#633df2" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#633df2" stopOpacity={0.015} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="#e9e8f2" vertical={false} />
-                  <XAxis dataKey="periodo" axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} />
-                  <Tooltip content={<TooltipGrafico />} />
-                  <Area type="monotone" dataKey="risco" stroke="#633df2" strokeWidth={2.5}
-                    fill="url(#pdRiscoDemo)" dot={{ r: 4, fill: "#633df2", strokeWidth: 0 }}
-                    activeDot={{ r: 6 }} isAnimationActive animationDuration={900} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {dados.evolucaoRisco && dados.evolucaoRisco.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dados.evolucaoRisco.slice(-mesesExibidos)} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="pdRiscoDemo" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#633df2" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#633df2" stopOpacity={0.015} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="#e9e8f2" vertical={false} />
+                    <XAxis dataKey="periodo" axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} axisLine={false} tickLine={false} />
+                    <Tooltip content={<TooltipGrafico />} />
+                    <Area type="monotone" dataKey="risco" stroke="#633df2" strokeWidth={2.5}
+                      fill="url(#pdRiscoDemo)" dot={{ r: 4, fill: "#633df2", strokeWidth: 0 }}
+                      activeDot={{ r: 6 }} isAnimationActive animationDuration={900} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="pd-sem-dados">Gráfico sem dados consolidados.</p>
+              )}
             </div>
           </section>
 
@@ -164,7 +205,7 @@ function Dashboard() {
             <div className="pd-grafico-circular">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={[{ valor: dados.taxaFrequenciaGeral }, { valor: 100 - dados.taxaFrequenciaGeral }]}
+                  <Pie data={[{ valor: dados.taxaFrequenciaGeral || 0 }, { valor: 100 - (dados.taxaFrequenciaGeral || 0) }]}
                     dataKey="valor" cx="50%" cy="50%" innerRadius="80%" outerRadius="96%"
                     startAngle={90} endAngle={-270} stroke="none" isAnimationActive animationDuration={1000}>
                     <Cell fill="#11bb77" /><Cell fill="#e1f2e9" />
@@ -172,7 +213,7 @@ function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pd-grafico-circular-rotulo">
-                <strong>{dados.taxaFrequenciaGeral}%</strong><span>de presença</span>
+                <strong>{dados.taxaFrequenciaGeral || 0}%</strong><span>de presença</span>
               </div>
             </div>
           </section>
@@ -180,8 +221,7 @@ function Dashboard() {
 
         <div className="pd-grade-inferior">
           <section className="pd-painel pd-painel-pequeno">
-            <CabecalhoPainel titulo="Frequência por dia da semana"
-              descricao="Média de presença dos estudantes." />
+            <CabecalhoPainel titulo="Frequência por dia da semana" descricao="Média de presença dos estudantes." />
             <div className="pd-grafico-inferior">
               <GraficoFrequencia dados={dados.frequenciaPorSemana} />
             </div>
@@ -229,7 +269,7 @@ function Dashboard() {
                 <GraficoFrequencia dados={turmasVisiveis} eixo="turma" />
               </div>
               <button type="button" className="pd-seta" aria-label="Próximas turmas"
-                disabled={paginaAtual === totalPaginas - 1} onClick={() => setPaginaTurmas(paginaAtual + 1)}>›</button>
+                disabled={paginaAtual >= totalPaginas - 1} onClick={() => setPaginaTurmas(paginaAtual + 1)}>›</button>
             </div>
           </section>
         </div>

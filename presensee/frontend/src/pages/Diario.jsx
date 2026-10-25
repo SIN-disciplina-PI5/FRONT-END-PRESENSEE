@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import DashboardLayout from "../layouts/DashboardLayout"
+import api from "../services/api"
 import {
   MascotAvatar,
   IconIntervencao,
@@ -11,12 +12,6 @@ import {
   IconSeta,
   IconEnviar,
 } from "../components/Icons"
-import {
-  alunos,
-  intervencoes,
-  anotacoes,
-  formatarData,
-} from "../data/diarioMock"
 import "../styles/Diario.css"
 import "../styles/DiarioWorkspace.css"
 
@@ -34,18 +29,24 @@ function dataHojeISO() {
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
 function partesDaData(iso) {
-  const [, mes, dia] = String(iso).split("-")
-  return { dia, mes: MESES[Number(mes) - 1] || "" }
+  if (!iso) return { dia: "--", mes: "---" }
+  const dataObj = new Date(iso)
+  if (isNaN(dataObj)) {
+    const partes = String(iso).split("-")
+    if (partes.length === 3) return { dia: partes[2], mes: MESES[Number(partes[1]) - 1] || "" }
+    return { dia: "--", mes: "---" }
+  }
+  return { 
+    dia: String(dataObj.getDate()).padStart(2, '0'), 
+    mes: MESES[dataObj.getMonth()] 
+  }
 }
 
-function nomeDoAluno(id) {
-  return alunos.find((aluno) => aluno.id === id)?.nome || "Aluno"
-}
-
-function prioridadePorRisco(risco) {
-  if (Number(risco) >= 70) return "Alta"
-  if (Number(risco) >= 40) return "Média"
-  return "Baixa"
+function formatarDataDisplay(iso) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  if (isNaN(d)) return iso
+  return d.toLocaleDateString("pt-BR")
 }
 
 function Diario() {
@@ -55,30 +56,57 @@ function Diario() {
   const [marcarComoPendencia, setMarcarComoPendencia] = useState(false)
   const [prioridadeNova, setPrioridadeNova] = useState("Média")
   const [mensagem, setMensagem] = useState("")
-  const [anotacoesLocais, setAnotacoesLocais] = useState(() =>
-    [...anotacoes].sort((a, b) => String(b.data).localeCompare(String(a.data)))
-  )
+  const [loading, setLoading] = useState(true)
+  
+  const [anotacoesLocais, setAnotacoesLocais] = useState([])
+  const [pendencias, setPendencias] = useState([])
+  const [intervencoes, setIntervencoes] = useState([])
 
-  const [pendencias, setPendencias] = useState(() => {
-    const existentes = []
-    alunos.forEach((aluno) => {
-      ;(aluno.pendencias || []).forEach((texto, indice) => {
-        existentes.push({
-          id: `aluno-${aluno.id}-${indice}`,
-          texto: typeof texto === "string" ? texto : texto.texto || texto.titulo || "Acompanhar aluno",
-          alunoId: aluno.id,
-          prioridade: prioridadePorRisco(aluno.risco),
-          prazo: "A definir",
-          feita: false,
-        })
-      })
-    })
-    return existentes
-  })
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        // Carrega intervenções/eventos recentes
+        try {
+          const resEventos = await api.get("/eventos"); // Ajuste para a rota de eventos/intervenções
+          setIntervencoes(Array.isArray(resEventos.data) ? resEventos.data : []);
+        } catch (e) { console.warn("Rota /eventos pendente"); }
+        
+        // Carrega incidentes/pendências/anotações
+        try {
+          const resIncidentes = await api.get("/incidentes"); // Ajuste para a rota de incidentes/anotações
+          const dadosInc = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
+          
+          const notas = dadosInc.filter(i => i.type === "NOTA" || !i.isPending).map(n => ({
+            id: n.id,
+            data: n.createdAt || n.data,
+            texto: n.description || n.texto,
+            categoria: n.category || n.categoria || "Observação",
+            titulo: n.title || n.titulo || (n.description ? `${n.description.slice(0, 52)}...` : "Anotação")
+          }));
+          setAnotacoesLocais(notas);
+          
+          const pends = dadosInc.filter(i => i.isPending || i.type === "PENDENCIA").map(p => ({
+            id: p.id,
+            texto: p.description || p.texto,
+            alunoId: p.studentId || p.alunoId,
+            prioridade: p.priority || p.prioridade || "Média",
+            feita: p.resolved || p.feita || false,
+          }));
+          setPendencias(pends);
+        } catch (e) { console.warn("Rota /incidentes pendente"); }
+
+      } catch (error) {
+        console.error("Erro geral ao carregar o diário", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregarDados();
+  }, [])
 
   const registrosOrdenados = useMemo(
-    () => [...intervencoes].sort((a, b) => String(b.data).localeCompare(String(a.data))),
-    []
+    () => [...intervencoes].sort((a, b) => String(b.createdAt || b.data).localeCompare(String(a.createdAt || a.data))),
+    [intervencoes]
   )
 
   const notasRecentes = useMemo(
@@ -87,21 +115,21 @@ function Diario() {
   )
 
   const pendenciasOrdenadas = useMemo(
-  () =>
-    [...pendencias].sort((a, b) => {
-      if (a.feita !== b.feita) return a.feita ? 1 : -1
-      return PRIORIDADES.indexOf(a.prioridade) - PRIORIDADES.indexOf(b.prioridade)
-    }),
-  [pendencias]
-)
+    () =>
+      [...pendencias].sort((a, b) => {
+        if (a.feita !== b.feita) return a.feita ? 1 : -1
+        return PRIORIDADES.indexOf(a.prioridade) - PRIORIDADES.indexOf(b.prioridade)
+      }),
+    [pendencias]
+  )
 
   const abertas = pendencias.filter((item) => !item.feita).length
   const diasComRegistro = new Set([
-    ...intervencoes.map((item) => item.data),
-    ...anotacoesLocais.map((item) => item.data),
+    ...intervencoes.map((item) => String(item.createdAt || item.data).split('T')[0]),
+    ...anotacoesLocais.map((item) => String(item.data).split('T')[0]),
   ]).size
 
-  function salvarAnotacao(event) {
+  async function salvarAnotacao(event) {
     event.preventDefault()
     const texto = textoAnotacao.trim()
 
@@ -109,55 +137,99 @@ function Diario() {
       setMensagem("Escreva uma anotação antes de salvar.")
       return
     }
+    
+    setMensagem("Salvando...");
 
-    const novaAnotacao = {
-      id: `local-${Date.now()}`,
-      data: dataHojeISO(),
-      texto,
-      categoria: categoria || "Observação",
-      titulo: texto.length > 55 ? `${texto.slice(0, 52)}...` : texto,
+    const payload = {
+      description: texto,
+      category: categoria || "Observação",
+      title: texto.length > 55 ? `${texto.slice(0, 52)}...` : texto,
+      isPending: marcarComoPendencia,
+      priority: marcarComoPendencia ? prioridadeNova : undefined,
+      type: marcarComoPendencia ? "PENDENCIA" : "NOTA"
+    };
+
+    try {
+      // Ajuste para a rota de gravação do seu back-end
+      const response = await api.post("/incidentes", payload);
+      const novoRegistro = response.data;
+      
+      if (marcarComoPendencia) {
+        setPendencias(lista => [{
+          id: novoRegistro.id || `temp-${Date.now()}`,
+          texto: payload.description,
+          prioridade: payload.priority,
+          feita: false
+        }, ...lista]);
+      } else {
+        setAnotacoesLocais(lista => [{
+          id: novoRegistro.id || `temp-${Date.now()}`,
+          data: novoRegistro.createdAt || dataHojeISO(),
+          texto: payload.description,
+          categoria: payload.category,
+          titulo: payload.title
+        }, ...lista]);
+      }
+      
+      setTextoAnotacao("")
+      setCategoria("")
+      setMarcarComoPendencia(false)
+      setPrioridadeNova("Média")
+      setMensagem("Anotação adicionada com sucesso.")
+      
+      setTimeout(() => setMensagem(""), 3000);
+    } catch (error) {
+      console.error("Erro ao salvar anotação", error);
+      setMensagem("Falha ao salvar. Verifique sua conexão.");
     }
-
-    setAnotacoesLocais((lista) => [novaAnotacao, ...lista])
-    if (marcarComoPendencia) {
-      setPendencias((lista) => [
-        {
-          id: `pendencia-${Date.now()}`,
-          texto,
-          prioridade:  prioridadeNova,
-          prazo: "Hoje",
-          feita: false,
-          alunoId: null,
-        },
-        ...lista,
-      ])
-    }
-
-    setTextoAnotacao("")
-    setCategoria("")
-    setMarcarComoPendencia(false)
-    setPrioridadeNova("Média")
-    setMensagem("Anotação adicionada nesta sessão.")
   }
 
-  function alternarPendencia(id) {
+  async function alternarPendencia(id) {
+    // Atualiza front-end otimisticamente
+    const pendencia = pendencias.find(p => p.id === id);
+    const novoStatus = !pendencia.feita;
+    
     setPendencias((lista) =>
-      lista.map((item) => item.id === id ? { ...item, feita: !item.feita } : item)
+      lista.map((item) => item.id === id ? { ...item, feita: novoStatus } : item)
     )
+    
+    // Atualiza back-end
+    try {
+      // Caso seja um ID real do banco (não os temps que criamos)
+      if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
+        await api.patch(`/incidentes/${id}`, { resolved: novoStatus, feita: novoStatus });
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar pendência", error);
+    }
   }
 
-  function trocarPrioridade(id) {
-  setPendencias((lista) =>
-    lista.map((item) => {
-      if (item.id !== id) return item
-      const proxima = PRIORIDADES[(PRIORIDADES.indexOf(item.prioridade) + 1) % PRIORIDADES.length]
-      return { ...item, prioridade: proxima }
-    })
-  )
-}
+  async function trocarPrioridade(id) {
+    const pendencia = pendencias.find(p => p.id === id);
+    const proxima = PRIORIDADES[(PRIORIDADES.indexOf(pendencia.prioridade) + 1) % PRIORIDADES.length];
+    
+    setPendencias((lista) =>
+      lista.map((item) => item.id === id ? { ...item, prioridade: proxima } : item)
+    )
+    
+    try {
+      if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
+        await api.patch(`/incidentes/${id}`, { priority: proxima, prioridade: proxima });
+      }
+    } catch (error) {
+      console.error("Erro ao alterar prioridade", error);
+    }
+  }
 
-  function excluirPendencia(id) {
+  async function excluirPendencia(id) {
     setPendencias((lista) => lista.filter((item) => item.id !== id))
+    try {
+      if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
+        await api.delete(`/incidentes/${id}`);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir", error);
+    }
   }
 
   return (
@@ -185,9 +257,7 @@ function Diario() {
           </div>
         </header>
 
-
         <section className="dw-indicadores" aria-label="Resumo do monitor">
-
           <article className="dw-indicador dw-roxo">
             <span className="dw-indicador-icone" aria-hidden="true"><IconIntervencao /></span>
             <div>
@@ -196,7 +266,6 @@ function Diario() {
               <small>Registros cadastrados</small>
             </div>
           </article>
-
           <article className="dw-indicador dw-azul">
             <span className="dw-indicador-icone" aria-hidden="true"><IconDiario /></span>
             <div>
@@ -205,7 +274,6 @@ function Diario() {
               <small>No diário</small>
             </div>
           </article>
-
           <article className="dw-indicador dw-amarelo">
             <span className="dw-indicador-icone" aria-hidden="true"><IconChecklist /></span>
             <div>
@@ -214,7 +282,6 @@ function Diario() {
               <small>Em aberto</small>
             </div>
           </article>
-
           <article className="dw-indicador dw-verde">
             <span className="dw-indicador-icone" aria-hidden="true"><IconCalendario /></span>
             <div>
@@ -223,15 +290,11 @@ function Diario() {
               <small>Com atividade registrada</small>
             </div>
           </article>
-
         </section>
 
-
         <section className="dw-grade-principal">
-
           {/* NOVA ANOTAÇÃO */}
           <form className="dw-card dw-form-anotacao" onSubmit={salvarAnotacao}>
-
             <div className="dw-card-titulo">
               <span className="dw-titulo-icone" aria-hidden="true"><IconDiario /></span>
               <div className="dw-card-titulo-texto">
@@ -239,7 +302,6 @@ function Diario() {
                 <p>Registre uma observação do dia.</p>
               </div>
             </div>
-
             <label className="dw-campo-anotacao">
               <span className="dw-sr-only">Texto da anotação</span>
               <textarea
@@ -251,9 +313,7 @@ function Diario() {
               />
               <small>{textoAnotacao.length}/500</small>
             </label>
-
             <div className="dw-form-rodape">
-
               <label className="dw-select-categoria">
                 <span>Categoria (opcional)</span>
                 <select value={categoria} onChange={(event) => setCategoria(event.target.value)}>
@@ -261,7 +321,6 @@ function Diario() {
                   {CATEGORIAS.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
               </label>
-
              <div className="dw-pendencia-opcao">
               <label className="dw-switch-label">
                 <span>Marcar como pendência</span>
@@ -272,7 +331,6 @@ function Diario() {
                 />
                 <span className="dw-switch-visual" aria-hidden="true" />
               </label>
-
               {marcarComoPendencia && (
                 <div className="dw-prio-grupo" role="radiogroup" aria-label="Prioridade da pendência">
                   {PRIORIDADES.map((item) => (
@@ -290,21 +348,15 @@ function Diario() {
                 </div>
               )}
             </div>
-
               <button className="dw-botao-salvar" type="submit">
                 <IconEnviar width={18} height={18} /> Salvar anotação
               </button>
-
             </div>
-
             {mensagem && <p className="dw-mensagem" role="status">{mensagem}</p>}
-
           </form>
-
 
           {/* PENDÊNCIAS */}
           <section className="dw-card dw-card-pendencias">
-
             <div className="dw-card-titulo">
               <span className="dw-titulo-icone" aria-hidden="true"><IconChecklist /></span>
               <div className="dw-card-titulo-texto">
@@ -313,8 +365,9 @@ function Diario() {
               </div>
               <span className="dw-contador">{abertas} abertas</span>
             </div>
-
-            {pendencias.length ? (
+            {loading ? (
+              <div className="dw-estado-vazio"><p>Carregando pendências...</p></div>
+            ) : pendencias.length ? (
               <ul className="dw-lista-pendencias">
                 {pendenciasOrdenadas.slice(0, 6).map((item) => (
                   <li className={item.feita ? "dw-pendencia-concluida" : ""} key={item.id}>
@@ -341,13 +394,10 @@ function Diario() {
                 <p>Nenhuma pendência em aberto. Você pode criar uma ao salvar uma anotação.</p>
               </div>
             )}
-
           </section>
-
 
           {/* REGISTROS RECENTES */}
           <section className="dw-card dw-card-registros">
-
             <div className="dw-card-titulo">
               <span className="dw-titulo-icone" aria-hidden="true"><IconRelogio /></span>
               <div className="dw-card-titulo-texto">
@@ -355,42 +405,37 @@ function Diario() {
                 <p>Últimas intervenções com os alunos.</p>
               </div>
             </div>
-
-            {registrosOrdenados.length ? (
+            {loading ? (
+              <div className="dw-estado-vazio"><p>Carregando registros...</p></div>
+            ) : registrosOrdenados.length ? (
               <div className="dw-lista-registros">
                 {registrosOrdenados.slice(0, 5).map((item) => {
-                  const { dia, mes } = partesDaData(item.data)
-
+                  const dataReg = item.createdAt || item.data;
+                  const { dia, mes } = partesDaData(dataReg)
+                  const tipo = item.type || item.tipo || "Registro";
                   return (
                     <article className="dw-registro" key={item.id}>
-
-                      <div className="dw-registro-data" aria-label={formatarData(item.data)}>
+                      <div className="dw-registro-data" aria-label={formatarDataDisplay(dataReg)}>
                         <strong>{dia}</strong>
                         <span>{mes}</span>
                       </div>
-
                       <div className="dw-registro-conteudo">
-
                         <div className="dw-registro-topo">
-                          <strong>{item.titulo || nomeDoAluno(item.alunoId)}</strong>
-                          <span className={`dw-tipo-tag dw-tipo-${String(item.tipo || "registro").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-                            {item.tipo || "Registro"}
+                          <strong>{item.title || item.titulo || item.student?.name || "Registro Escolar"}</strong>
+                          <span className={`dw-tipo-tag dw-tipo-${String(tipo).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                            {tipo}
                           </span>
                         </div>
-
-                        <p>{item.descricao || "Intervenção registrada no acompanhamento do aluno."}</p>
-
+                        <p>{item.description || item.descricao || "Intervenção registrada no acompanhamento do aluno."}</p>
                         <div className="dw-registro-meta">
-                          {item.hora && <span>{item.hora}</span>}
-                          {item.alunoId && (
-                            <Link to={`/diario/aluno/${item.alunoId}`}>
+                          {(item.time || item.hora) && <span>{item.time || item.hora}</span>}
+                          {(item.studentId || item.alunoId) && (
+                            <Link to={`/alunos/${item.studentId || item.alunoId}`}>
                               Ver aluno <IconSeta width={14} height={14} />
                             </Link>
                           )}
                         </div>
-
                       </div>
-
                     </article>
                   )
                 })}
@@ -401,13 +446,10 @@ function Diario() {
                 <p>Nenhum registro encontrado.</p>
               </div>
             )}
-
           </section>
-
 
           {/* ANOTAÇÕES RECENTES */}
           <section className="dw-card dw-card-anotacoes">
-
             <div className="dw-card-titulo">
               <span className="dw-titulo-icone" aria-hidden="true"><IconDiario /></span>
               <div className="dw-card-titulo-texto">
@@ -416,14 +458,15 @@ function Diario() {
               </div>
               <span className="dw-contador">{anotacoesLocais.length} registros</span>
             </div>
-
-            {notasRecentes.length ? (
+            {loading ? (
+              <div className="dw-estado-vazio"><p>Carregando anotações...</p></div>
+            ) : notasRecentes.length ? (
               <div className="dw-notas-recentes">
                 {notasRecentes.map((nota) => (
                   <article className="dw-nota-recente" key={nota.id}>
                     <div className="dw-nota-recente-topo">
                       <strong>{nota.titulo || (nota.texto.length > 58 ? `${nota.texto.slice(0, 55)}...` : nota.texto)}</strong>
-                      <time>{formatarData(nota.data)}</time>
+                      <time>{formatarDataDisplay(nota.data)}</time>
                     </div>
                     <p>{nota.texto}</p>
                     {nota.categoria && <span>{nota.categoria}</span>}
@@ -436,11 +479,8 @@ function Diario() {
                 <p>Suas anotações salvas aparecerão aqui.</p>
               </div>
             )}
-
           </section>
-
         </section>
-
 
         <section className="dw-atalhos">
           <div>
@@ -451,7 +491,6 @@ function Diario() {
           <Link to="/turmas">Consultar turmas <IconSeta width={16} height={16} /></Link>
           <Link to="/intervencao">Registrar intervenção <IconSeta width={16} height={16} /></Link>
         </section>
-
       </main>
     </DashboardLayout>
   )

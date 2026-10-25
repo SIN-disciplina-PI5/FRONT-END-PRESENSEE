@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { IconAlunos, MascotAvatar } from "../components/Icons";
 import { getUsuario } from "../services/auth";
+import api from "../services/api";
 import "../styles/Alunos.css";
 import "../styles/AlunosRisco.css";
-import { alunos as alunosMock } from "../data/diarioMock";
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const NOTAS = {
@@ -18,25 +18,20 @@ const OCORRENCIAS = [
   ["💬", "Conversa com o monitor", "05 de Agosto", "Conversa realizada para acompanhamento do aluno."],
   ["⚠️", "Faltas recorrentes", "01 de Agosto", "Registrado aumento no número de faltas."],
 ];
+
 const normalizeTurma = (valor) => {
   if (!valor) return "";
   const match = String(valor).match(/(\d)\s*(?:º\s*Ano\s*)?([A-Z])/i);
   return match ? `${match[1]}${match[2].toUpperCase()}` : String(valor);
 };
 
-// Adaptação dos estudantes do Diário para os indicadores da lista de Alunos.
-// O identificador original é preservado para a rota /alunos/:id.
-export const ALUNOS_INICIAIS = alunosMock.map((aluno) => ({
-  ...aluno,
-  turma: normalizeTurma(aluno.turma),
-  risco: aluno.frequencia < 75 ? "Alto" : aluno.frequencia < 90 ? "Médio" : "Baixo",
-}));
-
 export default function Alunos() {
   const location = useLocation();
   const navigate = useNavigate();
   const usuario = getUsuario();
-  const [alunos] = useState(ALUNOS_INICIAIS);
+  
+  const [alunos, setAlunos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [turmaSelecionada, setTurmaSelecionada] = useState(() => normalizeTurma(location.state?.turma));
   const [riscoSelecionado, setRiscoSelecionado] = useState("");
@@ -49,13 +44,46 @@ export default function Alunos() {
   const [mesSelecionado, setMesSelecionado] = useState("Agosto");
   const [mesNotas, setMesNotas] = useState("Agosto");
 
+  useEffect(() => {
+    async function carregarAlunos() {
+      try {
+        // Substitua '/alunos' por '/students' caso sua rota backend esteja em inglês
+        const response = await api.get("/alunos");
+        
+        // Mapeia os dados do back-end para o formato do front-end
+        const alunosFormatados = response.data.map((aluno) => {
+          const frequencia = aluno.attendanceRate ?? aluno.frequencia ?? 100;
+          return {
+            ...aluno,
+            id: aluno.id,
+            nome: aluno.name || aluno.nome || "Aluno sem nome",
+            turma: normalizeTurma(aluno.class?.name || aluno.turma || "N/A"),
+            frequencia: frequencia,
+            risco: aluno.riskLevel || (frequencia < 75 ? "Alto" : frequencia < 90 ? "Médio" : "Baixo"),
+            ultimaAtualizacao: aluno.updatedAt ? new Date(aluno.updatedAt).toLocaleDateString("pt-BR") : "—"
+          };
+        });
+        
+        setAlunos(alunosFormatados);
+      } catch (error) {
+        console.error("Erro ao buscar alunos:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    carregarAlunos();
+  }, []);
+
   const turmas = useMemo(() => [...new Set(alunos.map((aluno) => aluno.turma))]
     .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })), [alunos]);
+    
   const resumo = useMemo(() => ({
     Baixo: alunos.filter((a) => a.risco === "Baixo").length,
     Médio: alunos.filter((a) => a.risco === "Médio").length,
     Alto: alunos.filter((a) => a.risco === "Alto").length,
   }), [alunos]);
+  
   const alunosFiltrados = useMemo(() => alunos.filter((aluno) => {
     const nomeOk = aluno.nome.toLocaleLowerCase("pt-BR").includes(busca.trim().toLocaleLowerCase("pt-BR"));
     const turmaOk = !turmaSelecionada || aluno.turma === turmaSelecionada;
@@ -67,19 +95,23 @@ export default function Alunos() {
       (frequenciaSelecionada === "abaixo-70" && f < 70);
     return nomeOk && turmaOk && riscoOk && frequenciaOk;
   }), [alunos, busca, turmaSelecionada, riscoSelecionado, frequenciaSelecionada]);
+  
   const alunosOrdenados = useMemo(() => [...alunosFiltrados].sort((a, b) => {
     const x = a[ordenacao.campo];
     const y = b[ordenacao.campo];
     const comparacao = typeof x === "number" ? x - y : String(x).localeCompare(String(y), "pt-BR", { numeric: true });
     return ordenacao.direcao === "asc" ? comparacao : -comparacao;
   }), [alunosFiltrados, ordenacao]);
+  
   const totalPaginas = Math.max(1, Math.ceil(alunosOrdenados.length / itensPorPagina));
   const paginaAtual = Math.min(pagina, totalPaginas);
   const alunosPaginados = alunosOrdenados.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
+  
   const atualizarFiltro = (setter, valor) => { setter(valor); setPagina(1); };
   const ordenar = (campo) => { setOrdenacao((prev) => ({ campo, direcao: prev.campo === campo && prev.direcao === "asc" ? "desc" : "asc" })); setPagina(1); };
   const abrirAluno = (aluno) => { setAlunoSelecionado(aluno); setModalAtivo("principal"); };
   const fecharAluno = () => { setAlunoSelecionado(null); setModalAtivo("principal"); };
+  
   const diasNoMes = new Date(2026, MESES.indexOf(mesSelecionado) + 1, 0).getDate();
   const diasFrequencia = Array.from({ length: diasNoMes }, (_, index) => ({ dia: index + 1, presente: (index + 1) % 7 !== 0 && index + 1 !== 5 && index + 1 !== 12 }));
   const percentualFrequencia = Math.round(diasFrequencia.filter((d) => d.presente).length / diasFrequencia.length * 100);
@@ -88,15 +120,30 @@ export default function Alunos() {
   return (
     <DashboardLayout>
       <div className="alunos-page">
-        <header className="alunos-header">
-          <div className="alunos-header-usuario">
-        
-            <div>
-              <h1>Alunos</h1>
-              <p>Gerencie os alunos, acompanhe a frequência e identifique os níveis de risco.</p>
-            </div>
-          </div>
-        </header>
+        <header className="alunos-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div className="alunos-header-usuario">
+    <div>
+      <h1>Alunos</h1>
+      <p>Gerencie os alunos, acompanhe a frequência e identifique os níveis de risco.</p>
+    </div>
+  </div>
+  <button
+    type="button"
+    onClick={() => navigate("/novo-aluno")}
+    style={{
+      padding: "10px 18px",
+      borderRadius: "8px",
+      border: "none",
+      background: "#633df2",
+      color: "#ffffff",
+      fontWeight: "600",
+      cursor: "pointer",
+      fontSize: "14px"
+    }}
+  >
+    + Novo Aluno
+  </button>
+</header>
 
         <section className="alunos-resumo" aria-label="Filtrar alunos por nível de risco">
           <button
@@ -196,11 +243,13 @@ export default function Alunos() {
                 </tr>
               </thead>
               <tbody>
-                {alunosPaginados.map((aluno) => {
+                {loading ? (
+                  <tr><td colSpan={6} className="alunos-vazio">Carregando alunos...</td></tr>
+                ) : alunosPaginados.map((aluno) => {
                   const iniciais = aluno.nome.split(" ").slice(0, 2).map((parte) => parte[0]).join("").toUpperCase();
                   const cor = aluno.frequencia < 75 ? "alto" : aluno.frequencia < 90 ? "medio" : "baixo";
                   return (
-                    <tr key={aluno.matricula}>
+                    <tr key={aluno.id || Math.random()}>
                       <td><div className="alunos-nome"><span className="alunos-avatar">{iniciais}</span><strong>{aluno.nome}</strong></div></td>
                       <td><span className="alunos-turma-tag">{aluno.turma}</span></td>
                       <td>
@@ -210,7 +259,7 @@ export default function Alunos() {
                         </div>
                       </td>
                       <td><span className={`risk-status ${aluno.risco.toLowerCase()}`}><span className="risk-dot" />{aluno.risco}</span></td>
-                      <td className="alunos-atualizacao">{aluno.ultimaAtualizacao || "—"}</td>
+                      <td className="alunos-atualizacao">{aluno.ultimaAtualizacao}</td>
                       <td>
                         <div className="alunos-acoes">
                           <button type="button" className="alunos-acao" onClick={() => abrirAluno(aluno)} aria-label={`Ver detalhes de ${aluno.nome}`} title="Ver detalhes"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
@@ -220,7 +269,7 @@ export default function Alunos() {
                     </tr>
                   );
                 })}
-                {alunosPaginados.length === 0 && <tr><td colSpan={6} className="alunos-vazio">Nenhum aluno encontrado.</td></tr>}
+                {!loading && alunosPaginados.length === 0 && <tr><td colSpan={6} className="alunos-vazio">Nenhum aluno encontrado.</td></tr>}
               </tbody>
             </table>
           </div>
