@@ -1,15 +1,28 @@
-import { Link } from "react-router-dom"
-import { Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { getEscolas } from "../services/adminDemo"
-import "../styles/admin.css"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import api from "../../services/api"
+import "../styles/admin.css"
 
 export default function AdminDashboard() {
-  const escolas = getEscolas()
+  const [escolas, setEscolas] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    async function carregarDashboard() {
+      try {
+        const response = await api.get("/escolas")
+        setEscolas(response.data)
+      } catch (error) {
+        console.error("Erro ao carregar dados do dashboard:", error)
+      }
+    }
+    carregarDashboard()
+  }, [])
+
   const ativos = escolas.filter((e) => e.status === "Ativa").length
   const pendentes = escolas.filter((e) => e.status === "Pendente").length
   const bloqueadas = escolas.filter((e) => e.status === "Bloqueada").length
-  const navigate = useNavigate()
 
   const data = [
     { name: "Ativas", value: ativos, color: "#20c96b" },
@@ -17,14 +30,13 @@ export default function AdminDashboard() {
     { name: "Bloqueadas", value: bloqueadas, color: "#ef6473" }
   ].filter((item) => item.value > 0)
 
+  // Distribuição ilustrativa para o gráfico de linha (baseada no total real)
   const chartData = [
     { name: "Jan", n: 0 },
     { name: "Fev", n: Math.floor(escolas.length / 4) },
     { name: "Mar", n: Math.floor(escolas.length / 2) },
     { name: "Abr", n: escolas.length }
   ]
-
-  
 
   return (
     <div className="admin-page">
@@ -37,37 +49,34 @@ export default function AdminDashboard() {
 
       <h2 className="admin-section-title">Visão Geral</h2>
       <div className="admin-stats">
-  {[
-    ["Escolas cadastradas", escolas.length, "◈", "Todas"],
-    ["Escolas ativas", ativos, "✓", "Ativa"],
-    ["Aguardando ativação", pendentes, "!", "Pendente"],
-    ["Bloqueadas", bloqueadas, "⊘", "Bloqueada"]
-  ].map(([title, value, icon, filtro], i) => (
-    <article
-      className="admin-stat"
-      key={title}
-      role="button"
-      tabIndex={0}
-      onClick={() =>
-        navigate(`/admin/escolas?status=${filtro}`)
-      }
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          navigate(`/admin/escolas?status=${filtro}`)
-        }
-      }}
-      style={{ cursor: "pointer" }}
-    >
-      <div className={`admin-stat-icon i${i}`}>
-        {icon}
+        {[
+          ["Escolas cadastradas", escolas.length, "◈", "Todas"],
+          ["Escolas ativas", ativos, "✓", "Ativa"],
+          ["Aguardando ativação", pendentes, "!", "Pendente"],
+          ["Bloqueadas", bloqueadas, "⊘", "Bloqueada"]
+        ].map(([title, value, icon, filtro], i) => (
+          <article
+            className="admin-stat"
+            key={title}
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(`/admin/escolas?status=${filtro}`)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                navigate(`/admin/escolas?status=${filtro}`)
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <div className={`admin-stat-icon i${i}`}>
+              {icon}
+            </div>
+            <strong>{value}</strong>
+            <span>{title}</span>
+          </article>
+        ))}
       </div>
-
-      <strong>{value}</strong>
-      <span>{title}</span>
-    </article>
-  ))}
-</div>
 
       <div className="admin-grid">
         <section className="admin-panel admin-feature-chart">
@@ -82,7 +91,7 @@ export default function AdminDashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <small>Distribuição ilustrativa para o protótipo, sem histórico real.</small>
+          <small>Distribuição ilustrativa para o protótipo, baseada no total real.</small>
         </section>
 
         <section className="admin-panel admin-status-chart">
@@ -105,7 +114,11 @@ export default function AdminDashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div className="admin-legend">
-            {data.map((item) => <span key={item.name} style={{ color: item.color }}>● {item.name}: {item.value}</span>)}
+            {data.map((item) => (
+              <span key={item.name} style={{ color: item.color }}>
+                ● {item.name}: {item.value}
+              </span>
+            ))}
           </div>
         </section>
       </div>

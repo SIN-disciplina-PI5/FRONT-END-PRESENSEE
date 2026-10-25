@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../services/api"
-import { loginAdminDemo, logoutAdminDemo } from "../painel-administrativo/services/adminDemo"
 import "../styles/Login.css"
 
 function Login() {
@@ -15,43 +14,40 @@ function Login() {
   async function handleLogin(e) {
     e.preventDefault()
     setErro("")
-    if (!email.trim() || !senha) { setErro("Preencha todos os campos"); return }
-
-    // EXCLUSIVAMENTE LOCAL: permite demonstrar o superadministrador sem backend.
-    // Esta combinação não deve existir em um build de produção.
-if (loginAdminDemo(email, senha)) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("usuario")
-      navigate("/admin/dashboard", { replace: true })
-      return
+    if (!email.trim() || !senha) { 
+      setErro("Preencha todos os campos")
+      return 
     }
-    logoutAdminDemo()
 
     setEnviando(true)
     try {
-      const response = await api.post("/auth/login", { email, senha })
+      // Comunicação com o Back-end real
+      const response = await api.post("/login", { email, password: senha })
+      
       const { token } = response.data
-      // O contrato da API deve retornar usuario com perfil e escolaId.
-      // Nunca decidir o perfil pelo e-mail digitado na tela.
       const usuario = response.data.usuario ?? response.data.user
       const perfil = String(usuario?.perfil ?? usuario?.role ?? "").toLowerCase()
+      
       const admin = ["superadmin", "super_admin", "administrador", "admin"].includes(perfil)
-      const escola = ["gestor", "gestor_escolar", "monitor"].includes(perfil)
-      if (!token || !usuario || (!admin && (!escola || !usuario.escolaId))) {
-        setErro("O servidor não retornou perfil e escola válidos. Verifique a API de autenticação.")
+      const escola = ["gestor", "gestor_escolar", "monitor", "manager"].includes(perfil)
+      
+      if (!token || !usuario || (!admin && !escola)) {
+        setErro("O servidor não retornou um perfil válido. Verifique a API de autenticação.")
         return
       }
+      
       localStorage.setItem("token", token)
       localStorage.setItem("usuario", JSON.stringify(usuario))
       navigate(admin ? "/admin/dashboard" : "/dashboard", { replace: true })
     } catch (error) {
       console.error("Falha de autenticação", error)
       setErro("Email ou senha inválidos")
-    } finally { setEnviando(false) }
+    } finally { 
+      setEnviando(false) 
+    }
   }
 
   function entrarComoVisitante() {
-    logoutAdminDemo()
     localStorage.setItem("token", "token-demo")
     localStorage.setItem("usuario", JSON.stringify({ nome: "Visitante", perfil: "Demonstração" }))
     navigate("/dashboard", { replace: true })

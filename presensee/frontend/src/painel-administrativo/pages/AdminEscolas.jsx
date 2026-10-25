@@ -1,163 +1,112 @@
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-
-import {
-  changeStatus,
-  deleteEscola,
-  getEscolas
-} from "../services/adminDemo"
-
+import api from "../../services/api"
 import EscolaDetalhesModal from "../components/EscolaDetalhesModal"
 import "../styles/admin.css"
 
 export default function AdminEscolas() {
-  const [escolas, setEscolas] = useState(getEscolas())
+  const [escolas, setEscolas] = useState([])
   const [busca, setBusca] = useState("")
   const [excluir, setExcluir] = useState(null)
   const [detalhes, setDetalhes] = useState(null)
-
-  // FILTRO RECEBIDO PELA URL
-
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filtrosValidos = [
-    "Todas",
-    "Ativa",
-    "Pendente",
-    "Bloqueada"
-  ]
-
+  const filtrosValidos = ["Todas", "Ativa", "Pendente", "Bloqueada"]
   const statusUrl = searchParams.get("status")
+  const filtro = filtrosValidos.includes(statusUrl) ? statusUrl : "Todas"
 
-  const filtro = filtrosValidos.includes(statusUrl)
-    ? statusUrl
-    : "Todas"
+  useEffect(() => {
+    carregarEscolas()
+  }, [])
 
-  // ALTERAR FILTRO
+  async function carregarEscolas() {
+    try {
+      const response = await api.get("/escolas")
+      setEscolas(response.data)
+    } catch (error) {
+      console.error("Erro ao buscar escolas:", error)
+    }
+  }
 
   function alterarFiltro(novoFiltro) {
-    setSearchParams(
-      novoFiltro === "Todas"
-        ? {}
-        : { status: novoFiltro }
-    )
+    setSearchParams(novoFiltro === "Todas" ? {} : { status: novoFiltro })
   }
 
-  // ALTERAR STATUS DA ESCOLA
-
-  function status(id, novoStatus) {
-    changeStatus(id, novoStatus)
-    setEscolas(getEscolas())
+  async function status(id, novoStatus) {
+    try {
+      await api.patch(`/escolas/${id}/status`, { status: novoStatus })
+      carregarEscolas()
+    } catch (error) {
+      console.error("Erro ao alterar status:", error)
+    }
   }
 
-  // EXCLUIR ESCOLA
-
-  function confirmarExclusao() {
+  async function confirmarExclusao() {
     if (!excluir) return
-
-    deleteEscola(excluir.id)
-
-    setEscolas(getEscolas())
-    setExcluir(null)
-    setDetalhes(null)
+    try {
+      await api.delete(`/escolas/${excluir.id}`)
+      setExcluir(null)
+      setDetalhes(null)
+      carregarEscolas() 
+    } catch (error) {
+      console.error("Erro ao excluir escola:", error)
+    }
   }
-
-  // FILTRAR ESCOLAS
 
   const lista = escolas.filter((escola) => {
-    const correspondeStatus =
-      filtro === "Todas" || escola.status === filtro
-
-    const correspondeBusca = [
-      escola.nome,
-      escola.municipio,
-      escola.gestor
-    ]
+    const correspondeStatus = filtro === "Todas" || escola.status === filtro
+    const correspondeBusca = [escola.nome, escola.municipio, escola.rede]
       .join(" ")
       .toLowerCase()
       .includes(busca.toLowerCase())
-
     return correspondeStatus && correspondeBusca
   })
 
   return (
     <div className="admin-page">
-
-      {/* CABEÇALHO */}
-
       <div className="admin-heading">
         <div>
           <h1>Escolas</h1>
-
-          <p>
-            Cadastre e gerencie instituições vinculadas
-            ao projeto.
-          </p>
+          <p>Cadastre e gerencie instituições vinculadas ao projeto.</p>
         </div>
-
-        <Link
-          className="admin-btn"
-          to="/admin/escolas/nova"
-        >
+        <Link className="admin-btn" to="/admin/escolas/nova">
           + Nova escola
         </Link>
       </div>
 
-      {/* PAINEL DE ESCOLAS */}
-
       <section className="admin-panel admin-list-panel">
-
-        {/* FILTROS */}
-
         <div className="admin-filters">
-
           <input
             aria-label="Pesquisar escolas"
-            placeholder="Buscar escola, município ou gestor..."
+            placeholder="Buscar escola ou município..."
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
           />
-
           <select
             aria-label="Filtrar por situação"
             value={filtro}
-            onChange={(event) =>
-              alterarFiltro(event.target.value)
-            }
+            onChange={(event) => alterarFiltro(event.target.value)}
           >
             {filtrosValidos.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
+              <option key={item} value={item}>{item}</option>
             ))}
           </select>
-
         </div>
 
-        {/* TABELA DE ESCOLAS */}
-
         <div className="admin-table-wrap">
-
           <table className="admin-table">
-
             <thead>
               <tr>
                 <th>Escola</th>
                 <th>Município</th>
                 <th>Rede</th>
-                <th>Gestor</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
-
             <tbody>
               {lista.map((escola) => (
                 <tr key={escola.id}>
-
-                  {/* NOME DA ESCOLA */}
-
                   <td>
                     <button
                       type="button"
@@ -166,43 +115,16 @@ export default function AdminEscolas() {
                     >
                       {escola.nome}
                     </button>
-
-                    {escola.inep && (
-                      <small>
-                        INEP: {escola.inep}
-                      </small>
-                    )}
                   </td>
-
-                  {/* MUNICÍPIO */}
-
                   <td>{escola.municipio}</td>
-
-                  {/* REDE DE ENSINO */}
-
                   <td>{escola.rede}</td>
-
-                  {/* GESTOR RESPONSÁVEL */}
-
-                  <td>{escola.gestor}</td>
-
-                  {/* STATUS */}
-
                   <td>
-                    <span
-                      className={`admin-badge ${escola.status.toLowerCase()}`}
-                    >
+                    <span className={`admin-badge ${escola.status.toLowerCase()}`}>
                       {escola.status}
                     </span>
                   </td>
-
-                  {/* AÇÕES */}
-
                   <td>
                     <div className="admin-row-actions">
-
-                      {/* DETALHES DA ESCOLA */}
-
                       <button
                         type="button"
                         className="admin-outline-btn"
@@ -210,105 +132,56 @@ export default function AdminEscolas() {
                       >
                         Detalhes
                       </button>
-
-                      {/* ALTERAR STATUS */}
-
                       <select
                         aria-label={`Alterar situação de ${escola.nome}`}
                         value={escola.status}
-                        onChange={(event) =>
-                          status(
-                            escola.id,
-                            event.target.value
-                          )
-                        }
+                        onChange={(event) => status(escola.id, event.target.value)}
                       >
-                        <option value="Ativa">
-                          Ativa
-                        </option>
-
-                        <option value="Pendente">
-                          Pendente
-                        </option>
-
-                        <option value="Bloqueada">
-                          Bloqueada
-                        </option>
+                        <option value="Ativa">Ativa</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Bloqueada">Bloqueada</option>
                       </select>
-
-                      {/* EXCLUIR ESCOLA */}
-
                       <button
                         type="button"
                         className="admin-delete-button"
                         onClick={() => setExcluir(escola)}
-                        aria-label={`Excluir ${escola.nome}`}
                         title="Excluir escola"
                       >
                         Excluir
                       </button>
-
                     </div>
                   </td>
-
                 </tr>
               ))}
             </tbody>
-
           </table>
 
-          {/* NENHUMA ESCOLA ENCONTRADA */}
-
           {!lista.length && (
-            <p className="admin-empty">
-              Nenhuma escola encontrada.
-            </p>
+            <p className="admin-empty">Nenhuma escola encontrada.</p>
           )}
-
         </div>
       </section>
 
-      {/* POPUP DE DETALHES DA ESCOLA */}
-
-      <EscolaDetalhesModal
-        escola={detalhes}
-        onClose={() => setDetalhes(null)}
-      />
-
-      {/* POPUP DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      {detalhes && (
+        <EscolaDetalhesModal
+          escola={detalhes}
+          onClose={() => setDetalhes(null)}
+        />
+      )}
 
       {excluir && (
         <div
           className="admin-modal-backdrop"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setExcluir(null)
-            }
+            if (event.target === event.currentTarget) setExcluir(null)
           }}
         >
-          <div
-            className="admin-modal"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="admin-delete-title"
-            aria-describedby="admin-delete-description"
-          >
-
-            <h2 id="admin-delete-title">
-              Excluir escola?
-            </h2>
-
-            <p id="admin-delete-description">
-              Deseja excluir{" "}
-              <strong>{excluir.nome}</strong>?
-
-              Esta ação remove a instituição dos dados
-              demonstrativos deste navegador e será
-              registrada na auditoria.
+          <div className="admin-modal" role="alertdialog">
+            <h2>Excluir escola?</h2>
+            <p>
+              Deseja excluir <strong>{excluir.nome}</strong>? Esta ação é definitiva e será registrada na auditoria.
             </p>
-
             <div className="admin-actions">
-
               <button
                 type="button"
                 className="admin-btn secondary"
@@ -316,7 +189,6 @@ export default function AdminEscolas() {
               >
                 Cancelar
               </button>
-
               <button
                 type="button"
                 className="admin-btn admin-btn-danger"
@@ -324,12 +196,10 @@ export default function AdminEscolas() {
               >
                 Sim, excluir escola
               </button>
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   )
 }

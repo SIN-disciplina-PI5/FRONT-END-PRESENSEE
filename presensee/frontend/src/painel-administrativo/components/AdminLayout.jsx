@@ -1,6 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { logoutAdminDemo } from "../services/adminDemo"
 import AdminIcon from "./AdminIcons"
 import "../styles/admin.css"
 
@@ -16,7 +15,7 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(localStorage.getItem("adminSidebarCollapsed") === "true")
   const [tema, setTema] = useState(localStorage.getItem("tema") || "light")
   const [perfil, setPerfil] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("adminPerfilDemo")) || {} } catch { return {} }
+    try { return JSON.parse(localStorage.getItem("usuario")) || {} } catch { return {} }
   })
 
   useEffect(() => {
@@ -26,7 +25,7 @@ export default function AdminLayout() {
 
   useEffect(() => {
     const update = () => {
-      try { setPerfil(JSON.parse(localStorage.getItem("adminPerfilDemo")) || {}) } catch { setPerfil({}) }
+      try { setPerfil(JSON.parse(localStorage.getItem("usuario")) || {}) } catch { setPerfil({}) }
     }
     window.addEventListener("admin-profile-updated", update)
     return () => window.removeEventListener("admin-profile-updated", update)
@@ -40,7 +39,6 @@ export default function AdminLayout() {
   }
 
   function handleLogout() {
-    logoutAdminDemo()
     localStorage.removeItem("token")
     localStorage.removeItem("usuario")
     navigate("/login", { replace: true })
@@ -74,7 +72,12 @@ export default function AdminLayout() {
           <span className="admin-profile-avatar">
             {perfil.avatar ? <img src={perfil.avatar} alt="Avatar do administrador" /> : <AdminIcon name="user" size={22} />}
           </span>
-          {!collapsed && <span className="admin-profile-text"><strong>{perfil.nome || "Superadmin"}</strong><small>Administrador</small></span>}
+          {!collapsed && (
+            <span className="admin-profile-text">
+              <strong>{perfil.name || perfil.nome || "Superadmin"}</strong>
+              <small>Administrador</small>
+            </span>
+          )}
         </NavLink>
 
         <button type="button" className="admin-bottom admin-logout" onClick={handleLogout}>
