@@ -1,10 +1,7 @@
-
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useNavigate, Link } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import { getUsuario, logout } from "../services/auth"
 import "../styles/Sidebar.css"
-import { Link } from "react-router-dom"
-
 import {
   IconHome,
   IconAlunos,
@@ -31,25 +28,15 @@ const MENU = [
   { to: "/relatorios", label: "Relatório", Icon: IconRelatorio },
 ]
 
-function Sidebar() {
+function Sidebar({ mobileOpen = false }) {
   const navigate = useNavigate()
   const usuario = getUsuario()
-
-  const [avatar, setAvatar] = useState(
-    localStorage.getItem("avatarUsuario") || ""
-  )
-
-  const [collapsed, setCollapsed] = useState(
-    localStorage.getItem("sidebarCollapsed") === "true"
-  )
-
-  const [tema, setTema] = useState(
-    localStorage.getItem("tema") || "light"
-  )
-
+  const [avatar, setAvatar] = useState(localStorage.getItem("avatarUsuario") || "")
+  const [collapsed, setCollapsed] = useState(localStorage.getItem("sidebarCollapsed") === "true")
+  const [tema, setTema] = useState(localStorage.getItem("tema") || "light")
   const inputAvatar = useRef(null)
+  const showCollapsed = collapsed && !mobileOpen
 
-  // Aplica o tema e salva a preferência
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", tema)
     localStorage.setItem("tema", tema)
@@ -72,113 +59,64 @@ function Sidebar() {
 
   function escolherAvatar(e) {
     const arquivo = e.target.files[0]
-
-    if (!arquivo) {
-      return
-    }
-
+    if (!arquivo) return
     const leitor = new FileReader()
-
     leitor.onload = () => {
       const imagem = leitor.result
       setAvatar(imagem)
       localStorage.setItem("avatarUsuario", imagem)
     }
-
     leitor.readAsDataURL(arquivo)
   }
 
   return (
-    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-
-      {/* LOGO + BOTÃO DE COLAPSAR */}
-
+    <aside className={`sidebar ${showCollapsed ? "collapsed" : ""}`}>
       <div className="sidebar-top">
         <div className="sidebar-logo">
-          {!collapsed && (
+          {!showCollapsed && (
             <h2 className="brand-font" translate="no">
               Presen<span>See</span>
             </h2>
           )}
         </div>
-
         <button
+          type="button"
           className="collapse-toggle"
           onClick={alternarColapso}
-          title={collapsed ? "Expandir menu" : "Encolher menu"}
+          title={showCollapsed ? "Expandir menu" : "Encolher menu"}
         >
-          <IconCollapse collapsed={collapsed} />
+          <IconCollapse collapsed={showCollapsed} />
         </button>
       </div>
-
-      {/* MENU */}
-
       <nav className="sidebar-menu">
         {MENU.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={collapsed ? label : undefined}
-          >
+          <NavLink key={to} to={to} title={showCollapsed ? label : undefined}>
             <Icon />
-
-            {!collapsed && (
-              <span className="menu-label">
-                {label}
-              </span>
-            )}
+            {!showCollapsed && <span className="menu-label">{label}</span>}
           </NavLink>
         ))}
       </nav>
-
-      {/* MODO ESCURO / CLARO */}
-
       <button
+        type="button"
         className="theme-toggle"
         onClick={alternarTema}
-        title={tema === "light"
-          ? "Ativar modo escuro"
-          : "Ativar modo claro"
-        }
+        title={tema === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
       >
         {tema === "light" ? <IconMoon /> : <IconSun />}
-
-        {!collapsed && (
-          <span>
-            {tema === "light" ? "Modo escuro" : "Modo claro"}
-          </span>
-        )}
+        {!showCollapsed && <span>{tema === "light" ? "Modo escuro" : "Modo claro"}</span>}
       </button>
-
-      {/* USUÁRIO */}
-
       <div className="sidebar-user">
-        <Link
-          to="/perfil-monitor"
-          className="sidebar-user-link"
-          title="Acessar perfil do monitor"
-        >
+        <Link to="/perfil-monitor" className="sidebar-user-link" title="Acessar perfil do monitor">
           <div className="sidebar-avatar">
-            {avatar ? (
-              <img src={avatar} alt="Foto do usuário" />
-            ) : (
-              <MascotAvatar size={34} />
-            )}
+            {avatar ? <img src={avatar} alt="Foto do usuário" /> : <MascotAvatar size={34} />}
           </div>
-
-          {!collapsed && (
+          {!showCollapsed && (
             <div className="sidebar-user-info">
-              <strong>
-                {usuario?.nome || "Visitante"}
-              </strong>
-
+              <strong>{usuario?.nome || "Visitante"}</strong>
               <span>Monitor</span>
             </div>
           )}
         </Link>
-
-        {/* BOTÃO PARA ALTERAR FOTO */}
-
         <button
           type="button"
           className="sidebar-avatar-edit"
@@ -188,7 +126,6 @@ function Sidebar() {
         >
           <IconCamera />
         </button>
-
         <input
           ref={inputAvatar}
           type="file"
@@ -197,21 +134,10 @@ function Sidebar() {
           style={{ display: "none" }}
         />
       </div>
-
-      {/* ENCERRAR SESSÃO */}
-
-      <button
-        className="logout-button"
-        onClick={handleLogout}
-        title="Encerrar Sessão"
-      >
+      <button type="button" className="logout-button" onClick={handleLogout} title="Encerrar Sessão">
         <IconLogout />
-
-        {!collapsed && (
-          <span>Encerrar Sessão</span>
-        )}
+        {!showCollapsed && <span>Encerrar Sessão</span>}
       </button>
-
     </aside>
   )
 }
