@@ -1454,3 +1454,65 @@
     height: 44px;
     margin: 0;
 }
+
+
+@media (min-width: 768px) {
+  .alunos-page .students-table th:nth-child(4),
+  .alunos-page .students-table td:nth-child(4) {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .alunos-page .students-table td:nth-child(4) .risk-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 86px;
+    margin-inline: auto;
+  }
+}
+
+[data-theme="dark"] .alunos-page .alunos-tabela-panel,
+[data-theme="dark"] .alunos-page .students-table {
+  background: #141b2d;
+  border-color: #27344d;
+}
+
+[data-theme="dark"] .alunos-page .students-table tbody tr td {
+  background: #141b2d;
+  color: #e8edf5;
+  border-color: #27344d;
+}
+
+[data-theme="dark"] .alunos-page .students-table tbody tr:nth-child(even) td {
+  background: #1b2537;
+}
+
+[data-theme="dark"] .alunos-page .students-table tbody tr:hover td {
+  background: #27344d;
+}
+
+[data-theme="dark"] .alunos-page .students-table .alunos-atualizacao {
+  color: #a8b3c2 !important;
+}
+
+[data-theme="dark"] .alunos-page .students-table .alunos-turma-tag {
+  background: #332b60;
+  color: #c6b7ff;
+}
+
+@media (max-width: 767px) {
+  [data-theme="dark"] .alunos-page .students-table tbody tr {
+    background: #141b2d;
+    border-color: #27344d;
+  }
+
+  [data-theme="dark"] .alunos-page .students-table tbody tr td {
+    background: transparent;
+  }
+
+  [data-theme="dark"] .alunos-page .students-table tbody tr:hover td {
+    background: transparent;
+  }
+}
