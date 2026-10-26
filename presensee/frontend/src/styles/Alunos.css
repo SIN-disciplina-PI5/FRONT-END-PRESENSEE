@@ -1345,6 +1345,9 @@
     color: #cbd5e1;
 }
 
+
+
+
 @media (max-width: 1150px) {
     .alunos-resumo-card {
         padding: 13px;
@@ -1437,22 +1440,20 @@
     }
 }
 
-/* Alinhamento vertical da busca com os campos de seleção */
-.alunos-filtros-panel {
-    align-items: end;
-}
 
-.alunos-filtros-panel .alunos-busca {
-    align-self: end;
-    height: 44px;
-    min-height: 44px;
-    margin: 0;
-}
 
-.alunos-filtros-panel .search-aluno {
-    display: block;
-    height: 44px;
-    margin: 0;
+
+.alunos-page .students-table .risk-status {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 112px !important;
+    padding: 7px 0 !important;   
+    gap: 0 !important;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
 }
 
 
