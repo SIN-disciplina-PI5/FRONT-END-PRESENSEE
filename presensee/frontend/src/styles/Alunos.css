@@ -1485,9 +1485,6 @@
   border-color: #27344d;
 }
 
-[data-theme="dark"] .alunos-page .students-table tbody tr:nth-child(even) td {
-  background: #1b2537;
-}
 
 [data-theme="dark"] .alunos-page .students-table tbody tr:hover td {
   background: #27344d;
@@ -1515,4 +1512,23 @@
   [data-theme="dark"] .alunos-page .students-table tbody tr:hover td {
     background: transparent;
   }
+}
+
+
+.alunos-page .students-table .risk-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 86px;
+  min-height: 34px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  text-align: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.alunos-page .students-table .risk-status .risk-dot {
+  display: none;
 }
