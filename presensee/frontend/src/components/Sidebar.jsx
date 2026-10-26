@@ -77,6 +77,12 @@ const MENU_ADMIN = [
   Icon: IconComunicados
 },
 
+{
+    to: "/admin/saude-sistema",
+    label: "Saúde do Sistema",
+    Icon: IconSaudeSistema
+},
+
   {
     to: "/admin/auditoria",
     label: "Auditoria",
@@ -123,6 +129,23 @@ function IconComunicados() {
       <path d="M20 9a4 4 0 0 1 0 6" />
     </svg>
   );
+}
+
+function IconSaudeSistema() {
+    return (
+        <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M3 12h4l3-7 4 14 3-7h4" />
+        </svg>
+    );
 }
 
 function obterPerfilAdmin() {
