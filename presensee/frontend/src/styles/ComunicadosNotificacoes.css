@@ -1,0 +1,47 @@
+.pnot-grupo-titulo {
+    padding: 11px 15px 7px;
+    border-bottom: 1px solid rgba(120, 120, 160, 0.15);
+    color: #633df2;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.pnot-comunicado-detalhe {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 18px;
+}
+
+.pnot-comunicado-detalhe button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #633df2;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.pnot-comunicado-detalhe strong {
+    font-size: 15px;
+}
+
+.pnot-comunicado-detalhe small {
+    color: #7b849b;
+    font-size: 11px;
+}
+
+.pnot-comunicado-detalhe p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+[data-theme="dark"] .pnot-grupo-titulo,
+[data-theme="dark"] .pnot-comunicado-detalhe button {
+    color: #bca9ff;
+}

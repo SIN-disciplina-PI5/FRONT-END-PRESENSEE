@@ -1,0 +1,47 @@
+
+.sidebar-admin .sidebar-user-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-admin .sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-admin .sidebar-user-info strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-admin .sidebar-user-info span {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.sidebar-admin .sidebar-menu a svg,
+.sidebar-admin .theme-toggle svg,
+.sidebar-admin .logout-button svg {
+  flex-shrink: 0;
+}
+
+.sidebar-admin.collapsed .sidebar-user-link {
+  justify-content: center;
+}
+
+[data-theme="dark"] .sidebar-admin .sidebar-user-info strong {
+  color: white;
+}
