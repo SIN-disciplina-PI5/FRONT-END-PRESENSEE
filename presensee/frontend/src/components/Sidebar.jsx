@@ -71,6 +71,12 @@ const MENU_ADMIN = [
   Icon: IconChamados
 },
 
+{
+  to: "/admin/comunicados",
+  label: "Comunicados",
+  Icon: IconComunicados
+},
+
   {
     to: "/admin/auditoria",
     label: "Auditoria",
@@ -96,6 +102,25 @@ function IconChamados() {
     >
       <path d="M4 5h16v11H8l-4 4V5Z" />
       <path d="M8 9h8M8 12h5" />
+    </svg>
+  );
+}
+
+function IconComunicados() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 10v4h4l10 5V5L7 10H3Z" />
+      <path d="M7 14l2 6h3l-2-5" />
+      <path d="M20 9a4 4 0 0 1 0 6" />
     </svg>
   );
 }

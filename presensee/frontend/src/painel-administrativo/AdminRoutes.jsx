@@ -8,6 +8,7 @@ import AdminGestores from "./pages/AdminGestores"
 import AdminAuditoria from "./pages/AdminAuditoria"
 import AdminPerfil from "./pages/AdminPerfil"
 import AdminChamados from "./pages/AdminChamados";
+import AdminComunicados from "./pages/AdminComunicados";
 function AdminGuard(){
  const token = localStorage.getItem("token")
  let user = null
@@ -24,6 +25,7 @@ export function adminRoutes(){return <>
  <Route path="escolas/nova" element={<AdminNovaEscola/>}/>
  <Route path="gestores" element={<AdminGestores/>}/>
  <Route path="chamados" element={<AdminChamados />} />
+ <Route path="comunicados" element={<AdminComunicados />} />
  <Route path="auditoria" element={<AdminAuditoria/>}/>
  <Route path="perfil" element={<AdminPerfil/>}/>
  </Route></Route></>}
