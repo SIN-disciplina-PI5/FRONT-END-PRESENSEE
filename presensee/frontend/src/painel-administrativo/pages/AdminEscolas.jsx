@@ -1,288 +1,510 @@
 
-import { useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
-
+import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  IconAlunos,
+  IconAlertas,
+  IconPlus
+} from "../../components/Icons";
+import AdminIcon from "../components/AdminIcons";
 import {
   changeStatus,
   deleteEscola,
   getEscolas
-} from "../services/adminDemo"
+} from "../services/adminDemo";
+import EscolaDetalhesModal from "../components/EscolaDetalhesModal";
+import "../../styles/Alunos.css";
+import "../styles/admin.css";
+import "../styles/AdminEscolas.css";
 
-import EscolaDetalhesModal from "../components/EscolaDetalhesModal"
-import "../styles/admin.css"
+const FILTROS = ["Todas", "Ativa", "Pendente", "Bloqueada"];
+
+const STATUS = [
+  {
+    valor: "Ativa",
+    classe: "baixo",
+    rotulo: "Escolas ativas",
+    descricao: "Instituições em funcionamento"
+  },
+  {
+    valor: "Pendente",
+    classe: "medio",
+    rotulo: "Aguardando ativação",
+    descricao: "Aguardando liberação"
+  },
+  {
+    valor: "Bloqueada",
+    classe: "alto",
+    rotulo: "Escolas bloqueadas",
+    descricao: "Instituições bloqueadas"
+  }
+];
 
 export default function AdminEscolas() {
-  const [escolas, setEscolas] = useState(getEscolas())
-  const [busca, setBusca] = useState("")
-  const [excluir, setExcluir] = useState(null)
-  const [detalhes, setDetalhes] = useState(null)
+  const [escolas, setEscolas] = useState(getEscolas);
+  const [busca, setBusca] = useState("");
+  const [excluir, setExcluir] = useState(null);
+  const [detalhes, setDetalhes] = useState(null);
+  const [ordenacao, setOrdenacao] = useState({
+    campo: "nome",
+    direcao: "asc"
+  });
+  const [pagina, setPagina] = useState(1);
+  const [itensPorPagina, setItensPorPagina] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // FILTRO RECEBIDO PELA URL
+  const statusUrl = searchParams.get("status");
 
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const filtrosValidos = [
-    "Todas",
-    "Ativa",
-    "Pendente",
-    "Bloqueada"
-  ]
-
-  const statusUrl = searchParams.get("status")
-
-  const filtro = filtrosValidos.includes(statusUrl)
+  const filtro = FILTROS.includes(statusUrl)
     ? statusUrl
-    : "Todas"
+    : "Todas";
 
-  // ALTERAR FILTRO
+  const resumo = useMemo(() => ({
+    Todas: escolas.length,
+    Ativa: escolas.filter((escola) => escola.status === "Ativa").length,
+    Pendente: escolas.filter((escola) => escola.status === "Pendente").length,
+    Bloqueada: escolas.filter((escola) => escola.status === "Bloqueada").length
+  }), [escolas]);
+
+  const escolasFiltradas = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+
+    return escolas.filter((escola) => {
+      const statusCorreto =
+        filtro === "Todas" || escola.status === filtro;
+
+      const texto = [
+        escola.nome,
+        escola.municipio,
+        escola.gestor,
+        escola.rede,
+        escola.inep
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("pt-BR");
+
+      return statusCorreto && texto.includes(termo);
+    });
+  }, [escolas, busca, filtro]);
+
+  const escolasOrdenadas = useMemo(() => {
+    return [...escolasFiltradas].sort((a, b) => {
+      const primeiro = String(a[ordenacao.campo] ?? "");
+      const segundo = String(b[ordenacao.campo] ?? "");
+
+      const comparacao = primeiro.localeCompare(
+        segundo,
+        "pt-BR",
+        { numeric: true }
+      );
+
+      return ordenacao.direcao === "asc"
+        ? comparacao
+        : -comparacao;
+    });
+  }, [escolasFiltradas, ordenacao]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(escolasOrdenadas.length / itensPorPagina)
+  );
+
+  const paginaAtual = Math.min(pagina, totalPaginas);
+
+  const escolasPaginadas = escolasOrdenadas.slice(
+    (paginaAtual - 1) * itensPorPagina,
+    paginaAtual * itensPorPagina
+  );
 
   function alterarFiltro(novoFiltro) {
     setSearchParams(
       novoFiltro === "Todas"
         ? {}
         : { status: novoFiltro }
-    )
+    );
+    setPagina(1);
   }
 
-  // ALTERAR STATUS DA ESCOLA
-
-  function status(id, novoStatus) {
-    changeStatus(id, novoStatus)
-    setEscolas(getEscolas())
+  function selecionarCard(novoFiltro) {
+    alterarFiltro(novoFiltro === filtro ? "Todas" : novoFiltro);
   }
 
-  // EXCLUIR ESCOLA
+  function ordenar(campo) {
+    setOrdenacao((atual) => ({
+      campo,
+      direcao:
+        atual.campo === campo && atual.direcao === "asc"
+          ? "desc"
+          : "asc"
+    }));
+    setPagina(1);
+  }
+
+  function alterarStatus(id, novoStatus) {
+    changeStatus(id, novoStatus);
+    setEscolas(getEscolas());
+  }
 
   function confirmarExclusao() {
-    if (!excluir) return
+    if (!excluir) return;
 
-    deleteEscola(excluir.id)
-
-    setEscolas(getEscolas())
-    setExcluir(null)
-    setDetalhes(null)
+    deleteEscola(excluir.id);
+    setEscolas(getEscolas());
+    setExcluir(null);
+    setDetalhes(null);
   }
 
-  // FILTRAR ESCOLAS
-
-  const lista = escolas.filter((escola) => {
-    const correspondeStatus =
-      filtro === "Todas" || escola.status === filtro
-
-    const correspondeBusca = [
-      escola.nome,
-      escola.municipio,
-      escola.gestor
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(busca.toLowerCase())
-
-    return correspondeStatus && correspondeBusca
-  })
+  function iniciais(nome) {
+    return String(nome || "")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join("")
+      .toUpperCase();
+  }
 
   return (
-    <div className="admin-page">
-
-      {/* CABEÇALHO */}
-
-      <div className="admin-heading">
-        <div>
-          <h1>Escolas</h1>
-
-          <p>
-            Cadastre e gerencie instituições vinculadas
-            ao projeto.
-          </p>
+    <div className="alunos-page admin-escolas-page">
+      <header className="alunos-header admin-escolas-header">
+        <div className="alunos-header-usuario">
+          <div>
+            <h1>Escolas</h1>
+            <p>
+              Gerencie as instituições cadastradas e acompanhe
+              suas situações no PresenSee.
+            </p>
+          </div>
         </div>
 
         <Link
-          className="admin-btn"
           to="/admin/escolas/nova"
+          className="admin-escolas-nova"
         >
-          + Nova escola
+          
+          <span>+ Nova escola</span>
         </Link>
-      </div>
+      </header>
 
-      {/* PAINEL DE ESCOLAS */}
+      <section
+        className="alunos-resumo"
+        aria-label="Filtrar escolas por situação"
+      >
+        <button
+          type="button"
+          className={`alunos-resumo-card total ${
+            filtro === "Todas" ? "selecionado" : ""
+          }`}
+          aria-pressed={filtro === "Todas"}
+          onClick={() => {
+            alterarFiltro("Todas");
+            setBusca("");
+          }}
+        >
+          <span className="alunos-resumo-icone">
+            <AdminIcon name="school" size={27} />
+          </span>
 
-      <section className="admin-panel admin-list-panel">
+          <div>
+            <strong>{resumo.Todas}</strong>
+            <b>Total de escolas</b>
+            <small>Cadastradas no sistema</small>
+          </div>
+        </button>
 
-        {/* FILTROS */}
+        {STATUS.map((item) => (
+          <button
+            key={item.valor}
+            type="button"
+            className={`alunos-resumo-card ${item.classe} ${
+              filtro === item.valor ? "selecionado" : ""
+            }`}
+            aria-pressed={filtro === item.valor}
+            onClick={() => selecionarCard(item.valor)}
+          >
+            <span className="alunos-resumo-icone">
+              <span className="alunos-resumo-ponto" />
+            </span>
 
-        <div className="admin-filters">
+            <div>
+              <strong>{resumo[item.valor]}</strong>
+              <b>{item.rotulo}</b>
+              <small>
+                {escolas.length
+                  ? Math.round(
+                      (resumo[item.valor] / escolas.length) * 100
+                    )
+                  : 0}% do total
+              </small>
+            </div>
+          </button>
+        ))}
+      </section>
+
+      <section
+        className="alunos-filtros-panel admin-escolas-filtros"
+        aria-label="Filtros de escolas"
+      >
+        <label className="alunos-busca">
+          <span
+            aria-hidden="true"
+            className="alunos-search-icon"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <circle cx="10.8" cy="10.8" r="6.8" />
+              <path d="m16 16 5 5" />
+            </svg>
+          </span>
 
           <input
-            aria-label="Pesquisar escolas"
+            className="search-aluno"
+            type="search"
             placeholder="Buscar escola, município ou gestor..."
             value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            onChange={(event) => {
+              setBusca(event.target.value);
+              setPagina(1);
+            }}
+            aria-label="Pesquisar escolas"
           />
+        </label>
+
+        <div className="alunos-filtro">
+          <label htmlFor="admin-escolas-status">
+            Situação
+          </label>
 
           <select
-            aria-label="Filtrar por situação"
+            id="admin-escolas-status"
             value={filtro}
-            onChange={(event) =>
-              alterarFiltro(event.target.value)
-            }
+            onChange={(event) => alterarFiltro(event.target.value)}
           >
-            {filtrosValidos.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
+            <option value="Todas">Todas as escolas</option>
+            <option value="Ativa">Ativas</option>
+            <option value="Pendente">Pendentes</option>
+            <option value="Bloqueada">Bloqueadas</option>
           </select>
-
         </div>
+      </section>
 
-        {/* TABELA DE ESCOLAS */}
-
-        <div className="admin-table-wrap">
-
-          <table className="admin-table">
-
+      <section
+        className="alunos-tabela-panel"
+        aria-label="Listagem de escolas"
+      >
+        <div className="alunos-tabela-scroll">
+          <table className="students-table admin-escolas-tabela">
             <thead>
               <tr>
-                <th>Escola</th>
-                <th>Município</th>
-                <th>Rede</th>
-                <th>Gestor</th>
-                <th>Status</th>
-                <th>Ações</th>
+                {[
+                  ["nome", "Escola"],
+                  ["municipio", "Município"],
+                  ["rede", "Rede"],
+                  ["gestor", "Gestor"],
+                  ["status", "Status"]
+                ].map(([campo, titulo]) => (
+                  <th key={campo} scope="col">
+                    <button
+                      type="button"
+                      className="alunos-ordenar"
+                      onClick={() => ordenar(campo)}
+                    >
+                      {titulo}
+                      <span aria-hidden="true">↕</span>
+                    </button>
+                  </th>
+                ))}
+
+                <th scope="col">Ações</th>
               </tr>
             </thead>
 
             <tbody>
-              {lista.map((escola) => (
+              {escolasPaginadas.map((escola) => (
                 <tr key={escola.id}>
-
-                  {/* NOME DA ESCOLA */}
-
                   <td>
-                    <button
-                      type="button"
-                      className="admin-link-button"
-                      onClick={() => setDetalhes(escola)}
-                    >
-                      {escola.nome}
-                    </button>
+                    <div className="alunos-nome">
+                      <span className="alunos-avatar">
+                        {iniciais(escola.nome)}
+                      </span>
 
-                    {escola.inep && (
-                      <small>
-                        INEP: {escola.inep}
-                      </small>
-                    )}
+                      <div className="admin-escolas-identificacao">
+                        <button
+                          type="button"
+                          onClick={() => setDetalhes(escola)}
+                        >
+                          {escola.nome}
+                        </button>
+
+                        {escola.inep && (
+                          <small>INEP: {escola.inep}</small>
+                        )}
+                      </div>
+                    </div>
                   </td>
-
-                  {/* MUNICÍPIO */}
 
                   <td>{escola.municipio}</td>
 
-                  {/* REDE DE ENSINO */}
-
-                  <td>{escola.rede}</td>
-
-                  {/* GESTOR RESPONSÁVEL */}
+                  <td>
+                    <span className="alunos-turma-tag">
+                      {escola.rede}
+                    </span>
+                  </td>
 
                   <td>{escola.gestor}</td>
 
-                  {/* STATUS */}
-
                   <td>
                     <span
-                      className={`admin-badge ${escola.status.toLowerCase()}`}
+                      className={`risk-status admin-escolas-status ${
+                        escola.status.toLowerCase()
+                      }`}
                     >
+                      <span className="risk-dot" />
                       {escola.status}
                     </span>
                   </td>
 
-                  {/* AÇÕES */}
-
                   <td>
-                    <div className="admin-row-actions">
-
-                      {/* DETALHES DA ESCOLA */}
-
+                    <div className="alunos-acoes admin-escolas-acoes">
                       <button
                         type="button"
-                        className="admin-outline-btn"
+                        className="alunos-acao"
                         onClick={() => setDetalhes(escola)}
+                        aria-label={`Detalhes de ${escola.nome}`}
+                        title="Ver detalhes"
                       >
-                        Detalhes
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="19"
+                          height="19"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.9"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
                       </button>
 
-                      {/* ALTERAR STATUS */}
-
                       <select
+                        className="admin-escolas-alterar-status"
                         aria-label={`Alterar situação de ${escola.nome}`}
                         value={escola.status}
                         onChange={(event) =>
-                          status(
-                            escola.id,
-                            event.target.value
-                          )
+                          alterarStatus(escola.id, event.target.value)
                         }
                       >
-                        <option value="Ativa">
-                          Ativa
-                        </option>
-
-                        <option value="Pendente">
-                          Pendente
-                        </option>
-
-                        <option value="Bloqueada">
-                          Bloqueada
-                        </option>
+                        <option value="Ativa">Ativa</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Bloqueada">Bloqueada</option>
                       </select>
-
-                      {/* EXCLUIR ESCOLA */}
 
                       <button
                         type="button"
-                        className="admin-delete-button"
+                        className="alunos-acao admin-escolas-excluir"
                         onClick={() => setExcluir(escola)}
                         aria-label={`Excluir ${escola.nome}`}
                         title="Excluir escola"
                       >
-                        Excluir
+                        <svg
+                          width="19"
+                          height="19"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.9"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+                        </svg>
                       </button>
-
                     </div>
                   </td>
-
                 </tr>
               ))}
+
+              {escolasPaginadas.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="alunos-vazio">
+                    Nenhuma escola encontrada.
+                  </td>
+                </tr>
+              )}
             </tbody>
-
           </table>
-
-          {/* NENHUMA ESCOLA ENCONTRADA */}
-
-          {!lista.length && (
-            <p className="admin-empty">
-              Nenhuma escola encontrada.
-            </p>
-          )}
-
         </div>
-      </section>
 
-      {/* POPUP DE DETALHES DA ESCOLA */}
+        <footer className="alunos-paginacao">
+          <span>
+            Mostrando {escolasPaginadas.length} de{" "}
+            {escolasFiltradas.length} escolas
+          </span>
+
+          <div className="alunos-paginas">
+            <button
+              type="button"
+              disabled={paginaAtual <= 1}
+              onClick={() => setPagina(paginaAtual - 1)}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+
+            <strong>{paginaAtual}</strong>
+            <span>de {totalPaginas}</span>
+
+            <button
+              type="button"
+              disabled={paginaAtual >= totalPaginas}
+              onClick={() => setPagina(paginaAtual + 1)}
+              aria-label="Próxima página"
+            >
+              ›
+            </button>
+          </div>
+
+          <label className="alunos-por-pagina">
+            Itens por página
+
+            <select
+              value={itensPorPagina}
+              onChange={(event) => {
+                setItensPorPagina(Number(event.target.value));
+                setPagina(1);
+              }}
+            >
+              {[10, 20, 50].map((quantidade) => (
+                <option key={quantidade} value={quantidade}>
+                  {quantidade}
+                </option>
+              ))}
+            </select>
+          </label>
+        </footer>
+      </section>
 
       <EscolaDetalhesModal
         escola={detalhes}
         onClose={() => setDetalhes(null)}
       />
 
-      {/* POPUP DE CONFIRMAÇÃO DE EXCLUSÃO */}
-
       {excluir && (
         <div
           className="admin-modal-backdrop"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setExcluir(null)
+              setExcluir(null);
             }
           }}
         >
@@ -293,22 +515,18 @@ export default function AdminEscolas() {
             aria-labelledby="admin-delete-title"
             aria-describedby="admin-delete-description"
           >
-
             <h2 id="admin-delete-title">
               Excluir escola?
             </h2>
 
             <p id="admin-delete-description">
               Deseja excluir{" "}
-              <strong>{excluir.nome}</strong>?
-
-              Esta ação remove a instituição dos dados
-              demonstrativos deste navegador e será
-              registrada na auditoria.
+              <strong>{excluir.nome}</strong>? Esta ação
+              remove a instituição dos dados demonstrativos
+              deste navegador e será registrada na auditoria.
             </p>
 
             <div className="admin-actions">
-
               <button
                 type="button"
                 className="admin-btn secondary"
@@ -324,12 +542,10 @@ export default function AdminEscolas() {
               >
                 Sim, excluir escola
               </button>
-
             </div>
           </div>
         </div>
       )}
-
     </div>
-  )
+  );
 }

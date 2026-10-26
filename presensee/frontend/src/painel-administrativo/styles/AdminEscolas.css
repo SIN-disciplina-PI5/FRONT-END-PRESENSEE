@@ -1,0 +1,240 @@
+
+.admin-escolas-page {
+  font-family: var(--font-body);
+}
+
+.admin-escolas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-escolas-nova {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.admin-escolas-nova:hover {
+  background: var(--color-primary-dark);
+}
+
+.admin-escolas-nova svg {
+  width: 19px;
+  height: 19px;
+}
+
+.admin-escolas-page .alunos-resumo-card {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-escolas-page .alunos-resumo-card.selecionado {
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.admin-escolas-page .alunos-resumo-ponto {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.admin-escolas-filtros {
+  grid-template-columns: minmax(220px, 2.4fr) minmax(160px, 1fr);
+}
+
+.admin-escolas-page .alunos-search-icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+.admin-escolas-page .admin-escolas-tabela {
+  min-width: 960px;
+}
+
+.admin-escolas-identificacao {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.admin-escolas-identificacao button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #633DF2;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-escolas-identificacao button:hover {
+  color: #4B25C9;
+}
+
+.admin-escolas-identificacao small {
+  color: #7b849b;
+  font-size: 11px;
+}
+
+.admin-escolas-page .admin-escolas-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 105px;
+  padding: 7px 12px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.admin-escolas-page .admin-escolas-status .risk-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.admin-escolas-page .admin-escolas-status.ativa {
+  background: #e2f8eb;
+  color: #13824f;
+}
+
+.admin-escolas-page .admin-escolas-status.pendente {
+  background: #fff4d4;
+  color: #a66c00;
+}
+
+.admin-escolas-page .admin-escolas-status.bloqueada {
+  background: #ffe7e9;
+  color: #d9233a;
+}
+
+.admin-escolas-page .admin-escolas-acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.admin-escolas-page .admin-escolas-alterar-status {
+  width: 110px;
+  min-width: 110px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #cfc6fc;
+  border-radius: 8px;
+  background: #fff;
+  color: #353263;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.admin-escolas-page .admin-escolas-excluir {
+  color: #d9233a;
+}
+
+.admin-escolas-page .admin-escolas-excluir:hover {
+  background: #ffe7e9;
+}
+
+[data-theme="dark"] .admin-escolas-page {
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .admin-escolas-page .alunos-header h1 {
+  color: #a990ff;
+}
+
+[data-theme="dark"] .admin-escolas-page .alunos-header p {
+  color: #aab6c8;
+}
+
+[data-theme="dark"] .admin-escolas-identificacao button {
+  color: #633DF2;
+}
+
+[data-theme="dark"] .admin-escolas-identificacao small {
+  color: #aab6c8;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-tabela td {
+  background: #141b2d;
+  color: #e8edf5;
+  border-bottom-color: #2a3850;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-tabela tbody tr:hover td {
+  background: #1a2437;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-status.ativa {
+  background: #153c30;
+  color: #5ce2a1;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-status.pendente {
+  background: #44351a;
+  color: #f5c451;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-status.bloqueada {
+  background: #482732;
+  color: #ff7f90;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-alterar-status {
+  background: #1b2639;
+  color: #e9edff;
+  border-color: #414363;
+}
+
+[data-theme="dark"] .admin-escolas-page .admin-escolas-excluir {
+  color: #ff7f90;
+}
+
+@media (max-width: 1100px) {
+  .admin-escolas-filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-escolas-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-escolas-nova {
+    width: 100%;
+  }
+
+  .admin-escolas-filtros {
+    grid-template-columns: 1fr;
+  }
+}
