@@ -1,231 +1,306 @@
-
 .ad-dashboard {
-  width: 100%;
-  max-width: 1540px;
-  min-width: 0;
-  margin: 0 auto;
+    width: 100%;
+    max-width: 1540px;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    margin: 0 auto;
 }
 
 .ad-dashboard .pd-cabecalho {
-  margin-bottom: 24px;
+    margin-bottom: 24px;
 }
 
 .ad-indicadores {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .ad-indicador {
-  width: 100%;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
 .ad-indicador:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
 .ad-indicador .pd-indicador-icone {
-  width: 54px;
-  height: 54px;
+    width: 54px;
+    height: 54px;
 }
 
 .ad-indicador .pd-indicador-conteudo strong {
-  font-size: clamp(26px, 2.4vw, 36px);
+    font-size: clamp(26px, 2.4vw, 36px);
 }
 
 .ad-indicador .pd-indicador-conteudo span {
-  font-size: 12px;
-  white-space: normal;
-  line-height: 1.4;
+    font-size: 12px;
+    white-space: normal;
+    line-height: 1.4;
 }
 
 .ad-indicador.pd-indicador--ativas {
-  border-color: #bcebd7;
-  background: linear-gradient(
-    110deg,
-    #f0fff8,
-    var(--pd-surface) 78%
-  );
+    border-color: #bcebd7;
+    background: linear-gradient(110deg, #f0fff8, var(--pd-surface) 78%);
 }
 
 .ad-indicador.pd-indicador--ativas .pd-indicador-icone {
-  color: #11ba7a;
-  background: #ddfaeb;
+    color: #11ba7a;
+    background: #ddfaeb;
 }
 
 .ad-indicador.pd-indicador--ativas .pd-indicador-conteudo strong {
-  color: #11ba7a;
+    color: #11ba7a;
 }
 
 .ad-grade-principal {
-  grid-template-columns: minmax(0, 2.2fr) minmax(290px, 1fr);
-  align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(270px, 1fr);
+    align-items: start;
+    gap: 20px;
+    min-height: 0;
+    margin-bottom: 20px;
 }
 
-.ad-grade-principal .pd-painel {
-  min-width: 0;
+.ad-grade-principal .pd-painel,
+.ad-grade-secundaria .pd-painel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    padding: 20px;
+    overflow: visible;
+}
+
+.ad-grade-principal .pd-painel-cabecalho,
+.ad-grade-secundaria .pd-painel-cabecalho {
+    margin-bottom: 12px;
+}
+
+.ad-grade-principal .pd-painel-titulos h2,
+.ad-grade-secundaria .pd-painel-titulos h2 {
+    font-size: 15px;
+}
+
+.ad-grade-principal .pd-painel-titulos p,
+.ad-grade-secundaria .pd-painel-titulos p {
+    font-size: 11px;
 }
 
 .ad-grafico-evolucao {
-  height: 280px;
-  flex: 1;
-  min-height: 230px;
+    width: 100%;
+    height: 230px;
+    min-height: 230px;
+    max-height: 230px;
+    flex: 0 0 230px;
+    overflow: hidden;
 }
 
 .ad-grafico-observacao {
-  margin: 12px 0 0;
-  color: var(--pd-muted);
-  font-size: 11px;
-  line-height: 1.5;
+    margin: 10px 0 0;
+    color: var(--pd-muted);
+    font-size: 11px;
+    line-height: 1.5;
 }
 
 .ad-grafico-circular {
-  width: min(100%, 225px);
-  height: 225px;
-  flex: 0 0 auto;
-  margin: 20px auto 12px;
+    position: relative;
+    width: 170px;
+    height: 170px;
+    min-height: 170px;
+    max-width: 100%;
+    flex: 0 0 170px;
+    margin: 10px auto 12px;
+}
+
+.ad-grafico-circular .pd-grafico-circular-rotulo strong {
+    font-size: 27px;
+}
+
+.ad-grafico-circular .pd-grafico-circular-rotulo span {
+    font-size: 11px;
 }
 
 .ad-legenda-status {
-  display: grid;
-  width: 100%;
-  gap: 12px;
-  margin-top: auto;
-  padding: 8px 10px 4px;
+    display: grid;
+    width: 100%;
+    gap: 9px;
+    margin-top: 8px;
+    padding: 8px 10px 4px;
 }
 
 .ad-legenda-item {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  color: var(--pd-text);
-  font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    color: var(--pd-text);
+    font-size: 12px;
 }
 
 .ad-legenda-item strong {
-  margin-left: auto;
-  font-size: 12px;
-  font-weight: 700;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ad-grade-secundaria {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.ad-grade-secundaria .pd-painel {
+    padding: 18px;
+}
+
+.ad-grafico-menor {
+    width: 100%;
+    height: 205px;
+    min-height: 205px;
+    min-width: 0;
+}
+
+.ad-grafico-vazio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 205px;
+    padding: 15px;
+    color: var(--pd-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.ad-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ad-dados-aviso {
+    margin: 0 0 14px;
+    color: var(--pd-muted);
+    font-size: 11px;
+    line-height: 1.5;
 }
 
 .ad-dashboard .recharts-cartesian-axis-tick-value {
-  fill: var(--pd-muted);
-  font-size: 11px;
+    fill: var(--pd-muted);
+    font-size: 11px;
+}
+
+.admin-main:has(.ad-dashboard) {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: visible;
 }
 
 [data-theme="dark"] .ad-indicador.pd-indicador--ativas {
-  border-color: #245543;
-  background: linear-gradient(
-    110deg,
-    #142e29,
-    var(--pd-surface) 80%
-  );
+    border-color: #245543;
+    background: linear-gradient(110deg, #142e29, var(--pd-surface) 80%);
 }
 
 [data-theme="dark"] .ad-indicador.pd-indicador--ativas .pd-indicador-icone {
-  background: #1a4539;
-  color: #22c58e;
+    background: #1a4539;
+    color: #22c58e;
 }
 
 [data-theme="dark"] .ad-indicador.pd-indicador--ativas .pd-indicador-conteudo strong {
-  color: #22c58e;
+    color: #22c58e;
 }
 
 [data-theme="dark"] .ad-dashboard .recharts-cartesian-grid-horizontal line {
-  stroke: #35445c;
-  stroke-opacity: 0.65;
-}
-
-@media (min-width: 1250px) and (min-height: 760px) {
-  .admin-main:has(.ad-dashboard) {
-    height: 100dvh;
-    padding: clamp(16px, 2.4vh, 26px) clamp(20px, 2.3vw, 38px);
-    overflow-y: hidden;
-  }
-
-  .ad-dashboard {
-    display: grid;
-    height: 100%;
-    grid-template-rows: auto auto minmax(0, 1fr);
-    gap: clamp(12px, 1.65vh, 18px);
-  }
-
-  .ad-dashboard .pd-cabecalho,
-  .ad-dashboard .pd-indicadores {
-    margin-bottom: 0;
-  }
-
-  .ad-grade-principal {
-    min-height: 0;
-    margin-bottom: 0;
-  }
-
-  .ad-grade-principal .pd-painel {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .ad-grafico-evolucao {
-    height: auto;
-    min-height: 0;
-  }
-
-  .ad-grafico-circular {
-    height: min(25vh, 225px);
-    min-height: 130px;
-  }
+    stroke: #35445c;
+    stroke-opacity: 0.65;
 }
 
 @media (max-width: 1350px) {
-  .ad-indicadores {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+    .ad-indicadores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-  .ad-indicador {
-    min-height: 100px;
-  }
+    .ad-grade-secundaria {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 850px) {
-  .ad-grade-principal {
-    grid-template-columns: 1fr;
-  }
-
-  .ad-grafico-evolucao {
-    height: 250px;
-  }
-
-  .ad-grafico-circular {
-    height: 220px;
-  }
+    .ad-grade-principal,
+    .ad-grade-secundaria {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
 }
 
 @media (max-width: 680px) {
-  .ad-indicadores {
-    grid-template-columns: 1fr;
-  }
+    .ad-dashboard {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+    }
 
-  .ad-indicador {
-    min-height: 94px;
-  }
+    .ad-indicadores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
 
-  .ad-dashboard .pd-usuario h1 {
-    font-size: 23px;
-  }
+    .ad-indicador {
+        min-width: 0;
+        min-height: 94px;
+    }
 
-  .ad-grade-principal .pd-painel {
-    padding: 18px;
-  }
+    .ad-dashboard .pd-usuario h1 {
+        font-size: 23px;
+    }
 
-  .ad-grafico-evolucao {
-    height: 220px;
-    min-height: 220px;
-  }
+    .ad-grade-principal .pd-painel,
+    .ad-grade-secundaria .pd-painel {
+        padding: 16px;
+    }
 
-  .ad-grafico-circular {
-    height: 210px;
-  }
+    .ad-grafico-evolucao {
+        height: 200px;
+        min-height: 200px;
+        max-height: 200px;
+        flex-basis: 200px;
+    }
+
+    .ad-grafico-circular {
+        width: 155px;
+        height: 155px;
+        min-height: 155px;
+        flex-basis: 155px;
+    }
+
+    .ad-grafico-menor,
+    .ad-grafico-vazio {
+        height: 195px;
+        min-height: 195px;
+    }
+}
+
+@media (max-width: 390px) {
+    .ad-indicadores {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ad-indicador {
+        min-height: 88px;
+    }
+
+    .ad-grafico-evolucao {
+        height: 180px;
+        min-height: 180px;
+        max-height: 180px;
+        flex-basis: 180px;
+    }
 }
