@@ -1533,3 +1533,32 @@
 .alunos-page .students-table .risk-status .risk-dot {
   display: none;
 }
+
+
+[data-theme="dark"] .alunos-page .alunos-progresso {
+  background-color: #27344d;
+}
+
+[data-theme="dark"] .alunos-page .alunos-progresso::-webkit-progress-bar {
+  background-color: #27344d;
+}
+
+[data-theme="dark"] .alunos-page .alunos-progresso::-moz-progress-bar {
+  border-radius: 999px;
+}
+
+
+[data-theme="dark"] .alunos-page .students-table .risk-status.alto {
+  background: #482732;
+  color: #ff9494;
+}
+
+[data-theme="dark"] .alunos-page .students-table .risk-status.medio {
+  background: #41341e;
+  color: #f5c451;
+}
+
+[data-theme="dark"] .alunos-page .students-table .risk-status.baixo {
+  background: #102a25;
+  color: #22c55e;
+}
