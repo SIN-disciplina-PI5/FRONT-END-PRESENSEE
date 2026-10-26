@@ -1562,3 +1562,21 @@
   background: #102a25;
   color: #22c55e;
 }
+
+.alunos-page .alunos-filtros-panel {
+  align-items: end;
+}
+
+.alunos-page .alunos-filtros-panel .alunos-busca {
+  align-self: end;
+  margin: 0;
+  padding: 0;
+}
+
+.alunos-page .alunos-filtros-panel .search-aluno {
+  display: block;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  box-sizing: border-box;
+}
