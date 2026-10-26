@@ -1,0 +1,231 @@
+
+.ad-dashboard {
+  width: 100%;
+  max-width: 1540px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.ad-dashboard .pd-cabecalho {
+  margin-bottom: 24px;
+}
+
+.ad-indicadores {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ad-indicador {
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ad-indicador:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.ad-indicador .pd-indicador-icone {
+  width: 54px;
+  height: 54px;
+}
+
+.ad-indicador .pd-indicador-conteudo strong {
+  font-size: clamp(26px, 2.4vw, 36px);
+}
+
+.ad-indicador .pd-indicador-conteudo span {
+  font-size: 12px;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.ad-indicador.pd-indicador--ativas {
+  border-color: #bcebd7;
+  background: linear-gradient(
+    110deg,
+    #f0fff8,
+    var(--pd-surface) 78%
+  );
+}
+
+.ad-indicador.pd-indicador--ativas .pd-indicador-icone {
+  color: #11ba7a;
+  background: #ddfaeb;
+}
+
+.ad-indicador.pd-indicador--ativas .pd-indicador-conteudo strong {
+  color: #11ba7a;
+}
+
+.ad-grade-principal {
+  grid-template-columns: minmax(0, 2.2fr) minmax(290px, 1fr);
+  align-items: stretch;
+}
+
+.ad-grade-principal .pd-painel {
+  min-width: 0;
+}
+
+.ad-grafico-evolucao {
+  height: 280px;
+  flex: 1;
+  min-height: 230px;
+}
+
+.ad-grafico-observacao {
+  margin: 12px 0 0;
+  color: var(--pd-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ad-grafico-circular {
+  width: min(100%, 225px);
+  height: 225px;
+  flex: 0 0 auto;
+  margin: 20px auto 12px;
+}
+
+.ad-legenda-status {
+  display: grid;
+  width: 100%;
+  gap: 12px;
+  margin-top: auto;
+  padding: 8px 10px 4px;
+}
+
+.ad-legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--pd-text);
+  font-size: 12px;
+}
+
+.ad-legenda-item strong {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ad-dashboard .recharts-cartesian-axis-tick-value {
+  fill: var(--pd-muted);
+  font-size: 11px;
+}
+
+[data-theme="dark"] .ad-indicador.pd-indicador--ativas {
+  border-color: #245543;
+  background: linear-gradient(
+    110deg,
+    #142e29,
+    var(--pd-surface) 80%
+  );
+}
+
+[data-theme="dark"] .ad-indicador.pd-indicador--ativas .pd-indicador-icone {
+  background: #1a4539;
+  color: #22c58e;
+}
+
+[data-theme="dark"] .ad-indicador.pd-indicador--ativas .pd-indicador-conteudo strong {
+  color: #22c58e;
+}
+
+[data-theme="dark"] .ad-dashboard .recharts-cartesian-grid-horizontal line {
+  stroke: #35445c;
+  stroke-opacity: 0.65;
+}
+
+@media (min-width: 1250px) and (min-height: 760px) {
+  .admin-main:has(.ad-dashboard) {
+    height: 100dvh;
+    padding: clamp(16px, 2.4vh, 26px) clamp(20px, 2.3vw, 38px);
+    overflow-y: hidden;
+  }
+
+  .ad-dashboard {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: clamp(12px, 1.65vh, 18px);
+  }
+
+  .ad-dashboard .pd-cabecalho,
+  .ad-dashboard .pd-indicadores {
+    margin-bottom: 0;
+  }
+
+  .ad-grade-principal {
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .ad-grade-principal .pd-painel {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .ad-grafico-evolucao {
+    height: auto;
+    min-height: 0;
+  }
+
+  .ad-grafico-circular {
+    height: min(25vh, 225px);
+    min-height: 130px;
+  }
+}
+
+@media (max-width: 1350px) {
+  .ad-indicadores {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ad-indicador {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 850px) {
+  .ad-grade-principal {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-grafico-evolucao {
+    height: 250px;
+  }
+
+  .ad-grafico-circular {
+    height: 220px;
+  }
+}
+
+@media (max-width: 680px) {
+  .ad-indicadores {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-indicador {
+    min-height: 94px;
+  }
+
+  .ad-dashboard .pd-usuario h1 {
+    font-size: 23px;
+  }
+
+  .ad-grade-principal .pd-painel {
+    padding: 18px;
+  }
+
+  .ad-grafico-evolucao {
+    height: 220px;
+    min-height: 220px;
+  }
+
+  .ad-grafico-circular {
+    height: 210px;
+  }
+}
