@@ -16,6 +16,7 @@ import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
 import PerfilMonitor from "./pages/PerfilMonitor"
 import { adminRoutes } from "./painel-administrativo/AdminRoutes"
+import CadastroEstudante from "./pages/CadastroEstudante"
 
 import ProtectedRoute from "./components/ProtectedRoute"
 
@@ -23,7 +24,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {adminRoutes()}
+        {adminRoutes()} 
 
         <Route
           path="/"
@@ -50,6 +51,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cadastro-estudante"
+          element={
+            <ProtectedRoute>
+              <CadastroEstudante/>
             </ProtectedRoute>
           }
         />

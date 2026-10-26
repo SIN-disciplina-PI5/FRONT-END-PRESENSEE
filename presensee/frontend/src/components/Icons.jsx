@@ -211,6 +211,23 @@ export function IconSeta(props) {
   )
 }
 
+
+export function IconCadastroEstudante(props) {
+  return (
+    <svg
+      {...base} {...props}
+      viewBox="0 0 24 24"
+    >
+      <circle cx="9" cy="7" r="3" />
+      <path d="M3 20v-1a6 6 0 0 1 12 0v1H3Z" />
+      <circle cx="18" cy="17" r="4" />
+      <path d="M18 15v4" />
+      <path d="M16 17h4" />
+    </svg>
+  )
+}
+
+
 export function IconEnviar(props) {
   return (
     <svg {...base} {...props}>

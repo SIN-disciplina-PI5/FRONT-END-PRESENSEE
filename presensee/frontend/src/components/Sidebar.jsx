@@ -15,6 +15,7 @@ import {
   IconCamera,
   IconSun,
   IconMoon,
+  IconCadastroEstudante,
   MascotAvatar,
 } from "./Icons"
 
@@ -26,6 +27,7 @@ const MENU = [
   { to: "/intervencao", label: "Intervenção", Icon: IconIntervencao },
   { to: "/turmas", label: "Turma", Icon: IconTurma },
   { to: "/relatorios", label: "Relatório", Icon: IconRelatorio },
+  {to: "/cadastro-estudante", label: "Cadastro de Estudante", Icon: IconCadastroEstudante},
 ]
 
 function Sidebar({ mobileOpen = false }) {
