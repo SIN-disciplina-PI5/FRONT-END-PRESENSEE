@@ -6,7 +6,6 @@ import CadastroEscola from "./pages/CadastroEscola"
 import Dashboard from "./pages/Dashboard"
 import Alunos from "./pages/Alunos"
 import Calendario from "./pages/Calendario"
-import Frequencia from "./pages/Frequencia"
 import Relatorios from "./pages/Relatorios"
 import Turmas from "./pages/Turmas"
 import NovaTurma from "./pages/NovaTurma"
@@ -95,15 +94,6 @@ function App() {
           element={
             <ProtectedRoute>
               <NovaTurma />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/frequencia"
-          element={
-            <ProtectedRoute>
-              <Frequencia />
             </ProtectedRoute>
           }
         />

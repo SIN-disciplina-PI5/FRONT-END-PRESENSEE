@@ -1,14 +1,20 @@
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState, useEffect } from "react"
 import DashboardLayout from "../layouts/DashboardLayout"
-import {
-  alunos,
-  intervencoes,
-  TIPOS_INTERVENCAO,
-  formatarData,
-  dataHoje,
-} from "../data/diarioMock"
+import api from "../services/api"
 import "../styles/Intervencao.css"
 import "../styles/IntervencaoBusca.css"
+
+const TIPOS_INTERVENCAO = ["Conversa Individual", "Contato com responsável", "Encaminhamento"]
+
+function dataHoje() {
+  return new Date().toISOString().split("T")[0]
+}
+
+function formatarData(dataStr) {
+  if (!dataStr) return ""
+  const [ano, mes, dia] = dataStr.split("T")[0].split("-")
+  return `${dia}/${mes}/${ano}`
+}
 
 function normalizar(valor) {
   return String(valor ?? "")
@@ -19,7 +25,11 @@ function normalizar(valor) {
 }
 
 function Intervencao() {
-  const [registros, setRegistros] = useState(intervencoes)
+  const [registros, setRegistros] = useState([])
+  const [alunos, setAlunos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadingPost, setLoadingPost] = useState(false)
+
   const [busca, setBusca] = useState("")
   const [tipoSelecionado, setTipoSelecionado] = useState("Todos")
   const [modalAberto, setModalAberto] = useState(false)
@@ -31,39 +41,80 @@ function Intervencao() {
   const [sugestoesAbertas, setSugestoesAbertas] = useState(false)
   const [opcaoAtiva, setOpcaoAtiva] = useState(0)
   const buscaRef = useRef(null)
+  
   const [tipo, setTipo] = useState(TIPOS_INTERVENCAO[0])
   const [data, setData] = useState(dataHoje())
   const [descricao, setDescricao] = useState("")
   const [erro, setErro] = useState("")
 
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        const [resAlunos, resIntervencoes] = await Promise.all([
+          api.get("/students"),
+          api.get("/incidents").catch(() => ({ data: [] }))
+        ])
+        
+        // Mapeamento dos estudantes do banco para o padrão do componente
+        const alunosMap = (resAlunos.data || []).map(a => ({
+          id: a.id || a._id,
+          nome: a.name || a.nome,
+          turma: a.class?.name || a.turma || "Sem Turma"
+        }))
+        
+        // Mapeamento apenas dos incidentes que possuem um studentId (Intervenções)
+        const intervencoesMap = (resIntervencoes.data || [])
+          .filter(i => i.studentId)
+          .map(i => ({
+            id: i.id || i._id,
+            alunoId: i.studentId,
+            tipo: i.type,
+            descricao: i.description,
+            data: i.date || i.createdAt
+          }))
+
+        setAlunos(alunosMap)
+        setRegistros(intervencoesMap)
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    carregarDados()
+  }, [])
+
   const turmas = useMemo(
     () => [...new Set(alunos.map((aluno) => aluno.turma).filter(Boolean))]
       .sort((a, b) => String(a).localeCompare(String(b), "pt-BR", { numeric: true })),
-    []
+    [alunos]
   )
 
   const sugestoes = useMemo(() => {
     const pesquisa = normalizar(alunoBusca)
     return alunos
-      .filter((aluno) => (!turmaBusca || aluno.turma === turmaBusca) &&
-        (!pesquisa || normalizar(aluno.nome).includes(pesquisa) || normalizar(aluno.id).includes(pesquisa)))
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+      .filter((aluno) => {
+        const turmaCorresponde = !turmaBusca || aluno.turma === turmaBusca
+        const nomeCorresponde = !pesquisa || normalizar(aluno.nome).includes(pesquisa) || normalizar(aluno.id).includes(pesquisa)
+        return turmaCorresponde && nomeCorresponde
+      })
+      .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"))
       .slice(0, 12)
-  }, [alunoBusca, turmaBusca])
+  }, [alunos, alunoBusca, turmaBusca])
 
   const selecionado = alunos.find((aluno) => String(aluno.id) === String(alunoId))
 
   const listaFiltrada = useMemo(() => {
     return registros
       .filter((item) => {
-        const aluno = alunos.find((a) => a.id === item.alunoId)
+        const aluno = alunos.find((a) => String(a.id) === String(item.alunoId))
         const nome = aluno?.nome || "Aluno não encontrado"
         const correspondeBusca = normalizar(nome).includes(normalizar(busca))
         const correspondeTipo = tipoSelecionado === "Todos" || item.tipo === tipoSelecionado
         return correspondeBusca && correspondeTipo
       })
-      .sort((a, b) => b.data.localeCompare(a.data))
-  }, [registros, busca, tipoSelecionado])
+      .sort((a, b) => String(b.data).localeCompare(String(a.data)))
+  }, [registros, busca, tipoSelecionado, alunos])
 
   function escolherAluno(aluno) {
     setAlunoId(String(aluno.id))
@@ -122,28 +173,48 @@ function Intervencao() {
     setModalAberto(true)
   }
 
-  function salvarIntervencao(e) {
+  async function salvarIntervencao(e) {
     e.preventDefault()
     if (!alunoId || !tipo || !data || !descricao.trim()) {
       setErro("Selecione um aluno nas sugestões e preencha todos os campos.")
       return
     }
-    const novaIntervencao = {
-      id: Date.now(),
-      alunoId: Number(alunoId),
-      tipo,
-      data,
-      descricao: descricao.trim(),
+
+    setLoadingPost(true)
+    try {
+      const payload = {
+        studentId: alunoId,
+        type: tipo,
+        description: descricao.trim(),
+        date: new Date(data).toISOString()
+      }
+      
+      const response = await api.post("/incidents", payload)
+      const respData = response.data;
+      
+      const novoRegistro = {
+        id: respData.id || respData._id || Math.random().toString(),
+        alunoId: respData.studentId || payload.studentId,
+        tipo: respData.type || payload.type,
+        descricao: respData.description || payload.description,
+        data: respData.date || respData.createdAt || payload.date
+      }
+      
+      setRegistros((anterior) => [novoRegistro, ...anterior])
+      setBusca("")
+      setTipoSelecionado("Todos")
+      setModalAberto(false)
+      setErro("")
+    } catch (error) {
+      console.error("Erro ao salvar intervenção:", error)
+      setErro("Ocorreu um erro ao salvar. Verifique sua conexão.")
+    } finally {
+      setLoadingPost(false)
     }
-    setRegistros((anterior) => [...anterior, novaIntervencao])
-    setBusca("")
-    setTipoSelecionado("Todos")
-    setModalAberto(false)
-    setErro("")
   }
 
   function iniciais(nome) {
-    return nome.split(" ").filter(Boolean).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase()
+    return (nome || "").split(" ").filter(Boolean).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase()
   }
 
   function classeTipo(tipoIntervencao) {
@@ -153,11 +224,21 @@ function Intervencao() {
   }
 
   function nomeAluno(id) {
-    return alunos.find((aluno) => aluno.id === id)?.nome || "Aluno não encontrado"
+    return alunos.find((aluno) => String(aluno.id) === String(id))?.nome || "Aluno não encontrado"
   }
 
   function turmaAluno(id) {
-    return alunos.find((aluno) => aluno.id === id)?.turma || "Turma não informada"
+    return alunos.find((a) => String(a.id) === String(id))?.turma || "Turma não informada"
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <main className="intervencao-page">
+          <p style={{ padding: "2rem" }}>Carregando dados das intervenções...</p>
+        </main>
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -326,8 +407,10 @@ function Intervencao() {
                 </label>
                 {erro && <p className="intervencao-erro" role="alert">{erro}</p>}
                 <div className="intervencao-formulario-acoes">
-                  <button type="button" className="intervencao-botao-secundario" onClick={() => setModalAberto(false)}>Cancelar</button>
-                  <button type="submit" className="intervencao-botao-principal">Salvar intervenção</button>
+                  <button type="button" className="intervencao-botao-secundario" onClick={() => setModalAberto(false)} disabled={loadingPost}>Cancelar</button>
+                  <button type="submit" className="intervencao-botao-principal" disabled={loadingPost}>
+                    {loadingPost ? "Salvando..." : "Salvar intervenção"}
+                  </button>
                 </div>
               </form>
             </section>

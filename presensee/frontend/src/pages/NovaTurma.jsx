@@ -22,8 +22,15 @@ export default function NovaTurma() {
     setLoading(true);
     
     try {
-      // Substitua '/turmas' por '/classes' caso a rota no seu back-end seja em inglês
-      await api.post("/turmas", dados);
+      // Mapeamento do payload com o campo 'year' exigido pelo Prisma no back-end
+      const payload = {
+        name: dados.nome,
+        course: dados.curso,
+        shift: dados.turno,
+        year: new Date().getFullYear() 
+      };
+
+      await api.post("/classes", payload);
       navigate("/turmas");
     } catch (error) {
       console.error("Erro ao cadastrar turma:", error);

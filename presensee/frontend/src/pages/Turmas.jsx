@@ -13,14 +13,13 @@ function Turmas() {
   useEffect(() => {
     async function carregarTurmas() {
       try {
-        // Substitua '/turmas' por '/classes' caso sua rota backend esteja em inglês
-        const response = await api.get("/turmas");
+        const response = await api.get("/classes");
         
         const turmasFormatadas = response.data.map((turma) => ({
-          id: turma.id,
+          id: turma.id || turma._id,
           nome: turma.name || turma.nome || "Sem Nome",
           curso: turma.course || turma.curso || "Ensino Médio",
-          alunos: turma._count?.students || turma.alunos || 0,
+          alunos: turma._count?.students || turma.students?.length || turma.alunos || 0,
           turno: turma.shift || turma.turno || "Manhã",
           frequencia: turma.attendanceRate || turma.frequencia || 100,
           atencao: turma.attentionStudents || turma.atencao || 0,
@@ -135,7 +134,7 @@ function Turmas() {
               <div className="student-modal-header">
                 <div>
                   <h2 id="turma-modal-titulo">{turmaSelecionada.nome}</h2>
-                  <span>{turmaSelecionada.curso} • {turmaSelecionada.turno}</span>
+                  <span>{turmaSelecionada.curso} · {turmaSelecionada.turno}</span>
                 </div>
               </div>
               <div className="student-modal-stats">

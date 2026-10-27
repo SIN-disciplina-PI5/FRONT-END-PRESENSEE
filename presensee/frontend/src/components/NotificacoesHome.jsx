@@ -1,37 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getToken } from "../services/auth";
+import api from "../services/api";
 import "../styles/NotificacoesHome.css";
-
-const EXEMPLOS = [
-  {
-    id: "demo-alerta-1",
-    titulo: "Faltas consecutivas",
-    estudante: "Gabriel Soares",
-    matricula: "006",
-    descricao: "O estudante acumulou 4 faltas consecutivas.",
-    nivel: "alto",
-    quando: "Hoje",
-  },
-  {
-    id: "demo-alerta-2",
-    titulo: "Frequência em atenção",
-    estudante: "Pedro Henrique",
-    matricula: "005",
-    descricao: "A frequência do estudante está abaixo do esperado.",
-    nivel: "medio",
-    quando: "Ontem",
-  },
-  {
-    id: "demo-alerta-3",
-    titulo: "Acompanhamento recomendado",
-    estudante: "Marcos Heitor",
-    matricula: "003",
-    descricao: "Revise os indicadores de presença deste estudante.",
-    nivel: "medio",
-    quando: "Esta semana",
-  },
-];
 
 const ETIQUETAS = { alto: "Alto risco", medio: "Atenção", baixo: "Informativo" };
 
@@ -44,21 +14,44 @@ function IconeSino() {
   );
 }
 
-export default function NotificacoesHome({ notificacoes }) {
+export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   const navigate = useNavigate();
   const areaRef = useRef(null);
-  const isDemo = getToken() === "token-demo";
   
-  const fonte = Array.isArray(notificacoes) && notificacoes.length > 0 ? notificacoes : isDemo ? EXEMPLOS : [];
-  
-  const alertas = fonte.map((alerta) => ({
-    ...alerta,
-    matricula: String(alerta.matricula ?? alerta.alunoId ?? "").trim() || null,
-    estudante: alerta.estudante || alerta.alunoNome || "Estudante",
-  }));
-  
+  const [alertasApi, setAlertasApi] = useState([]);
   const [aberto, setAberto] = useState(false);
   const [lidos, setLidos] = useState([]);
+
+  // Busca dados reais da API caso não venham via prop do componente pai
+  useEffect(() => {
+    if (notificacoesProp && notificacoesProp.length > 0) return;
+
+    async function buscarAlertas() {
+      try {
+        const response = await api.get("/alertas").catch(() => api.get("/notificacoes"));
+        if (response?.data) {
+          setAlertasApi(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar notificações:", error);
+      }
+    }
+    buscarAlertas();
+  }, [notificacoesProp]);
+
+  const fonte = (notificacoesProp && notificacoesProp.length > 0) ? notificacoesProp : alertasApi;
+  
+  const alertas = (Array.isArray(fonte) ? fonte : []).map((alerta) => ({
+    ...alerta,
+    id: alerta.id || alerta._id || Math.random().toString(36).substr(2, 9),
+    matricula: String(alerta.matricula ?? alerta.alunoId ?? "").trim() || null,
+    estudante: alerta.estudante || alerta.alunoNome || alerta.aluno?.nome || "Estudante",
+    titulo: alerta.titulo || alerta.title || "Novo Alerta",
+    descricao: alerta.descricao || alerta.mensagem || alerta.message || "",
+    nivel: alerta.nivel || alerta.risco || alerta.level || "baixo",
+    quando: alerta.quando || (alerta.createdAt ? new Date(alerta.createdAt).toLocaleDateString("pt-BR") : "Recente"),
+  }));
+  
   const naoLidos = alertas.filter((alerta) => !lidos.includes(alerta.id)).length;
 
   useEffect(() => {
@@ -130,7 +123,10 @@ export default function NotificacoesHome({ notificacoes }) {
                 </button>
               );
             }) : (
-              <div className="pnot-empty"><strong>Nenhuma notificação por enquanto</strong><p>Os alertas dos estudantes aparecerão aqui quando a integração estiver disponível.</p></div>
+              <div className="pnot-empty">
+                <strong>Nenhuma notificação</strong>
+                <p>Os alertas e ocorrências dos estudantes aparecerão aqui.</p>
+              </div>
             )}
           </div>
           {alertas.length > 0 && (

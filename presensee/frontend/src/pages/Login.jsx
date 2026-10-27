@@ -9,11 +9,13 @@ function Login() {
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState("")
+  const [mensagem, setMensagem] = useState("")
   const [enviando, setEnviando] = useState(false)
 
   async function handleLogin(e) {
     e.preventDefault()
     setErro("")
+    setMensagem("")
     if (!email.trim() || !senha) { 
       setErro("Preencha todos os campos")
       return 
@@ -38,19 +40,33 @@ function Login() {
       
       localStorage.setItem("token", token)
       localStorage.setItem("usuario", JSON.stringify(usuario))
-      navigate(admin ? "/admin/dashboard" : "/dashboard", { replace: true })
+      
+      // Removemos o replace: true para garantir que o redirecionamento recarrega o estado de autenticação
+      window.location.href = admin ? "/admin/dashboard" : "/dashboard"
     } catch (error) {
       console.error("Falha de autenticação", error)
-      setErro("Email ou senha inválidos")
+      setErro("Email ou senha inválidos. Se o banco estiver vazio, execute o Setup Inicial.")
     } finally { 
       setEnviando(false) 
     }
   }
 
-  function entrarComoVisitante() {
-    localStorage.setItem("token", "token-demo")
-    localStorage.setItem("usuario", JSON.stringify({ nome: "Visitante", perfil: "Demonstração" }))
-    navigate("/dashboard", { replace: true })
+  // Função para executar a rota /setup do back-end e criar o primeiro utilizador no banco
+  async function executarSetup() {
+    setErro("")
+    setMensagem("")
+    setEnviando(true)
+    try {
+      const response = await api.post("/setup")
+      setMensagem(response.data.message || "Setup concluído! Agora você pode fazer login.")
+      // Se o backend devolver credenciais padrão, logar elas no console
+      console.log("Credenciais de setup:", response.data) 
+    } catch (error) {
+      console.error("Erro no setup", error)
+      setErro(error.response?.data?.error || "Falha ao executar o setup. Verifique os logs do back-end.")
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -84,13 +100,20 @@ function Login() {
           <p className="login-subtitle">Acesse o painel de presença da sua turma.</p>
           <form onSubmit={handleLogin}>
             <label htmlFor="email">Email</label>
-            <input id="email" className="login-input" type="email" placeholder="email@gmail.com" value={email} onChange={e=>setEmail(e.target.value)} />
+            <input id="email" className="login-input" type="email" placeholder="email@escola.com" value={email} onChange={e=>setEmail(e.target.value)} />
             <label htmlFor="senha">Senha</label>
             <input id="senha" className="login-input" type={mostrarSenha ? "text" : "password"} placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} />
             <p className="show-password" onClick={()=>setMostrarSenha(!mostrarSenha)}>{mostrarSenha ? "Ocultar senha" : "Mostrar senha"}</p>
+            
             {erro && <p className="error-message" role="alert">{erro}</p>}
-            <button className="login-button" type="submit" disabled={enviando}>{enviando ? "Entrando..." : "Entrar"}</button>
-            <button type="button" className="create-account" onClick={entrarComoVisitante}>Entrar como visitante</button>
+            {mensagem && <p className="success-message" role="alert" style={{color: '#17b989', fontSize: '0.875rem', marginBottom: '1rem'}}>{mensagem}</p>}
+            
+            <button className="login-button" type="submit" disabled={enviando}>{enviando ? "Processando..." : "Entrar"}</button>
+            
+            {/* O botão de Visitante foi substituído por este para popular o banco de dados */}
+            <button type="button" className="create-account" onClick={executarSetup} disabled={enviando}>
+              ⚙️ Executar Setup Inicial do Sistema
+            </button>
           </form>
         </div>
       </div>

@@ -67,17 +67,17 @@ function Diario() {
       try {
         // Carrega intervenções/eventos recentes
         try {
-          const resEventos = await api.get("/eventos"); // Ajuste para a rota de eventos/intervenções
+          const resEventos = await api.get("/events");
           setIntervencoes(Array.isArray(resEventos.data) ? resEventos.data : []);
-        } catch (e) { console.warn("Rota /eventos pendente"); }
+        } catch (e) { console.warn("Rota /events pendente"); }
         
         // Carrega incidentes/pendências/anotações
         try {
-          const resIncidentes = await api.get("/incidentes"); // Ajuste para a rota de incidentes/anotações
+          const resIncidentes = await api.get("/incidents");
           const dadosInc = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
           
           const notas = dadosInc.filter(i => i.type === "NOTA" || !i.isPending).map(n => ({
-            id: n.id,
+            id: n.id || n._id,
             data: n.createdAt || n.data,
             texto: n.description || n.texto,
             categoria: n.category || n.categoria || "Observação",
@@ -86,14 +86,14 @@ function Diario() {
           setAnotacoesLocais(notas);
           
           const pends = dadosInc.filter(i => i.isPending || i.type === "PENDENCIA").map(p => ({
-            id: p.id,
+            id: p.id || p._id,
             texto: p.description || p.texto,
             alunoId: p.studentId || p.alunoId,
             prioridade: p.priority || p.prioridade || "Média",
             feita: p.resolved || p.feita || false,
           }));
           setPendencias(pends);
-        } catch (e) { console.warn("Rota /incidentes pendente"); }
+        } catch (e) { console.warn("Rota /incidents pendente"); }
 
       } catch (error) {
         console.error("Erro geral ao carregar o diário", error);
@@ -150,20 +150,20 @@ function Diario() {
     };
 
     try {
-      // Ajuste para a rota de gravação do seu back-end
-      const response = await api.post("/incidentes", payload);
+      const response = await api.post("/incidents", payload);
       const novoRegistro = response.data;
+      const novoId = novoRegistro.id || novoRegistro._id || `temp-${Date.now()}`;
       
       if (marcarComoPendencia) {
         setPendencias(lista => [{
-          id: novoRegistro.id || `temp-${Date.now()}`,
+          id: novoId,
           texto: payload.description,
           prioridade: payload.priority,
           feita: false
         }, ...lista]);
       } else {
         setAnotacoesLocais(lista => [{
-          id: novoRegistro.id || `temp-${Date.now()}`,
+          id: novoId,
           data: novoRegistro.createdAt || dataHojeISO(),
           texto: payload.description,
           categoria: payload.category,
@@ -185,7 +185,6 @@ function Diario() {
   }
 
   async function alternarPendencia(id) {
-    // Atualiza front-end otimisticamente
     const pendencia = pendencias.find(p => p.id === id);
     const novoStatus = !pendencia.feita;
     
@@ -193,11 +192,9 @@ function Diario() {
       lista.map((item) => item.id === id ? { ...item, feita: novoStatus } : item)
     )
     
-    // Atualiza back-end
     try {
-      // Caso seja um ID real do banco (não os temps que criamos)
       if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
-        await api.patch(`/incidentes/${id}`, { resolved: novoStatus, feita: novoStatus });
+        await api.patch(`/incidents/${id}`, { resolved: novoStatus, feita: novoStatus });
       }
     } catch (error) {
       console.error("Erro ao atualizar pendência", error);
@@ -214,7 +211,7 @@ function Diario() {
     
     try {
       if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
-        await api.patch(`/incidentes/${id}`, { priority: proxima, prioridade: proxima });
+        await api.patch(`/incidents/${id}`, { priority: proxima, prioridade: proxima });
       }
     } catch (error) {
       console.error("Erro ao alterar prioridade", error);
@@ -225,7 +222,7 @@ function Diario() {
     setPendencias((lista) => lista.filter((item) => item.id !== id))
     try {
       if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp'))) {
-        await api.delete(`/incidentes/${id}`);
+        await api.delete(`/incidents/${id}`);
       }
     } catch (error) {
       console.error("Erro ao excluir", error);
@@ -414,7 +411,7 @@ function Diario() {
                   const { dia, mes } = partesDaData(dataReg)
                   const tipo = item.type || item.tipo || "Registro";
                   return (
-                    <article className="dw-registro" key={item.id}>
+                    <article className="dw-registro" key={item.id || item._id}>
                       <div className="dw-registro-data" aria-label={formatarDataDisplay(dataReg)}>
                         <strong>{dia}</strong>
                         <span>{mes}</span>

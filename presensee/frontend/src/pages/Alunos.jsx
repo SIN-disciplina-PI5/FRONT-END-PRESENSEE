@@ -47,15 +47,13 @@ export default function Alunos() {
   useEffect(() => {
     async function carregarAlunos() {
       try {
-        // Substitua '/alunos' por '/students' caso sua rota backend esteja em inglês
-        const response = await api.get("/alunos");
+        const response = await api.get("/students");
         
-        // Mapeia os dados do back-end para o formato do front-end
         const alunosFormatados = response.data.map((aluno) => {
           const frequencia = aluno.attendanceRate ?? aluno.frequencia ?? 100;
           return {
             ...aluno,
-            id: aluno.id,
+            id: aluno.id || aluno._id,
             nome: aluno.name || aluno.nome || "Aluno sem nome",
             turma: normalizeTurma(aluno.class?.name || aluno.turma || "N/A"),
             frequencia: frequencia,
@@ -121,29 +119,29 @@ export default function Alunos() {
     <DashboardLayout>
       <div className="alunos-page">
         <header className="alunos-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-  <div className="alunos-header-usuario">
-    <div>
-      <h1>Alunos</h1>
-      <p>Gerencie os alunos, acompanhe a frequência e identifique os níveis de risco.</p>
-    </div>
-  </div>
-  <button
-    type="button"
-    onClick={() => navigate("/novo-aluno")}
-    style={{
-      padding: "10px 18px",
-      borderRadius: "8px",
-      border: "none",
-      background: "#633df2",
-      color: "#ffffff",
-      fontWeight: "600",
-      cursor: "pointer",
-      fontSize: "14px"
-    }}
-  >
-    + Novo Aluno
-  </button>
-</header>
+          <div className="alunos-header-usuario">
+            <div>
+              <h1>Alunos</h1>
+              <p>Gerencie os alunos, acompanhe a frequência e identifique os níveis de risco.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/novo-aluno")}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "8px",
+              border: "none",
+              background: "#633df2",
+              color: "#ffffff",
+              fontWeight: "600",
+              cursor: "pointer",
+              fontSize: "14px"
+            }}
+          >
+            + Novo Aluno
+          </button>
+        </header>
 
         <section className="alunos-resumo" aria-label="Filtrar alunos por nível de risco">
           <button

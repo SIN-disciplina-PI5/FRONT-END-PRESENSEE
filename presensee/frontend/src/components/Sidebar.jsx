@@ -1,9 +1,7 @@
-
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useNavigate, Link } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import { getUsuario, logout } from "../services/auth"
 import "../styles/Sidebar.css"
-import { Link } from "react-router-dom"
 
 import {
   IconHome,
@@ -38,18 +36,15 @@ function Sidebar() {
   const [avatar, setAvatar] = useState(
     localStorage.getItem("avatarUsuario") || ""
   )
-
   const [collapsed, setCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true"
   )
-
   const [tema, setTema] = useState(
     localStorage.getItem("tema") || "light"
   )
 
   const inputAvatar = useRef(null)
 
-  // Aplica o tema e salva a preferência
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", tema)
     localStorage.setItem("tema", tema)
@@ -72,27 +67,28 @@ function Sidebar() {
 
   function escolherAvatar(e) {
     const arquivo = e.target.files[0]
-
-    if (!arquivo) {
-      return
-    }
+    if (!arquivo) return
 
     const leitor = new FileReader()
-
     leitor.onload = () => {
       const imagem = leitor.result
       setAvatar(imagem)
       localStorage.setItem("avatarUsuario", imagem)
     }
-
     leitor.readAsDataURL(arquivo)
   }
 
+  // Mapeamento dinâmico do utilizador e cargo com base na API
+  const nomeExibicao = usuario?.name || usuario?.nome || "Visitante"
+  const roleDb = String(usuario?.role || usuario?.perfil || "").toUpperCase()
+  
+  let cargoExibicao = "Visitante"
+  if (roleDb === "ADMIN" || roleDb === "SUPERADMIN") cargoExibicao = "Administrador"
+  else if (roleDb === "MANAGER" || roleDb === "GESTOR") cargoExibicao = "Gestor"
+  else if (roleDb === "MONITOR") cargoExibicao = "Monitor"
+
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-
-      {/* LOGO + BOTÃO DE COLAPSAR */}
-
       <div className="sidebar-top">
         <div className="sidebar-logo">
           {!collapsed && (
@@ -101,7 +97,6 @@ function Sidebar() {
             </h2>
           )}
         </div>
-
         <button
           className="collapse-toggle"
           onClick={alternarColapso}
@@ -111,53 +106,26 @@ function Sidebar() {
         </button>
       </div>
 
-      {/* MENU */}
-
       <nav className="sidebar-menu">
         {MENU.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            title={collapsed ? label : undefined}
-          >
+          <NavLink key={to} to={to} title={collapsed ? label : undefined}>
             <Icon />
-
-            {!collapsed && (
-              <span className="menu-label">
-                {label}
-              </span>
-            )}
+            {!collapsed && <span className="menu-label">{label}</span>}
           </NavLink>
         ))}
       </nav>
 
-      {/* MODO ESCURO / CLARO */}
-
       <button
         className="theme-toggle"
         onClick={alternarTema}
-        title={tema === "light"
-          ? "Ativar modo escuro"
-          : "Ativar modo claro"
-        }
+        title={tema === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
       >
         {tema === "light" ? <IconMoon /> : <IconSun />}
-
-        {!collapsed && (
-          <span>
-            {tema === "light" ? "Modo escuro" : "Modo claro"}
-          </span>
-        )}
+        {!collapsed && <span>{tema === "light" ? "Modo escuro" : "Modo claro"}</span>}
       </button>
 
-      {/* USUÁRIO */}
-
       <div className="sidebar-user">
-        <Link
-          to="/perfil-monitor"
-          className="sidebar-user-link"
-          title="Acessar perfil do monitor"
-        >
+        <Link to="/perfil-monitor" className="sidebar-user-link" title="Acessar perfil">
           <div className="sidebar-avatar">
             {avatar ? (
               <img src={avatar} alt="Foto do usuário" />
@@ -165,20 +133,13 @@ function Sidebar() {
               <MascotAvatar size={34} />
             )}
           </div>
-
           {!collapsed && (
             <div className="sidebar-user-info">
-              <strong>
-                {usuario?.nome || "Visitante"}
-              </strong>
-
-              <span>Monitor</span>
+              <strong>{nomeExibicao}</strong>
+              <span>{cargoExibicao}</span>
             </div>
           )}
         </Link>
-
-        {/* BOTÃO PARA ALTERAR FOTO */}
-
         <button
           type="button"
           className="sidebar-avatar-edit"
@@ -188,30 +149,13 @@ function Sidebar() {
         >
           <IconCamera />
         </button>
-
-        <input
-          ref={inputAvatar}
-          type="file"
-          accept="image/*"
-          onChange={escolherAvatar}
-          style={{ display: "none" }}
-        />
+        <input ref={inputAvatar} type="file" accept="image/*" onChange={escolherAvatar} style={{ display: "none" }} />
       </div>
 
-      {/* ENCERRAR SESSÃO */}
-
-      <button
-        className="logout-button"
-        onClick={handleLogout}
-        title="Encerrar Sessão"
-      >
+      <button className="logout-button" onClick={handleLogout} title="Encerrar Sessão">
         <IconLogout />
-
-        {!collapsed && (
-          <span>Encerrar Sessão</span>
-        )}
+        {!collapsed && <span>Encerrar Sessão</span>}
       </button>
-
     </aside>
   )
 }

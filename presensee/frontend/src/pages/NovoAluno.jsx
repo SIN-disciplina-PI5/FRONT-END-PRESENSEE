@@ -20,7 +20,7 @@ function NovoAluno() {
   useEffect(() => {
     async function carregarTurmas() {
       try {
-        const response = await api.get("/turmas"); // Ajuste para "/classes" se a rota for em inglês
+        const response = await api.get("/classes");
         setTurmas(response.data);
       } catch (error) {
         console.error("Erro ao carregar turmas:", error);
@@ -44,21 +44,30 @@ function NovoAluno() {
     setLoading(true);
 
     try {
-      // Usamos FormData para suportar o envio do arquivo (foto) para o Cloudinary
-      const formData = new FormData();
-      formData.append("name", dados.nome);
-      formData.append("registration", dados.matricula);
-      formData.append("classId", dados.turmaId);
-      if (dados.email) formData.append("email", dados.email);
-      if (dados.dataNascimento) formData.append("birthDate", dados.dataNascimento);
-      if (foto) formData.append("photo", foto);
+      // 1. Envia os dados de texto como JSON para criar o aluno
+      const payload = {
+        name: dados.nome,
+        registration: dados.matricula,
+        classId: dados.turmaId,
+        email: dados.email || undefined,
+        birthDate: dados.dataNascimento ? new Date(dados.dataNascimento).toISOString() : undefined
+      };
 
-      // Ajuste para "/students" caso a rota do seu backend seja em inglês
-      await api.post("/alunos", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      });
+      const response = await api.post("/students", payload);
+      const alunoCriado = response.data;
+      const alunoId = alunoCriado.id || alunoCriado._id;
+
+      // 2. Se o utilizador anexou uma foto e o aluno foi criado, envia a biometria
+      if (foto && alunoId) {
+        const formData = new FormData();
+        formData.append("photo", foto);
+        
+        await api.patch(`/students/${alunoId}/biometry`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+      }
 
       navigate("/alunos");
     } catch (error) {
@@ -108,7 +117,7 @@ function NovoAluno() {
           >
             <option value="">Selecione a Turma *</option>
             {turmas.map((turma) => (
-              <option key={turma.id} value={turma.id}>
+              <option key={turma.id || turma._id} value={turma.id || turma._id}>
                 {turma.nome || turma.name}
               </option>
             ))}
