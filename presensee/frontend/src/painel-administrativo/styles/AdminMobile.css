@@ -1,0 +1,841 @@
+
+.admin-mobile-appbar,
+.admin-mobile-sidebar-backdrop,
+.admin-mobile-drawer-top {
+    display: none;
+}
+
+.admin-mobile-sidebar-holder {
+    display: contents;
+}
+
+.admin-layout,
+.admin-main {
+    min-width: 0;
+}
+
+@media (max-width: 1100px) {
+    .admin-layout .admin-main {
+        min-width: 0;
+    }
+
+    .admin-layout .admin-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-layout .admin-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-layout .admin-detail-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-layout {
+        display: block;
+        width: 100%;
+        min-height: 100dvh;
+        max-width: 100%;
+    }
+
+    .admin-layout .admin-main {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 16px 14px max(36px, env(safe-area-inset-bottom));
+        overflow-x: clip;
+    }
+
+    .admin-mobile-appbar {
+        position: sticky;
+        top: 0;
+        z-index: 110;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        height: 60px;
+        padding-left: max(14px, env(safe-area-inset-left));
+        padding-right: max(14px, env(safe-area-inset-right));
+        border-bottom: 1px solid var(--border-color, #ede7fa);
+        background: var(--card-bg, #fff);
+    }
+
+    .admin-mobile-menu-trigger {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 0;
+        border-radius: 10px;
+        background: #eeeaff;
+        color: #5330d1;
+        cursor: pointer;
+    }
+
+    .admin-mobile-brand {
+        color: #4b25c9;
+        font-size: 21px;
+        font-style: italic;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .admin-mobile-brand span {
+        color: #38bdf8;
+    }
+
+    .admin-mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: #0d103b88;
+        cursor: pointer;
+    }
+
+    .admin-mobile-sidebar-holder {
+        display: block;
+        position: static;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar,
+    .admin-mobile-sidebar-holder .sidebar.collapsed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 121;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: min(285px, 85vw);
+        max-width: 85vw;
+        height: 100dvh;
+        padding: 72px 14px 20px;
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform 0.2s ease, visibility 0.2s ease;
+    }
+
+    .admin-mobile-sidebar-holder.mobile-open .sidebar,
+    .admin-mobile-sidebar-holder.mobile-open .sidebar.collapsed {
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 12px 0 42px #0f103644;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar-top {
+        display: none;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar .collapse-toggle {
+        display: none;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar-menu {
+        width: 100%;
+        padding-bottom: 10px;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar-menu a,
+    .admin-mobile-sidebar-holder .sidebar.collapsed .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 44px;
+        padding: 10px;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar.collapsed .theme-toggle,
+    .admin-mobile-sidebar-holder .sidebar.collapsed .logout-button,
+    .admin-mobile-sidebar-holder .sidebar.collapsed .sidebar-user-link {
+        justify-content: flex-start;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar .menu-label,
+    .admin-mobile-sidebar-holder .sidebar .theme-toggle > span,
+    .admin-mobile-sidebar-holder .sidebar .logout-button > span,
+    .admin-mobile-sidebar-holder .sidebar .sidebar-user-info {
+        display: block;
+    }
+
+    .admin-mobile-sidebar-holder .sidebar .sidebar-user-info {
+        min-width: 0;
+    }
+
+    .admin-mobile-drawer-top {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 123;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: min(285px, 85vw);
+        height: 60px;
+        padding: 10px 14px;
+        color: #fff;
+        background: var(--color-sidebar, #4b25c9);
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform 0.2s ease, visibility 0.2s ease;
+    }
+
+    .admin-mobile-sidebar-holder.mobile-open .admin-mobile-drawer-top {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .admin-mobile-drawer-top strong {
+        font-size: 20px;
+        font-style: italic;
+        font-weight: 800;
+    }
+
+    .admin-mobile-drawer-top strong span {
+        color: #7ad9ff;
+    }
+
+    .admin-mobile-drawer-close {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 0;
+        border-radius: 9px;
+        background: #ffffff20;
+        color: #fff;
+        font-size: 29px;
+        cursor: pointer;
+    }
+
+    .admin-mobile-menu-trigger:focus-visible,
+    .admin-mobile-drawer-close:focus-visible {
+        outline: 3px solid #38bdf8;
+        outline-offset: 2px;
+    }
+
+    .admin-main :is(
+        .admin-page,
+        .alunos-page,
+        .pd-dashboard,
+        .admin-saude-page,
+        .admin-chamados-page,
+        .admin-comunicados-page,
+        .admin-auditoria-page,
+        .admin-gestores-page,
+        .admin-escolas-page
+    ) {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-inline: 0;
+    }
+
+    .admin-main .alunos-page {
+        padding: 4px 0 24px;
+    }
+
+    .admin-main .alunos-header,
+    .admin-main .admin-heading {
+        min-width: 0;
+    }
+
+    .admin-main .alunos-header h1,
+    .admin-main .admin-heading h1 {
+        overflow-wrap: anywhere;
+        line-height: 1.2;
+    }
+
+    .admin-main :is(input, select, textarea) {
+        max-width: 100%;
+        min-width: 0;
+        font-size: 16px;
+    }
+
+    .admin-main :is(button, select, input, textarea) {
+        touch-action: manipulation;
+    }
+
+    .admin-main .alunos-resumo,
+    .admin-main .admin-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .admin-main .alunos-resumo-card {
+        min-width: 0;
+        min-height: 95px;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .admin-main .alunos-resumo-icone {
+        flex-basis: 36px;
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    .admin-main .alunos-resumo-card strong {
+        font-size: 23px;
+    }
+
+    .admin-main .alunos-filtros-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .admin-main .alunos-filtros-panel > * {
+        width: 100%;
+        min-width: 0;
+        grid-column: auto;
+    }
+
+    .admin-main .alunos-filtros-panel :is(input, select) {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .admin-main .admin-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-main .admin-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main .admin-detail-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-main .admin-detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main .admin-actions {
+        flex-wrap: wrap;
+    }
+
+    .admin-main .admin-actions > button {
+        min-height: 44px;
+    }
+
+    .admin-main .admin-row-actions {
+        flex-wrap: wrap;
+    }
+
+    .admin-main .alunos-tabela-panel {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .admin-main .alunos-tabela-scroll,
+    .admin-main .admin-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-main .students-table,
+    .admin-main .admin-table {
+        width: 100%;
+    }
+
+    .admin-main .alunos-paginacao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .admin-main .admin-modal-backdrop {
+        padding: 12px;
+    }
+
+    .admin-main .admin-modal {
+        width: min(100%, 520px);
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+        padding: 18px;
+        overscroll-behavior: contain;
+    }
+
+    .admin-main .admin-details-modal {
+        width: min(100%, 520px);
+        max-height: calc(100dvh - 24px);
+    }
+
+    .admin-main .admin-profile-header {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .admin-main .admin-profile-photo {
+        width: 70px;
+        height: 70px;
+    }
+
+    .admin-main .chamados-indicadores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .admin-main .chamados-indicador {
+        min-width: 0;
+    }
+
+    .admin-main .chamados-modal {
+        max-width: calc(100vw - 16px);
+        max-height: calc(100dvh - 16px);
+    }
+
+    .admin-main .chamados-modal-backdrop {
+        padding: 8px;
+    }
+
+    .admin-main .saude-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .admin-main .saude-resource-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main .saude-service-detail {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-main .saude-section {
+        min-width: 0;
+        padding: 16px;
+    }
+
+    .admin-main .saude-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-main .saude-refresh {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .admin-main .saude-overall {
+        flex-wrap: wrap;
+    }
+
+    .admin-main .saude-overall > span {
+        width: 100%;
+        text-align: left;
+    }
+
+    .admin-main .saude-history-heading {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-main .saude-service-text {
+        overflow-wrap: anywhere;
+    }
+
+    .admin-main .saude-history-table {
+        min-width: 760px;
+    }
+
+    .admin-main .saude-section .alunos-tabela-scroll {
+        overflow-x: auto;
+    }
+
+    .admin-main .saude-section .students-table {
+        display: table;
+        min-width: 760px;
+    }
+
+    .admin-main .saude-section .students-table thead {
+        display: table-header-group;
+    }
+
+    .admin-main .saude-section .students-table tbody {
+        display: table-row-group;
+    }
+
+    .admin-main .saude-section .students-table tr {
+        display: table-row;
+    }
+
+    .admin-main .saude-section .students-table th,
+    .admin-main .saude-section .students-table td {
+        display: table-cell;
+    }
+
+    .admin-main .pd-dashboard {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .admin-main .pd-indicadores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .admin-main .pd-grade-principal,
+    .admin-main .pd-grade-inferior {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .admin-main .pd-painel {
+        min-width: 0;
+        height: auto;
+        padding: 14px;
+    }
+
+    .admin-main .pd-painel .recharts-responsive-container {
+        min-width: 0 !important;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-main .saude-service-detail {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main .admin-detail-summary {
+        gap: 8px;
+    }
+
+    .admin-main .admin-detail-summary > div {
+        padding: 11px;
+    }
+
+    .admin-main .chamados-indicador {
+        padding: 11px;
+    }
+}
+
+@media (max-width: 390px) {
+    .admin-layout .admin-main {
+        padding-inline: 10px;
+    }
+
+    .admin-mobile-brand {
+        font-size: 19px;
+    }
+
+    .admin-main .pd-indicadores {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main .alunos-resumo-card {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .admin-main .saude-metrics {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+[data-theme="dark"] .admin-mobile-appbar {
+    background: var(--card-bg, #182237);
+    border-bottom-color: var(--border-color, #35415e);
+}
+
+[data-theme="dark"] .admin-mobile-menu-trigger {
+    background: #332b60;
+    color: #dacfff;
+}
+
+[data-theme="dark"] .admin-mobile-brand {
+    color: #e8edf5;
+}
+
+[data-theme="dark"] .admin-mobile-brand span {
+    color: #22d3c5;
+}
+
+[data-theme="dark"] .admin-mobile-drawer-top {
+    background: #0f1e2e;
+}
+
+[data-theme="dark"] .admin-mobile-drawer-top strong span {
+    color: #22d3c5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-mobile-sidebar-holder .sidebar,
+    .admin-mobile-drawer-top {
+        transition: none;
+    }
+}
+
+
+
+@media (max-width: 767px) {
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) {
+        display: block;
+        width: 100%;
+        min-width: 0 !important;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) thead {
+        display: none;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody tr {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        gap: 0;
+        padding: 15px;
+        border: 1px solid var(--border-color, #e6e0f1);
+        border-radius: 15px;
+        background: var(--card-bg, #fff);
+        box-shadow: 0 4px 15px rgba(33, 32, 74, 0.05);
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        padding: 11px 0;
+        border: 0;
+        border-bottom: 1px solid var(--border-color, #eceef4);
+        background: transparent;
+        text-align: left;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td:first-child {
+        grid-column: auto;
+        grid-row: auto;
+        padding-top: 0;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td:last-child {
+        grid-column: auto;
+        grid-row: auto;
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td:nth-child(n) {
+        grid-column: auto;
+        grid-row: auto;
+        justify-self: stretch;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td:nth-child(n)::before {
+        display: none;
+        content: none;
+    }
+
+    .admin-main .admin-gestores-tabela tbody td:nth-child(2)::before {
+        display: block;
+        content: "Escola";
+    }
+
+    .admin-main .admin-gestores-tabela tbody td:nth-child(3)::before {
+        display: block;
+        content: "E-mail";
+    }
+
+    .admin-main .admin-gestores-tabela tbody td:nth-child(4)::before {
+        display: block;
+        content: "Situação";
+    }
+
+    .admin-main .admin-escolas-tabela tbody td:nth-child(2)::before {
+        display: block;
+        content: "Município";
+    }
+
+    .admin-main .admin-escolas-tabela tbody td:nth-child(3)::before {
+        display: block;
+        content: "Rede";
+    }
+
+    .admin-main .admin-escolas-tabela tbody td:nth-child(4)::before {
+        display: block;
+        content: "Gestor responsável";
+    }
+
+    .admin-main .admin-escolas-tabela tbody td:nth-child(5)::before {
+        display: block;
+        content: "Situação";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(2)::before {
+        display: block;
+        content: "Escola";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(3)::before {
+        display: block;
+        content: "Responsável";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(4)::before {
+        display: block;
+        content: "Prioridade";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(5)::before {
+        display: block;
+        content: "Status";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(6)::before {
+        display: block;
+        content: "Prazo";
+    }
+
+    .admin-main .chamados-tabela tbody td:nth-child(7)::before {
+        display: block;
+        content: "Última atualização";
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td::before {
+        margin-bottom: 6px;
+        color: var(--text-secondary, #78809b);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela) .alunos-nome {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela) .alunos-avatar {
+        flex-shrink: 0;
+    }
+
+    .admin-main .admin-gestores-nome,
+    .admin-main .admin-escolas-identificacao {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-main .admin-gestores-nome,
+    .admin-main .admin-escolas-identificacao button,
+    .admin-main .chamados-tabela-identificacao button {
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: left;
+    }
+
+    .admin-main .admin-gestores-tabela tbody td:last-child,
+    .admin-main .admin-escolas-tabela tbody td:last-child {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .admin-main .admin-gestores-acoes,
+    .admin-main .admin-escolas-acoes {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 9px;
+    }
+
+    .admin-main .admin-escolas-alterar-status {
+        flex-shrink: 0;
+    }
+
+    .admin-main .admin-gestores-status,
+    .admin-main .admin-escolas-status,
+    .admin-main .chamados-badge {
+        align-self: flex-start;
+        margin: 0;
+    }
+
+    .admin-main .chamados-tabela-identificacao {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .admin-main .chamados-tabela-identificacao span,
+    .admin-main .chamados-tabela-identificacao small {
+        overflow-wrap: anywhere;
+    }
+
+    .admin-main .chamados-tabela tbody td:last-child {
+        align-items: stretch;
+    }
+
+    .admin-main .chamados-ver {
+        align-self: stretch;
+        min-height: 40px;
+        text-align: center;
+    }
+
+    .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody .alunos-vazio {
+        display: block;
+        padding: 20px;
+        text-align: center;
+        border: 0;
+    }
+
+    [data-theme="dark"] .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody tr {
+        background: var(--card-bg, #141b2d);
+        border-color: var(--border-color, #35415e);
+    }
+
+    [data-theme="dark"] .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td {
+        background: transparent;
+        border-bottom-color: #2a3850;
+    }
+
+    [data-theme="dark"] .admin-main :is(.admin-gestores-tabela, .admin-escolas-tabela, .chamados-tabela) tbody td:last-child {
+        border-bottom: 0;
+    }
+}

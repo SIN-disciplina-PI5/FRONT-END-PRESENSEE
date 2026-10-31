@@ -1,0 +1,366 @@
+
+.admin-auditoria-page {
+  font-family: var(--font-body);
+}
+
+.admin-auditoria-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-auditoria-exportar {
+  min-height: 43px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-primary);
+  color: #fff;
+  font: 650 12px var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-auditoria-exportar:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.admin-auditoria-exportar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-auditoria-filtros {
+  grid-template-columns: minmax(220px, 2.4fr) repeat(2, minmax(145px, 1fr));
+}
+
+.admin-auditoria-page .alunos-search-icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+.admin-auditoria-historico {
+  overflow: hidden;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 5px 25px #1a174b0e;
+}
+
+.admin-auditoria-historico-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e9eaf2;
+}
+
+.admin-auditoria-historico-topo h2 {
+  margin: 0;
+  color: #202747;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.admin-auditoria-historico-topo p {
+  margin: 6px 0 0;
+  color: #7b849b;
+  font-size: 12px;
+}
+
+.admin-auditoria-historico-topo > span {
+  color: #667085;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-auditoria-timeline {
+  padding: 10px 24px 4px;
+}
+
+.admin-auditoria-grupo {
+  margin-top: 18px;
+}
+
+.admin-auditoria-grupo h3 {
+  margin: 0 0 14px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.admin-auditoria-eventos {
+  position: relative;
+  padding-left: 13px;
+  border-left: 2px solid #e9eaf2;
+}
+
+.admin-auditoria-evento {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  min-width: 0;
+  padding: 4px 0 22px 15px;
+}
+
+.admin-auditoria-evento-icone {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 12px;
+  background: #eee9ff;
+  color: #633df2;
+}
+
+.admin-auditoria-evento-icone svg {
+  width: 21px;
+  height: 21px;
+}
+
+.admin-auditoria-evento-icone.cadastro {
+  background: #e2f8eb;
+  color: #13824f;
+}
+
+.admin-auditoria-evento-icone.alteracao {
+  background: #fff4d4;
+  color: #a66c00;
+}
+
+.admin-auditoria-evento-icone.exclusao {
+  background: #ffe7e9;
+  color: #d9233a;
+}
+
+.admin-auditoria-evento-corpo {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0 18px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.admin-auditoria-evento-principal {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-auditoria-evento-texto {
+  min-width: 0;
+}
+
+.admin-auditoria-evento-texto strong {
+  display: block;
+  color: #29304b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.admin-auditoria-evento-texto p {
+  margin: 4px 0 0;
+  color: #633df2;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-auditoria-evento-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 9px;
+  color: #7b849b;
+  font-size: 11px;
+}
+
+.admin-auditoria-detalhes {
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: #f1edff;
+  color: #4b25c9;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.admin-auditoria-detalhes:hover {
+  background: #e3dbff;
+}
+
+.admin-auditoria-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin: 16px 0 0;
+  padding: 16px;
+  border-radius: 11px;
+  background: #f8f9fd;
+}
+
+.admin-auditoria-info div {
+  min-width: 0;
+}
+
+.admin-auditoria-info dt {
+  margin-bottom: 5px;
+  color: #7b849b;
+  font-size: 11px;
+}
+
+.admin-auditoria-info dd {
+  margin: 0;
+  color: #29304b;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.admin-auditoria-info-completa {
+  grid-column: 1 / -1;
+}
+
+.admin-auditoria-vazio {
+  margin: 0;
+  padding: 50px 24px;
+  color: #667085;
+  font-size: 13px;
+  text-align: center;
+}
+
+[data-theme="dark"] .admin-auditoria-page .alunos-header h1 {
+  color: #a990ff;
+}
+
+[data-theme="dark"] .admin-auditoria-historico {
+  background: #141b2d;
+}
+
+[data-theme="dark"] .admin-auditoria-historico-topo,
+[data-theme="dark"] .admin-auditoria-evento-corpo {
+  border-color: #2a3850;
+}
+
+[data-theme="dark"] .admin-auditoria-historico-topo h2,
+[data-theme="dark"] .admin-auditoria-evento-texto strong,
+[data-theme="dark"] .admin-auditoria-info dd {
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .admin-auditoria-historico-topo p,
+[data-theme="dark"] .admin-auditoria-historico-topo > span,
+[data-theme="dark"] .admin-auditoria-grupo h3,
+[data-theme="dark"] .admin-auditoria-evento-meta,
+[data-theme="dark"] .admin-auditoria-info dt,
+[data-theme="dark"] .admin-auditoria-vazio {
+  color: #aab6c8;
+}
+
+[data-theme="dark"] .admin-auditoria-eventos {
+  border-color: #35445c;
+}
+
+[data-theme="dark"] .admin-auditoria-evento-texto p {
+  color: #a990ff;
+}
+
+[data-theme="dark"] .admin-auditoria-evento-icone {
+  background: #30264f;
+  color: #bca9ff;
+}
+
+[data-theme="dark"] .admin-auditoria-evento-icone.cadastro {
+  background: #153c30;
+  color: #5ce2a1;
+}
+
+[data-theme="dark"] .admin-auditoria-evento-icone.alteracao {
+  background: #44351a;
+  color: #f5c451;
+}
+
+[data-theme="dark"] .admin-auditoria-evento-icone.exclusao {
+  background: #482732;
+  color: #ff7f90;
+}
+
+[data-theme="dark"] .admin-auditoria-detalhes {
+  background: #30264f;
+  color: #bca9ff;
+}
+
+[data-theme="dark"] .admin-auditoria-info {
+  background: #1b2639;
+}
+
+@media (max-width: 1100px) {
+  .admin-auditoria-filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-auditoria-filtros .alunos-busca {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-auditoria-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-auditoria-exportar {
+    width: 100%;
+  }
+
+  .admin-auditoria-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-auditoria-filtros .alunos-busca {
+    grid-column: auto;
+  }
+
+  .admin-auditoria-historico-topo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-auditoria-timeline {
+    padding: 8px 15px;
+  }
+
+  .admin-auditoria-evento {
+    gap: 10px;
+    padding-left: 10px;
+  }
+
+  .admin-auditoria-evento-icone {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .admin-auditoria-evento-principal {
+    flex-direction: column;
+  }
+
+  .admin-auditoria-info {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-auditoria-info-completa {
+    grid-column: auto;
+  }
+}
