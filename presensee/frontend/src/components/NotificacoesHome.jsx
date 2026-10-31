@@ -22,13 +22,12 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   const [aberto, setAberto] = useState(false);
   const [lidos, setLidos] = useState([]);
 
-  // Busca dados reais da API caso não venham via prop do componente pai
   useEffect(() => {
     if (notificacoesProp && notificacoesProp.length > 0) return;
 
     async function buscarAlertas() {
       try {
-        const response = await api.get("/alertas").catch(() => api.get("/notificacoes"));
+        const response = await api.get("/alerts");
         if (response?.data) {
           setAlertasApi(Array.isArray(response.data) ? response.data : []);
         }
@@ -44,11 +43,11 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   const alertas = (Array.isArray(fonte) ? fonte : []).map((alerta) => ({
     ...alerta,
     id: alerta.id || alerta._id || Math.random().toString(36).substr(2, 9),
-    matricula: String(alerta.matricula ?? alerta.alunoId ?? "").trim() || null,
-    estudante: alerta.estudante || alerta.alunoNome || alerta.aluno?.nome || "Estudante",
-    titulo: alerta.titulo || alerta.title || "Novo Alerta",
-    descricao: alerta.descricao || alerta.mensagem || alerta.message || "",
-    nivel: alerta.nivel || alerta.risco || alerta.level || "baixo",
+    alunoId: alerta.studentId || String(alerta.matricula ?? alerta.alunoId ?? "").trim() || null,
+    estudante: alerta.student?.name || alerta.estudante || alerta.alunoNome || alerta.aluno?.nome || "Estudante",
+    titulo: alerta.title || alerta.titulo || "Novo Alerta",
+    descricao: alerta.message || alerta.descricao || alerta.mensagem || "",
+    nivel: alerta.level || alerta.nivel || alerta.risco || "baixo",
     quando: alerta.quando || (alerta.createdAt ? new Date(alerta.createdAt).toLocaleDateString("pt-BR") : "Recente"),
   }));
   
@@ -75,7 +74,7 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   function visualizar(alerta) {
     setLidos((anteriores) => [...new Set([...anteriores, alerta.id])]);
     setAberto(false);
-    const idAluno = alerta.matricula;
+    const idAluno = alerta.alunoId;
     if (idAluno) {
       navigate(`/alunos/${encodeURIComponent(String(idAluno))}`);
     } else {

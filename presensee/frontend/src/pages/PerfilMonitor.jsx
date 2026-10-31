@@ -5,19 +5,18 @@ import "../styles/PerfilMonitor.css"
 
 const CHAVE_USUARIO = "usuario"
 const CHAVE_AVATAR = "avatarUsuario"
-// Substitua pelo e-mail oficial da equipe de suporte do PresenSee.
-const EMAIL_SUPORTE = "suporte@seudominio.com.br"
+const EMAIL_SUPORTE = "suporte@presensee.com.br"
 
 function lerUsuario() {
   try {
     const salvo = localStorage.getItem(CHAVE_USUARIO)
     const dados = salvo ? JSON.parse(salvo) : {}
     return {
-      nome: dados.nome || "Visitante",
+      nome: dados.name || dados.nome || "Visitante",
       email: dados.email || "",
       telefone: dados.telefone || "",
-      cargo: dados.cargo || dados.perfil || "Monitor",
-      instituicao: dados.instituicao || "",
+      cargo: dados.role || dados.cargo || dados.perfil || "Monitor",
+      instituicao: dados.instituicao || "Minha Escola",
     }
   } catch {
     return {
@@ -99,7 +98,7 @@ function PerfilMonitor() {
       `Nome: ${usuario.nome || "Não informado"}`,
       `E-mail para contato: ${usuario.email || "Não informado"}`,
       `Categoria: ${categoriaSuporte}`,
-    ].join("\\n")
+    ].join("\n")
 
     window.location.href = `mailto:${EMAIL_SUPORTE}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
     setAvisoSuporte("Seu aplicativo de e-mail deve abrir com a mensagem preenchida. Revise e envie o e-mail por lá.")
@@ -125,10 +124,11 @@ function PerfilMonitor() {
       const atualizado = {
         ...usuarioAtual,
         nome: usuario.nome.trim(),
+        name: usuario.nome.trim(), 
         email: usuario.email.trim(),
         telefone: usuario.telefone.trim(),
         cargo: usuario.cargo.trim() || "Monitor",
-        perfil: usuarioAtual.perfil || usuario.cargo.trim() || "Monitor",
+        role: usuario.cargo.trim() || "Monitor",
         instituicao: usuario.instituicao.trim(),
       }
 
@@ -142,6 +142,9 @@ function PerfilMonitor() {
       })
       setModoEdicao(false)
       setMensagem("Perfil salvo neste navegador.")
+      
+      // Dispatch custom event to notify other components (like Sidebar/Header)
+      window.dispatchEvent(new Event("storage"))
     } catch {
       setMensagem("Não foi possível salvar os dados do perfil.")
     }

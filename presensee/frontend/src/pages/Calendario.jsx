@@ -82,11 +82,21 @@ export default function Calendario() {
     `${evento.titulo} ${evento.descricao}`.toLowerCase().includes(pesquisa.trim().toLowerCase())
   ).sort((a, b) => (a.datas?.[0] || "").localeCompare(b.datas?.[0] || "")), [eventosMes, filtroTipo, pesquisa]);
 
-  // Carrega os eventos da API
   const carregarEventos = async () => {
     try {
-      const response = await api.get("/eventos");
-      setEventos(Array.isArray(response.data) ? response.data : []);
+      const response = await api.get("/events");
+      const eventosMapeados = (Array.isArray(response.data) ? response.data : []).map(e => ({
+        id: e.id || e._id,
+        titulo: e.title || e.titulo,
+        descricao: e.description || e.descricao,
+        tipo: e.type || e.tipo,
+        modo: e.mode || e.modo || "periodo",
+        datas: e.dates || e.datas || [],
+        cor: e.color || e.cor || CORES[0],
+        abono: e.allowance || e.abono || "escola",
+        publico: e.audience || e.publico || ""
+      }));
+      setEventos(eventosMapeados);
     } catch (error) {
       console.error("Erro ao carregar eventos:", error);
     } finally {
@@ -121,7 +131,7 @@ export default function Calendario() {
 
   function editarEvento(evento) {
     const ordenadas = [...evento.datas].sort();
-    setEditando(evento.id || evento._id);
+    setEditando(evento.id);
     setForm({ ...MODELO, ...evento, inicio: ordenadas[0], fim: ordenadas.at(-1), modo: evento.modo || (evento.datas.length === 1 ? "dia" : "periodo"), alternados: evento.datas });
     setPainel("evento");
     setErro("");
@@ -139,22 +149,23 @@ export default function Calendario() {
     if (form.abono === "especificos" && !form.publico.trim()) return setErro("Informe quais alunos ou turmas terão as faltas abonadas.");
     
     const payload = {
-      titulo: form.titulo.trim(),
-      descricao: form.descricao?.trim() || "",
-      tipo: form.tipo,
-      modo: form.modo,
-      datas,
-      cor: form.cor,
-      abono: form.abono,
-      publico: form.abono === "especificos" ? form.publico.trim() : "Toda a escola"
+      title: form.titulo.trim(),
+      description: form.descricao?.trim() || "",
+      type: form.tipo,
+      mode: form.modo,
+      dates: datas,
+      color: form.cor,
+      allowance: form.abono,
+      audience: form.abono === "especificos" ? form.publico.trim() : "Toda a escola"
     };
 
     try {
       if (editando) {
-        await api.put(`/eventos/${editando}`, payload); // ou .patch
+        // Requer que a rota PATCH /events/:id seja adicionada no back-end posteriormente
+        await api.patch(`/events/${editando}`, payload); 
         setMensagem("Evento atualizado com sucesso!");
       } else {
-        await api.post("/eventos", payload);
+        await api.post("/events", payload);
         setMensagem("Evento criado com sucesso!");
       }
       carregarEventos();
@@ -168,11 +179,11 @@ export default function Calendario() {
   }
 
   async function excluirEvento(evento) {
-    const id = evento.id || evento._id;
+    const id = evento.id;
     if (!window.confirm(`Excluir o evento “${evento.titulo}”?`)) return;
     
     try {
-      await api.delete(`/eventos/${id}`);
+      await api.delete(`/events/${id}`);
       carregarEventos();
       if (editando === id) { 
         setEditando(null); 
@@ -197,16 +208,15 @@ export default function Calendario() {
     if (!["application/pdf", "image/png", "image/jpeg"].includes(arquivoAtestado.type)) return setErro("Use PDF, PNG ou JPG.");
     
     const formData = new FormData();
-    formData.append("aluno", atestado.aluno);
-    formData.append("turma", atestado.turma);
-    formData.append("inicio", atestado.inicio);
-    formData.append("fim", atestado.fim);
-    formData.append("observacao", atestado.observacao);
-    formData.append("arquivo", arquivoAtestado);
+    formData.append("student", atestado.aluno);
+    formData.append("class", atestado.turma);
+    formData.append("startDate", atestado.inicio);
+    formData.append("endDate", atestado.fim);
+    formData.append("observation", atestado.observacao);
+    formData.append("file", arquivoAtestado);
 
     try {
-      // Ajuste a rota /atestados conforme o seu backend real
-      await api.post("/atestados", formData, {
+      await api.post("/certificates", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setAtestado({ aluno: "", turma: "", inicio: "", fim: "", observacao: "" });
@@ -309,7 +319,7 @@ export default function Calendario() {
                 {visao === "lista" ? (
                   <div className="ce-list-calendar">
                     {eventosMes.length ? [...eventosMes].sort((a, b) => a.datas[0].localeCompare(b.datas[0])).map((evento) => (
-                      <button key={evento.id || evento._id} className="ce-list-event" onClick={() => editarEvento(evento)}>
+                      <button key={evento.id} className="ce-list-event" onClick={() => editarEvento(evento)}>
                         <span className="ce-cor" style={{ backgroundColor: evento.cor }} />
                         <strong>{evento.titulo}</strong>
                         <span>{resumoDatas(evento.datas)}</span>
@@ -343,7 +353,7 @@ export default function Calendario() {
                                     <button
                                       type="button"
                                       className="ce-event-chip"
-                                      key={evento.id || evento._id}
+                                      key={evento.id}
                                       style={{ backgroundColor: `${evento.cor}20`, color: evento.cor, borderLeftColor: evento.cor }}
                                       title={evento.titulo}
                                       onClick={(e) => { e.stopPropagation(); editarEvento(evento); }}
@@ -366,7 +376,7 @@ export default function Calendario() {
               <div className="ce-calendar-footer"><p className="ce-hint">Clique em um evento para editar ou selecione um dia para cadastrar.</p><span>{eventosMes.length} evento(s) neste mês</span></div>
             </section>
 
-            <section className="ce-card ce-list-section"><div className="ce-list-head"><div><h2>Eventos do mês</h2><p>Eventos cadastrados em {tituloMes}.</p></div><div className="ce-list-filters"><input value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} placeholder="Buscar evento..." aria-label="Buscar evento" /><select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)} aria-label="Filtrar tipo"><option value="">Todos os tipos</option>{TIPOS.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></div></div><div className="ce-table-scroll"><table className="ce-table"><thead><tr><th>Evento</th><th>Período</th><th>Tipo</th><th>Abono</th><th>Público</th><th>Ações</th></tr></thead><tbody>{eventosFiltrados.map((e) => <tr key={e.id || e._id}><td><span className="ce-event-title"><i className="ce-cor" style={{ backgroundColor: e.cor }} />{e.titulo}</span></td><td>{resumoDatas(e.datas)}</td><td><span className="ce-pill ce-type">{e.tipo}</span></td><td><span className={`ce-pill ${e.abono === "nenhum" ? "ce-no" : "ce-yes"}`}>{e.abono === "nenhum" ? "Não" : "Sim"}</span></td><td>{e.publico}</td><td><div className="ce-row-actions"><button type="button" onClick={() => editarEvento(e)}>Editar</button><button type="button" onClick={() => excluirEvento(e)} aria-label={`Excluir ${e.titulo}`}>Excluir</button></div></td></tr>)}{!eventosFiltrados.length && <tr><td colSpan="6" className="ce-empty">Nenhum evento encontrado.</td></tr>}</tbody></table></div></section>
+            <section className="ce-card ce-list-section"><div className="ce-list-head"><div><h2>Eventos do mês</h2><p>Eventos cadastrados em {tituloMes}.</p></div><div className="ce-list-filters"><input value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} placeholder="Buscar evento..." aria-label="Buscar evento" /><select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)} aria-label="Filtrar tipo"><option value="">Todos os tipos</option>{TIPOS.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></div></div><div className="ce-table-scroll"><table className="ce-table"><thead><tr><th>Evento</th><th>Período</th><th>Tipo</th><th>Abono</th><th>Público</th><th>Ações</th></tr></thead><tbody>{eventosFiltrados.map((e) => <tr key={e.id}><td><span className="ce-event-title"><i className="ce-cor" style={{ backgroundColor: e.cor }} />{e.titulo}</span></td><td>{resumoDatas(e.datas)}</td><td><span className="ce-pill ce-type">{e.tipo}</span></td><td><span className={`ce-pill ${e.abono === "nenhum" ? "ce-no" : "ce-yes"}`}>{e.abono === "nenhum" ? "Não" : "Sim"}</span></td><td>{e.publico}</td><td><div className="ce-row-actions"><button type="button" onClick={() => editarEvento(e)}>Editar</button><button type="button" onClick={() => excluirEvento(e)} aria-label={`Excluir ${e.titulo}`}>Excluir</button></div></td></tr>)}{!eventosFiltrados.length && <tr><td colSpan="6" className="ce-empty">Nenhum evento encontrado.</td></tr>}</tbody></table></div></section>
           </div>
 
           {painel !== "fechado" && <aside className="ce-card ce-form-panel" key={painel}>

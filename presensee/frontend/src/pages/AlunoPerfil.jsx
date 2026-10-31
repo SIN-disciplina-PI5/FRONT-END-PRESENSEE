@@ -6,15 +6,15 @@ import api from "../services/api"
 import "../styles/AlunoPerfil.css"
 
 function corFrequencia(valor) {
-  if (valor < 75) return "#ef4444"; // Vermelho: ruim
-  if (valor < 90) return "#eab308"; // Amarelo: médio
-  return "#22c55e"; // Verde: bom
+  if (valor < 75) return "#ef4444"; 
+  if (valor < 90) return "#eab308"; 
+  return "#22c55e"; 
 }
 
 function corRisco(valor) {
-  if (valor >= 70) return "#ef4444"; // Alto risco
-  if (valor >= 40) return "#eab308"; // Risco médio
-  return "#22c55e"; // Baixo risco
+  if (valor >= 70) return "#ef4444"; 
+  if (valor >= 40) return "#eab308"; 
+  return "#22c55e"; 
 }
 
 function iniciais(nome) {
@@ -46,15 +46,14 @@ function AlunoPerfil() {
   useEffect(() => {
     async function carregarPerfil() {
       try {
-        // 1. Buscar dados do aluno
-        // Ajuste para "/students" se a sua rota for em inglês
-        const resAluno = await api.get(`/alunos/${id}`);
+        // 1. Buscar dados do aluno usando o ID (rota em inglês)
+        const resAluno = await api.get(`/students/${id}`);
         const dadosAluno = resAluno.data;
         
         const frequencia = dadosAluno.attendanceRate ?? dadosAluno.frequencia ?? 100;
         
         setAluno({
-          id: dadosAluno.id,
+          id: dadosAluno.id || dadosAluno._id,
           nome: dadosAluno.name || dadosAluno.nome || "Aluno sem nome",
           matricula: dadosAluno.registration || dadosAluno.matricula || "N/A",
           turma: dadosAluno.class?.name || dadosAluno.turma || "Turma não vinculada",
@@ -66,28 +65,32 @@ function AlunoPerfil() {
           responsaveis: dadosAluno.guardians || dadosAluno.responsaveis || []
         });
 
-        // 2. Buscar intervenções (Eventos) do aluno
+        // 2. Buscar intervenções (Incidentes do tipo que não são pendência) do aluno
         try {
-          const resEventos = await api.get(`/eventos?studentId=${id}`);
-          const eventos = Array.isArray(resEventos.data) ? resEventos.data : [];
-          setHistorico(eventos.map(e => ({
-            id: e.id,
-            data: e.createdAt || e.data,
+          // Passamos o studentId na query string para o controlador filtrar
+          const resIncidentes = await api.get(`/incidents?studentId=${id}`);
+          const incidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
+          
+          // Separar em intervenções (histórico) e pendências ativas
+          const historicoFiltrado = incidentes.filter(i => !i.isPending && i.type !== "PENDENCIA");
+          setHistorico(historicoFiltrado.map(e => ({
+            id: e.id || e._id,
+            data: e.createdAt || e.date || e.data,
             tipo: e.type || e.tipo || "Intervenção",
             descricao: e.description || e.descricao
           })).sort((a, b) => String(b.data).localeCompare(String(a.data))));
-        } catch (e) { console.warn("Rota de eventos pendente para o aluno"); }
 
-        // 3. Buscar pendências (Incidentes) do aluno
-        try {
-          const resIncidentes = await api.get(`/incidentes?studentId=${id}`);
-          const incidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
-          setPendencias(incidentes.filter(i => i.isPending || i.type === "PENDENCIA").map(p => ({
-            id: p.id,
+          // Filtrar as pendências
+          const pends = incidentes.filter(i => i.isPending || i.type === "PENDENCIA");
+          setPendencias(pends.map(p => ({
+            id: p.id || p._id,
             texto: p.description || p.texto,
             feita: p.resolved || p.feita || false,
           })));
-        } catch (e) { console.warn("Rota de incidentes pendente para o aluno"); }
+
+        } catch (e) { 
+          console.warn("Rota de incidentes pendente para o aluno"); 
+        }
 
       } catch (error) {
         console.error("Erro ao buscar perfil do aluno:", error);
@@ -138,11 +141,11 @@ function AlunoPerfil() {
         resolved: false
       };
       
-      const response = await api.post("/incidentes", payload);
+      const response = await api.post("/incidents", payload);
       const nova = response.data;
       
       setPendencias(lista => [...lista, {
-        id: nova.id || Date.now(),
+        id: nova.id || nova._id || Date.now(),
         texto: payload.description,
         feita: false,
       }]);
@@ -157,7 +160,7 @@ function AlunoPerfil() {
     if (texto === null || !texto.trim()) return;
 
     try {
-      await api.patch(`/incidentes/${item.id}`, { description: texto.trim(), texto: texto.trim() });
+      await api.patch(`/incidents/${item.id}`, { description: texto.trim() });
       setPendencias(lista => lista.map(p => p.id === item.id ? { ...p, texto: texto.trim() } : p));
     } catch (error) {
       console.error("Erro ao editar", error);
@@ -169,7 +172,7 @@ function AlunoPerfil() {
     if (!confirmar) return;
 
     try {
-      await api.delete(`/incidentes/${idPendencia}`);
+      await api.delete(`/incidents/${idPendencia}`);
       setPendencias(lista => lista.filter(item => item.id !== idPendencia));
     } catch (error) {
       console.error("Erro ao excluir", error);
@@ -183,7 +186,7 @@ function AlunoPerfil() {
     setPendencias((lista) => lista.map((item) => item.id === idPendencia ? { ...item, feita: novoStatus } : item));
     
     try {
-      await api.patch(`/incidentes/${idPendencia}`, { resolved: novoStatus, feita: novoStatus });
+      await api.patch(`/incidents/${idPendencia}`, { resolved: novoStatus });
     } catch (error) {
       console.error("Erro ao alternar pendência", error);
     }

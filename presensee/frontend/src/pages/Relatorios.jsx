@@ -41,7 +41,6 @@ export default function Relatorios() {
   const [tipo, setTipo] = useState("frequencia");
   const [turmaFiltro, setTurmaFiltro] = useState("Todas as turmas");
   
-  // Estados para dados reais da API
   const [alunosData, setAlunosData] = useState([]);
   const [intervencoesData, setIntervencoesData] = useState([]);
   const [turmasData, setTurmasData] = useState([]);
@@ -57,23 +56,39 @@ export default function Relatorios() {
   
   const descricaoPeriodo = opcoesPeriodo.find((p) => p.chave === periodo)?.label || periodo;
 
-  // Buscar dados da API
   useEffect(() => {
     async function fetchData() {
       try {
-        const [resAlunos, resIntervencoes, resTurmas] = await Promise.all([
-          api.get("/alunos").catch(() => ({ data: [] })),
-          api.get("/intervencoes").catch(() => ({ data: [] })),
-          api.get("/turmas").catch(() => ({ data: [] }))
+        const [resAlunos, resIncidentes, resTurmas] = await Promise.all([
+          api.get("/students").catch(() => ({ data: [] })),
+          api.get("/incidents").catch(() => ({ data: [] })),
+          api.get("/classes").catch(() => ({ data: [] }))
         ]);
         
-        setAlunosData(Array.isArray(resAlunos.data) ? resAlunos.data : []);
-        setIntervencoesData(Array.isArray(resIntervencoes.data) ? resIntervencoes.data : []);
+        const alunosFormatados = (resAlunos.data || []).map(a => ({
+          ...a,
+          id: a.id || a._id,
+          nome: a.name || a.nome,
+          turma: a.class?.name || a.turma,
+          frequencia: a.attendanceRate ?? a.frequencia ?? 100,
+          faltas: a.absences ?? a.faltas ?? 0,
+        }));
         
-        // Formatar as turmas para extrair apenas os nomes
-        const turmasList = Array.isArray(resTurmas.data) 
-          ? resTurmas.data.map(t => t.nome || t.name || t).filter(Boolean)
-          : [];
+        const intervencoesFormatadas = (resIncidentes.data || [])
+          .filter(i => i.studentId)
+          .map(i => ({
+            ...i,
+            id: i.id || i._id,
+            alunoId: i.studentId || i.alunoId,
+            data: i.date || i.createdAt || i.data,
+            tipo: i.type || i.tipo,
+            descricao: i.description || i.descricao
+          }));
+
+        const turmasList = (resTurmas.data || []).map(t => t.name || t.nome || t).filter(Boolean);
+
+        setAlunosData(alunosFormatados);
+        setIntervencoesData(intervencoesFormatadas);
         setTurmasData([...new Set(turmasList)]);
       } catch (error) {
         console.error("Erro ao carregar dados para os relatórios:", error);
@@ -84,17 +99,15 @@ export default function Relatorios() {
     fetchData();
   }, []);
 
-  // Extrair turmas dos alunos caso a rota /turmas falhe ou venha vazia
   const NOMES_TURMAS = useMemo(() => {
     if (turmasData.length > 0) return turmasData;
-    const turmasExtraidas = alunosData.map(a => a.turma || a.class).filter(Boolean);
+    const turmasExtraidas = alunosData.map(a => a.turma || a.class?.name).filter(Boolean);
     return [...new Set(turmasExtraidas)].sort();
   }, [turmasData, alunosData]);
 
-  // Cálculos baseados nos dados da API
   const estudantes = useMemo(() => alunosData.filter((a) => {
-    const freq = a.frequencia || a.attendanceRate || 0;
-    const turmaAluno = a.turma || a.class;
+    const freq = a.frequencia || 0;
+    const turmaAluno = a.turma;
     return Number.isFinite(Number(freq)) && (turmaFiltro === "Todas as turmas" || turmaAluno === turmaFiltro);
   }), [alunosData, turmaFiltro]);
 
@@ -104,38 +117,38 @@ export default function Relatorios() {
 
   const intervencoesPeriodo = useMemo(() => intervencoesData
     .filter((i) => String(i.data || "").startsWith(periodo))
-    .filter((i) => estudantes.some((a) => String(a.id || a._id) === String(i.alunoId)))
-    .map((i) => ({ ...i, aluno: estudantes.find((a) => String(a.id || a._id) === String(i.alunoId)) })), [intervencoesData, estudantes, periodo]);
+    .filter((i) => estudantes.some((a) => String(a.id) === String(i.alunoId)))
+    .map((i) => ({ ...i, aluno: estudantes.find((a) => String(a.id) === String(i.alunoId)) })), [intervencoesData, estudantes, periodo]);
 
   const turmas = useMemo(() => NOMES_TURMAS
     .filter((t) => turmaFiltro === "Todas as turmas" || t === turmaFiltro)
     .map((nome) => {
-      const lista = estudantes.filter((a) => (a.turma || a.class) === nome);
-      const faltas = faltasPeriodo.filter((f) => (f.aluno.turma || f.aluno.class) === nome);
-      const acoes = intervencoesPeriodo.filter((i) => (i.aluno.turma || i.aluno.class) === nome);
+      const lista = estudantes.filter((a) => a.turma === nome);
+      const faltas = faltasPeriodo.filter((f) => f.aluno.turma === nome);
+      const acoes = intervencoesPeriodo.filter((i) => i.aluno.turma === nome);
       
-      const freqMedia = media(lista.map((a) => a.frequencia || a.attendanceRate || 0));
+      const freqMedia = media(lista.map((a) => a.frequencia));
       
       return { 
         turma: nome, 
         alunos: lista.length, 
         frequencia: freqMedia,
-        baixo: lista.filter((a) => risco(a.frequencia || a.attendanceRate || 0) === "Baixo").length,
-        medio: lista.filter((a) => risco(a.frequencia || a.attendanceRate || 0) === "Médio").length,
-        alto: lista.filter((a) => risco(a.frequencia || a.attendanceRate || 0) === "Alto").length,
+        baixo: lista.filter((a) => risco(a.frequencia) === "Baixo").length,
+        medio: lista.filter((a) => risco(a.frequencia) === "Médio").length,
+        alto: lista.filter((a) => risco(a.frequencia) === "Alto").length,
         faltas: faltas.length, 
         justificadas: faltas.filter((f) => f.justificada).length,
         intervencoes: acoes.length, 
-        comPendencias: lista.filter((a) => a.pendencias?.length > 0).length 
+        comPendencias: lista.filter((a) => (a.pendencias || []).length > 0).length 
       };
     }), [NOMES_TURMAS, estudantes, faltasPeriodo, intervencoesPeriodo, turmaFiltro]);
 
-  const freqGeral = media(estudantes.map((a) => a.frequencia || a.attendanceRate || 0));
+  const freqGeral = media(estudantes.map((a) => a.frequencia));
   
   const resumo = [
     { titulo: "Frequência Geral", valor: `${freqGeral}%`, icone: "%", classe: "frequencia" },
     { titulo: "Total de Alunos", valor: estudantes.length, icone: "pessoas", classe: "alunos" },
-    { titulo: "Alunos em Risco", valor: estudantes.filter((a) => Number(a.frequencia || a.attendanceRate || 0) < 90).length, icone: "alerta", classe: "risco" },
+    { titulo: "Alunos em Risco", valor: estudantes.filter((a) => Number(a.frequencia) < 90).length, icone: "alerta", classe: "risco" },
   ];
 
   const colunas = {
@@ -166,28 +179,28 @@ export default function Relatorios() {
     adicionar("Resumo por turma", colunas, linhasResumo);
     
     const linhaAluno = (a) => {
-      const freq = a.frequencia || a.attendanceRate || 0;
+      const freq = a.frequencia;
       return [
-        a.matricula || a.id || a._id, 
-        a.nomeCompleto || a.nome || a.name, 
-        a.turma || a.class, 
+        a.registration || a.matricula || a.id, 
+        a.nome, 
+        a.turma, 
         `${freq}%`, 
         risco(freq),
-        a.faltas ?? a.historicoFaltas?.length ?? 0, 
+        a.faltas, 
         a.status || "Ativo", 
         a.email || "", 
         a.telefone || "",
-        (a.responsaveis || []).map((r) => `${r.nome} (${r.parentesco}): ${r.telefone || ""}`).join(" | ")
+        (a.guardians || a.responsaveis || []).map((r) => `${r.nome || r.name} (${r.parentesco}): ${r.telefone || ""}`).join(" | ")
       ];
     };
     
     const cabAluno = ["Matrícula", "Nome completo", "Turma", "Frequência atual", "Risco atual", "Total de faltas", "Situação", "E-mail", "Contato", "Responsáveis e telefones"];
     
     const alunosOrdenados = [...estudantes].sort((a, b) => {
-      const turmaA = a.turma || a.class || "";
-      const turmaB = b.turma || b.class || "";
-      const nomeA = a.nomeCompleto || a.nome || a.name || "";
-      const nomeB = b.nomeCompleto || b.nome || b.name || "";
+      const turmaA = a.turma || "";
+      const turmaB = b.turma || "";
+      const nomeA = a.nome || "";
+      const nomeB = b.nome || "";
       return turmaA.localeCompare(turmaB, "pt-BR", { numeric: true }) || nomeA.localeCompare(nomeB);
     });
     
@@ -196,10 +209,10 @@ export default function Relatorios() {
     if (["frequencia", "risco", "acompanhamento", "cadastro"].includes(tipo)) {
       adicionar("Acompanhamento individual", ["Matrícula", "Aluno", "Turma", "Risco atual", "Observações", "Resultado esperado", "Resultado obtido", "Pendências"],
         alunosOrdenados.map((a) => [
-          a.matricula || a.id || a._id, 
-          a.nomeCompleto || a.nome || a.name, 
-          a.turma || a.class, 
-          risco(a.frequencia || a.attendanceRate || 0), 
+          a.registration || a.matricula || a.id, 
+          a.nome, 
+          a.turma, 
+          risco(a.frequencia), 
           a.observacoes || "", 
           a.resultadoEsperado || "", 
           a.resultadoObtido || "", 
@@ -212,9 +225,9 @@ export default function Relatorios() {
         [...faltasPeriodo].sort((a, b) => b.data.localeCompare(a.data)).map((f) =>
           [
             formatar(f.data), 
-            f.aluno.matricula || f.aluno.id || f.aluno._id, 
-            f.aluno.nomeCompleto || f.aluno.nome || f.aluno.name, 
-            f.aluno.turma || f.aluno.class, 
+            f.aluno.registration || f.aluno.matricula || f.aluno.id, 
+            f.aluno.nome, 
+            f.aluno.turma, 
             f.justificada ? "Sim" : "Não"
           ]));
     }
@@ -224,9 +237,9 @@ export default function Relatorios() {
         [...intervencoesPeriodo].sort((a, b) => b.data.localeCompare(a.data)).map((i) =>
           [
             formatar(i.data), 
-            i.aluno.matricula || i.aluno.id || i.aluno._id, 
-            i.aluno.nomeCompleto || i.aluno.nome || i.aluno.name, 
-            i.aluno.turma || i.aluno.class, 
+            i.aluno.registration || i.aluno.matricula || i.aluno.id, 
+            i.aluno.nome, 
+            i.aluno.turma, 
             i.tipo, 
             i.descricao || ""
           ]));
