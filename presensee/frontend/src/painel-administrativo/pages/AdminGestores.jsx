@@ -1,36 +1,58 @@
-
-import { useMemo, useState } from "react";
-import { getEscolas } from "../services/adminDemo";
+import { useMemo, useState, useEffect } from "react";
+import api from "../../services/api";
 import GestorDetalhesModal from "../components/GestorDetalhesModal";
 import "../../styles/Alunos.css";
 import "../styles/admin.css";
 import "../styles/AdminGestores.css";
 
 export default function AdminGestores() {
-  const escolas = getEscolas();
-
+  const [gestores, setGestores] = useState([]);
+  const [carregando, setCarregando] = useState(true);
   const [selecionado, setSelecionado] = useState(null);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("Todas");
   const [ordenacao, setOrdenacao] = useState({
-    campo: "gestor",
+    campo: "nome",
     direcao: "asc"
   });
   const [pagina, setPagina] = useState(1);
   const [itensPorPagina, setItensPorPagina] = useState(10);
 
+  useEffect(() => {
+    async function carregarGestores() {
+      try {
+        setCarregando(true);
+        const response = await api.get("/users");
+        
+        // Filtra apenas os usuários que são gestores, caso a rota retorne todos
+        const listaUsuarios = Array.isArray(response.data) ? response.data : [];
+        const apenasGestores = listaUsuarios.filter(user => 
+          user.role === "MANAGER" || user.role === "GESTOR" || user.perfil === "MANAGER"
+        );
+        
+        setGestores(apenasGestores);
+      } catch (error) {
+        console.error("Erro ao carregar gestores:", error);
+      } finally {
+        setCarregando(false);
+      }
+    }
+    carregarGestores();
+  }, []);
+
   const gestoresFiltrados = useMemo(() => {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
 
-    return escolas.filter((escola) => {
+    return gestores.filter((gestor) => {
       const correspondeStatus =
-        filtro === "Todas" || escola.status === filtro;
+        filtro === "Todas" || 
+        gestor.status === filtro || 
+        String(gestor.status).toUpperCase() === filtro.toUpperCase();
 
       const texto = [
-        escola.gestor,
-        escola.nome,
-        escola.email,
-        escola.municipio
+        gestor.nome || gestor.name,
+        gestor.email,
+        gestor.escolaNome || "Sem escola associada" // Ajuste conforme o campo retornado pela API
       ]
         .filter(Boolean)
         .join(" ")
@@ -38,12 +60,16 @@ export default function AdminGestores() {
 
       return correspondeStatus && texto.includes(termo);
     });
-  }, [escolas, busca, filtro]);
+  }, [gestores, busca, filtro]);
 
   const gestoresOrdenados = useMemo(() => {
     return [...gestoresFiltrados].sort((a, b) => {
-      const primeiro = String(a[ordenacao.campo] ?? "");
-      const segundo = String(b[ordenacao.campo] ?? "");
+      // Ajuste para lidar com name ou nome
+      const valA = a[ordenacao.campo] || (ordenacao.campo === 'nome' ? a.name : '');
+      const valB = b[ordenacao.campo] || (ordenacao.campo === 'nome' ? b.name : '');
+      
+      const primeiro = String(valA ?? "");
+      const segundo = String(valB ?? "");
 
       const comparacao = primeiro.localeCompare(
         segundo,
@@ -82,7 +108,6 @@ export default function AdminGestores() {
           ? "desc"
           : "asc"
     }));
-
     setPagina(1);
   }
 
@@ -94,6 +119,10 @@ export default function AdminGestores() {
       .map((parte) => parte[0])
       .join("")
       .toUpperCase();
+  }
+
+  if (carregando) {
+    return <div className="alunos-page admin-gestores-page" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>Carregando gestores...</div>;
   }
 
   return (
@@ -171,8 +200,8 @@ export default function AdminGestores() {
             <thead>
               <tr>
                 {[
-                  ["gestor", "Gestor"],
-                  ["nome", "Escola"],
+                  ["nome", "Gestor"],
+                  ["escolaNome", "Escola"],
                   ["email", "E-mail"],
                   ["status", "Situação"]
                 ].map(([campo, titulo]) => (
@@ -193,80 +222,83 @@ export default function AdminGestores() {
             </thead>
 
             <tbody>
-              {gestoresPaginados.map((escola) => (
-                <tr key={escola.id}>
-                  <td>
-                    <div className="alunos-nome">
-                      <span className="alunos-avatar">
-                        {obterIniciais(escola.gestor)}
-                      </span>
+              {gestoresPaginados.map((gestor) => {
+                const nomeExibicao = gestor.nome || gestor.name || "Sem nome";
+                const statusExibicao = gestor.status || "Ativa"; 
 
-                      <button
-                        type="button"
-                        className="admin-gestores-nome"
-                        onClick={() => setSelecionado(escola)}
-                      >
-                        {escola.gestor || "Não informado"}
-                      </button>
-                    </div>
-                  </td>
+                return (
+                  <tr key={gestor.id}>
+                    <td>
+                      <div className="alunos-nome">
+                        <span className="alunos-avatar">
+                          {obterIniciais(nomeExibicao)}
+                        </span>
 
-                  <td>
-                    <span className="admin-gestores-escola">
-                      {escola.nome}
-                    </span>
-                  </td>
-
-                  <td>
-                    {escola.email || "Não informado"}
-                  </td>
-
-                  <td>
-                    <span
-                      className={`risk-status admin-gestores-status ${
-                        escola.status.toLowerCase()
-                      }`}
-                    >
-                      <span className="risk-dot" />
-                      {escola.status}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="alunos-acoes admin-gestores-acoes">
-                      <button
-                        type="button"
-                        className="alunos-acao"
-                        onClick={() => setSelecionado(escola)}
-                        aria-label={`Ver perfil de ${
-                          escola.gestor || "gestor"
-                        }`}
-                        title="Ver perfil"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="19"
-                          height="19"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.9"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
+                        <button
+                          type="button"
+                          className="admin-gestores-nome"
+                          onClick={() => setSelecionado(gestor)}
                         >
-                          <path d="M2 12s3.5-6 10-6 10 6-3.5 6-10 6S2 12 2 12Z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                          {nomeExibicao}
+                        </button>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="admin-gestores-escola">
+                        {gestor.escolaNome || "Sem escola associada"}
+                      </span>
+                    </td>
+
+                    <td>
+                      {gestor.email || "Não informado"}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`risk-status admin-gestores-status ${
+                          String(statusExibicao).toLowerCase()
+                        }`}
+                      >
+                        <span className="risk-dot" />
+                        {statusExibicao === "ATIVA" ? "Ativa" : statusExibicao === "BLOQUEADA" ? "Bloqueada" : statusExibicao}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="alunos-acoes admin-gestores-acoes">
+                        <button
+                          type="button"
+                          className="alunos-acao"
+                          onClick={() => setSelecionado(gestor)}
+                          aria-label={`Ver perfil de ${nomeExibicao}`}
+                          title="Ver perfil"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="19"
+                            height="19"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.9"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M2 12s3.5-6 10-6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
 
               {gestoresPaginados.length === 0 && (
                 <tr>
                   <td colSpan={5} className="alunos-vazio">
-                    Nenhum gestor encontrado.
+                    Nenhum gestor encontrado na base de dados.
                   </td>
                 </tr>
               )}
@@ -324,7 +356,7 @@ export default function AdminGestores() {
       </section>
 
       <GestorDetalhesModal
-        escola={selecionado}
+        gestor={selecionado}
         onClose={() => setSelecionado(null)}
       />
     </div>

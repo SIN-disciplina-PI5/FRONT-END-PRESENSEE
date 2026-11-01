@@ -1,5 +1,4 @@
-
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   IconAlunos,
@@ -7,11 +6,7 @@ import {
   IconPlus
 } from "../../components/Icons";
 import AdminIcon from "../components/AdminIcons";
-import {
-  changeStatus,
-  deleteEscola,
-  getEscolas
-} from "../services/adminDemo";
+import api from "../../services/api";
 import EscolaDetalhesModal from "../components/EscolaDetalhesModal";
 import "../../styles/Alunos.css";
 import "../styles/admin.css";
@@ -41,7 +36,8 @@ const STATUS = [
 ];
 
 export default function AdminEscolas() {
-  const [escolas, setEscolas] = useState(getEscolas);
+  const [escolas, setEscolas] = useState([]);
+  const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState("");
   const [excluir, setExcluir] = useState(null);
   const [detalhes, setDetalhes] = useState(null);
@@ -53,6 +49,21 @@ export default function AdminEscolas() {
   const [itensPorPagina, setItensPorPagina] = useState(10);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  useEffect(() => {
+    async function carregarEscolas() {
+      try {
+        setCarregando(true);
+        const response = await api.get("/escolas");
+        setEscolas(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Erro ao carregar escolas:", error);
+      } finally {
+        setCarregando(false);
+      }
+    }
+    carregarEscolas();
+  }, []);
+
   const statusUrl = searchParams.get("status");
 
   const filtro = FILTROS.includes(statusUrl)
@@ -61,9 +72,9 @@ export default function AdminEscolas() {
 
   const resumo = useMemo(() => ({
     Todas: escolas.length,
-    Ativa: escolas.filter((escola) => escola.status === "Ativa").length,
-    Pendente: escolas.filter((escola) => escola.status === "Pendente").length,
-    Bloqueada: escolas.filter((escola) => escola.status === "Bloqueada").length
+    Ativa: escolas.filter((escola) => escola.status === "Ativa" || escola.status === "ATIVA").length,
+    Pendente: escolas.filter((escola) => escola.status === "Pendente" || escola.status === "PENDENTE").length,
+    Bloqueada: escolas.filter((escola) => escola.status === "Bloqueada" || escola.status === "BLOQUEADA").length
   }), [escolas]);
 
   const escolasFiltradas = useMemo(() => {
@@ -71,7 +82,7 @@ export default function AdminEscolas() {
 
     return escolas.filter((escola) => {
       const statusCorreto =
-        filtro === "Todas" || escola.status === filtro;
+        filtro === "Todas" || escola.status === filtro || escola.status === filtro.toUpperCase();
 
       const texto = [
         escola.nome,
@@ -141,18 +152,34 @@ export default function AdminEscolas() {
     setPagina(1);
   }
 
-  function alterarStatus(id, novoStatus) {
-    changeStatus(id, novoStatus);
-    setEscolas(getEscolas());
+  async function alterarStatus(id, novoStatus) {
+    try {
+      // Atualiza o status na API real
+      await api.patch(`/escolas/${id}/status`, { status: novoStatus });
+      // Atualiza o estado local para refletir a mudança instantaneamente sem recarregar
+      setEscolas((atuais) => 
+        atuais.map((esc) => esc.id === id ? { ...esc, status: novoStatus } : esc)
+      );
+    } catch (error) {
+      console.error("Erro ao alterar status:", error);
+      alert("Não foi possível alterar o status da escola. Verifique a conexão.");
+    }
   }
 
-  function confirmarExclusao() {
+  async function confirmarExclusao() {
     if (!excluir) return;
 
-    deleteEscola(excluir.id);
-    setEscolas(getEscolas());
-    setExcluir(null);
-    setDetalhes(null);
+    try {
+      // Remove do banco de dados real
+      await api.delete(`/escolas/${excluir.id}`);
+      // Remove do estado local
+      setEscolas((atuais) => atuais.filter((esc) => esc.id !== excluir.id));
+      setExcluir(null);
+      setDetalhes(null);
+    } catch (error) {
+      console.error("Erro ao excluir escola:", error);
+      alert("Não foi possível excluir a escola. Verifique dependências e tente novamente.");
+    }
   }
 
   function iniciais(nome) {
@@ -163,6 +190,10 @@ export default function AdminEscolas() {
       .map((parte) => parte[0])
       .join("")
       .toUpperCase();
+  }
+
+  if (carregando) {
+    return <div className="alunos-page admin-escolas-page" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>Carregando escolas...</div>;
   }
 
   return (
@@ -182,7 +213,6 @@ export default function AdminEscolas() {
           to="/admin/escolas/nova"
           className="admin-escolas-nova"
         >
-          
           <span>+ Nova escola</span>
         </Link>
       </header>
@@ -361,7 +391,7 @@ export default function AdminEscolas() {
                   <td>
                     <span
                       className={`risk-status admin-escolas-status ${
-                        escola.status.toLowerCase()
+                        String(escola.status).toLowerCase()
                       }`}
                     >
                       <span className="risk-dot" />
@@ -518,8 +548,8 @@ export default function AdminEscolas() {
             <p id="admin-delete-description">
               Deseja excluir{" "}
               <strong>{excluir.nome}</strong>? Esta ação
-              remove a instituição dos dados demonstrativos
-              deste navegador e será registrada na auditoria.
+              remove a instituição permanentemente do banco de dados
+              e será registrada na auditoria do sistema.
             </p>
             <div className="admin-actions">
               <button

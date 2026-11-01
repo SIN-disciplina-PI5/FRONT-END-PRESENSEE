@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Area,
@@ -21,8 +22,7 @@ import {
     MascotAvatar
 } from "../../components/Icons";
 import AdminIcon from "../components/AdminIcons";
-import { getEscolas } from "../services/adminDemo";
-import { carregarChamados } from "../services/chamadosDemo";
+import api from "../../services/api";
 import "../../styles/Dashboard.css";
 import "../styles/admin.css";
 import "../styles/AdminDashboard.css";
@@ -46,7 +46,8 @@ function obterMesAtual() {
 
 function obterPerfil() {
     try {
-        return JSON.parse(localStorage.getItem("adminPerfilDemo")) || {};
+        // Agora busca o perfil real autenticado no sistema, e não o Demo
+        return JSON.parse(localStorage.getItem("usuario")) || {};
     } catch {
         return {};
     }
@@ -82,8 +83,8 @@ function obterSerieChamados(chamados, quantidade = 6) {
 
         return {
             nome: `${nome}/${String(ano).slice(-2)}`,
-            abertos: chamados.filter((item) => doMes(item.criadoEm)).length,
-            resolvidos: chamados.filter((item) => doMes(item.resolvidoEm)).length
+            abertos: chamados.filter((item) => doMes(item.criadoEm || item.createdAt)).length,
+            resolvidos: chamados.filter((item) => doMes(item.resolvidoEm || item.resolvedAt)).length
         };
     });
 }
@@ -137,15 +138,41 @@ function GraficoVazio({ texto }) {
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
-    const escolas = getEscolas();
-    const chamados = carregarChamados();
+    
+    // Estados para armazenar os dados reais da API
+    const [escolas, setEscolas] = useState([]);
+    const [chamados, setChamados] = useState([]);
+    const [carregando, setCarregando] = useState(true);
+    
     const perfil = obterPerfil();
 
-    const ativos = escolas.filter((escola) => escola.status === "Ativa").length;
-    const pendentes = escolas.filter((escola) => escola.status === "Pendente").length;
-    const bloqueadas = escolas.filter((escola) => escola.status === "Bloqueada").length;
+    useEffect(() => {
+        async function buscarDadosDashboard() {
+            try {
+                // Dispara as requisições em paralelo para maior rapidez
+                const [respostaEscolas, respostaChamados] = await Promise.all([
+                    api.get("/escolas").catch(() => ({ data: [] })),
+                    api.get("/chamados").catch(() => ({ data: [] }))
+                ]);
+
+                setEscolas(Array.isArray(respostaEscolas.data) ? respostaEscolas.data : []);
+                setChamados(Array.isArray(respostaChamados.data) ? respostaChamados.data : []);
+            } catch (error) {
+                console.error("Erro ao buscar dados do dashboard administrativo:", error);
+            } finally {
+                setCarregando(false);
+            }
+        }
+
+        buscarDadosDashboard();
+    }, []);
+
+    // Se a propriedade de status/estado no banco for diferente, ajuste "Ativa", "Pendente", "Bloqueada"
+    const ativos = escolas.filter((escola) => escola.status === "Ativa" || escola.status === "ATIVA").length;
+    const pendentes = escolas.filter((escola) => escola.status === "Pendente" || escola.status === "PENDENTE").length;
+    const bloqueadas = escolas.filter((escola) => escola.status === "Bloqueada" || escola.status === "BLOQUEADA").length;
     const total = escolas.length;
-    const primeiroNome = (perfil.nome || "Superadmin").trim().split(/\s+/)[0];
+    const primeiroNome = (perfil.name || perfil.nome || "Superadmin").trim().split(/\s+/)[0];
 
     const distribuicao = [
         { nome: "Ativas", valor: ativos, cor: CORES_STATUS.ativas },
@@ -153,8 +180,11 @@ export default function AdminDashboard() {
         { nome: "Bloqueadas", valor: bloqueadas, cor: CORES_STATUS.bloqueadas }
     ];
     const distribuicaoGrafico = distribuicao.filter((item) => item.valor > 0);
+    
+    // Ajuste "municipio" e "rede" se os campos da sua API tiverem nomes diferentes (ex: "cidade")
     const municipios = agregarPorCampo(escolas, "municipio");
     const redes = agregarPorCampo(escolas, "rede");
+    
     const serieChamados = obterSerieChamados(chamados);
     const possuiChamados = serieChamados.some((item) => item.abertos > 0 || item.resolvidos > 0);
 
@@ -167,6 +197,10 @@ export default function AdminDashboard() {
 
     function navegarParaEscolas(status) {
         navigate(`/admin/escolas?status=${encodeURIComponent(status)}`);
+    }
+
+    if (carregando) {
+        return <div className="admin-page pd-dashboard ad-dashboard" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>Carregando dados...</div>;
     }
 
     return (
@@ -218,7 +252,7 @@ export default function AdminDashboard() {
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="ad-grafico-observacao">Evolução ilustrativa para o protótipo, sem histórico real de cadastros.</p>
+                    <p className="ad-grafico-observacao">Evolução ilustrativa para o protótipo, com projeção baseada no total atual ({total}).</p>
                 </section>
 
                 <section className="pd-painel pd-frequencia">

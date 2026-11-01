@@ -5,6 +5,9 @@ import AdminEscolas from "./pages/AdminEscolas"
 import AdminNovaEscola from "./pages/AdminNovaEscola"
 import AdminGestores from "./pages/AdminGestores"
 import AdminNovoGestor from "./pages/AdminNovoGestor"
+import AdminChamados from "./pages/AdminChamados"
+import AdminComunicados from "./pages/AdminComunicados"
+import AdminSaudeSistema from "./pages/AdminSaudeSistema"
 import AdminAuditoria from "./pages/AdminAuditoria"
 import AdminPerfil from "./pages/AdminPerfil"
 
@@ -37,6 +40,9 @@ export function adminRoutes() {
           <Route path="escolas/nova" element={<AdminNovaEscola/>}/>
           <Route path="gestores" element={<AdminGestores/>}/>
           <Route path="gestores/novo" element={<AdminNovoGestor/>}/>
+          <Route path="chamados" element={<AdminChamados/>}/>
+          <Route path="comunicados" element={<AdminComunicados/>}/>
+          <Route path="saude-sistema" element={<AdminSaudeSistema/>}/>
           <Route path="auditoria" element={<AdminAuditoria/>}/>
           <Route path="perfil" element={<AdminPerfil/>}/>
         </Route>

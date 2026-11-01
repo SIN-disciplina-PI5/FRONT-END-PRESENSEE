@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { IconAlunos, MascotAvatar } from "../components/Icons";
@@ -33,6 +33,8 @@ export default function Alunos() {
   const [modalAtivo, setModalAtivo] = useState("principal");
   const [mesSelecionado, setMesSelecionado] = useState(MESES[new Date().getMonth()]);
   const [mesNotas, setMesNotas] = useState(MESES[new Date().getMonth()]);
+  
+  const alertaProcessado = useRef(false);
 
   useEffect(() => {
     async function carregarAlunos() {
@@ -98,10 +100,9 @@ export default function Alunos() {
   const atualizarFiltro = (setter, valor) => { setter(valor); setPagina(1); };
   const ordenar = (campo) => { setOrdenacao((prev) => ({ campo, direcao: prev.campo === campo && prev.direcao === "asc" ? "desc" : "asc" })); setPagina(1); };
   
-  // NOVA FUNÇÃO ABRIR ALUNO COM FETCH DA API
-  const abrirAluno = async (aluno) => {
+  const abrirAluno = async (aluno, abaInicial = "principal") => {
     setAlunoSelecionado(aluno);
-    setModalAtivo("principal");
+    setModalAtivo(abaInicial);
     try {
       const res = await api.get(`/students/${aluno.id}`);
       setAlunoSelecionado((prev) => ({
@@ -115,9 +116,38 @@ export default function Alunos() {
     }
   };
   
-  const fecharAluno = () => { setAlunoSelecionado(null); setModalAtivo("principal"); };
+  const fecharAluno = () => { 
+    setAlunoSelecionado(null); 
+    setModalAtivo("principal"); 
+    alertaProcessado.current = false;
+    
+    // Limpa URL e states para não reabrir sozinho ao atualizar a página
+    if (location.pathname !== "/alunos" || location.state) {
+      navigate("/alunos", { replace: true, state: {} });
+    }
+  };
+
+  // Escuta se chegou via notificação e abre o modal na aba ocorrências
+  useEffect(() => {
+    if (alunos.length > 0 && !alertaProcessado.current) {
+      let alunoIdAlvo = location.state?.alertaAtivo?.alunoId;
+      
+      if (!alunoIdAlvo) {
+        const match = location.pathname.match(/\/alunos\/([^/]+)/);
+        if (match) alunoIdAlvo = match[1];
+      }
+
+      if (alunoIdAlvo) {
+        const alunoParaAbrir = alunos.find((a) => String(a.id) === String(alunoIdAlvo));
+        if (alunoParaAbrir) {
+          const abaDestino = location.state?.alertaAtivo ? "ocorrencias" : "principal";
+          abrirAluno(alunoParaAbrir, abaDestino);
+          alertaProcessado.current = true;
+        }
+      }
+    }
+  }, [alunos, location.pathname, location.state]);
   
-  // Cálculos dinâmicos baseados no aluno selecionado
   const mediaGeral = alunoSelecionado?.grades?.length > 0 
     ? (alunoSelecionado.grades.reduce((s, n) => s + n.value, 0) / alunoSelecionado.grades.length).toFixed(1)
     : "-";
@@ -130,7 +160,6 @@ export default function Alunos() {
   const diasNoMes = new Date(new Date().getFullYear(), MESES.indexOf(mesSelecionado) + 1, 0).getDate();
   const diasFrequencia = Array.from({ length: diasNoMes }, (_, index) => {
     const dia = index + 1;
-    // Tenta encontrar um registro real, senão simula visualmente para preencher o grid
     const freqReal = alunoSelecionado?.attendances?.find(a => new Date(a.date).getDate() === dia && new Date(a.date).getMonth() === MESES.indexOf(mesSelecionado));
     return {
       dia,

@@ -15,7 +15,20 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   
   const [alertasApi, setAlertasApi] = useState([]);
   const [aberto, setAberto] = useState(false);
-  const [lidos, setLidos] = useState([]);
+  
+  // Inicia o estado lendo do localStorage para persistir as leituras
+  const [lidos, setLidos] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("alertas_lidos")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Salva no localStorage sempre que um alerta for marcado como lido
+  useEffect(() => {
+    localStorage.setItem("alertas_lidos", JSON.stringify(lidos));
+  }, [lidos]);
 
   useEffect(() => {
     if (notificacoesProp && notificacoesProp.length > 0) return;
@@ -60,12 +73,19 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   function visualizar(alerta) {
     setLidos((anteriores) => [...new Set([...anteriores, alerta.id])]);
     setAberto(false);
+    
     const idAluno = alerta.alunoId;
     if (idAluno) {
-      navigate(`/alunos/${encodeURIComponent(String(idAluno))}`);
+      // Passa o objeto do alerta no "state" da navegação para a tela do aluno poder usá-lo
+      navigate(`/alunos/${encodeURIComponent(String(idAluno))}`, { state: { alertaAtivo: alerta } });
     } else {
       navigate("/alunos");
     }
+  }
+
+  function marcarTodasComoLidas() {
+    const todosIds = alertas.map((a) => a.id);
+    setLidos((anteriores) => [...new Set([...anteriores, ...todosIds])]);
   }
 
   return (
@@ -114,7 +134,7 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
           </div>
           {alertas.length > 0 && (
             <div className="pnot-footer">
-              <button type="button" onClick={() => setLidos(alertas.map((a) => a.id))} disabled={naoLidos === 0}>Marcar todas como lidas</button>
+              <button type="button" onClick={marcarTodasComoLidas} disabled={naoLidos === 0}>Marcar todas como lidas</button>
             </div>
           )}
         </section>

@@ -1,9 +1,54 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle2, Clock3, Database, HardDrive, HeartPulse, RefreshCw, Server, ShieldCheck, Cpu, BrainCircuit, ScanFace, FileBarChart, ClipboardList, LogIn, ChevronDown, ChevronUp } from "lucide-react";
-import { fetchSystemHealth, getOverallState, HEALTH_INTERVAL, HEALTH_URL, loadHistory, saveHistory, SERVICE_NAMES, summaryStats } from "../services/saudeSistema";
+import api from "../../services/api";
 import "../../styles/Alunos.css";
 import "../styles/admin.css";
 import "../styles/AdminSaudeSistema.css";
+
+const HEALTH_INTERVAL = 60000;
+const SERVICE_NAMES = {
+    api: "API Principal (Node.js)",
+    database: "Banco de Dados (Neon/Prisma)",
+    biometric: "Reconhecimento Facial (Python)",
+    ai: "Análise Preditiva de Evasão (IA)",
+    server: "Infraestrutura de Hospedagem (Render)",
+    login: "Serviço de Autenticação",
+    attendance: "Registro de Frequência",
+    reports: "Geração de Relatórios",
+    interventions: "Gestão de Alertas"
+};
+
+function loadHistory() {
+    try { return JSON.parse(localStorage.getItem("healthHistory")) || []; } 
+    catch { return []; }
+}
+
+function saveHistory(history) {
+    localStorage.setItem("healthHistory", JSON.stringify(history));
+}
+
+function getOverallState(snapshot) {
+    if (!snapshot) return { status: "unknown", label: "Não configurado" };
+    if (!snapshot.received) return { status: "down", label: "Sistema indisponível" };
+    const hasDown = snapshot.services?.some(s => s.status === "down");
+    const hasDegraded = snapshot.services?.some(s => s.status === "degraded");
+    if (hasDown) return { status: "down", label: "Falha parcial/total" };
+    if (hasDegraded) return { status: "degraded", label: "Operando com degradação" };
+    return { status: "operational", label: "Todos os sistemas operacionais" };
+}
+
+function summaryStats(history) {
+    if (!history || history.length === 0) return { checks: 0, failed: 0, availability: null, averageLatency: null };
+    const failed = history.filter(h => !h.received || h.services?.some(s => s.status === "down")).length;
+    const valid = history.filter(h => h.received && h.metrics);
+    const avgLatency = valid.length ? valid.reduce((acc, h) => acc + (h.services?.find(s => s.key === "api")?.latencyMs || 0), 0) / valid.length : null;
+    return {
+        checks: history.length,
+        failed,
+        availability: ((history.length - failed) / history.length) * 100,
+        averageLatency: avgLatency ? Math.round(avgLatency) : null
+    };
+}
 
 const ICONS = { api: Server, database: Database, biometric: ScanFace, ai: BrainCircuit, server: Cpu, login: LogIn, attendance: ClipboardList, reports: FileBarChart, interventions: ShieldCheck };
 const GROUPS = [
@@ -72,12 +117,21 @@ export default function AdminSaudeSistema() {
         const controller = new AbortController();
         abortRef.current = controller;
         try {
-            const result = await fetchSystemHealth(controller.signal);
+            const response = await api.get("/health", { signal: controller.signal });
+            const result = response.data;
             if (!result || controller.signal.aborted) return;
             setSnapshot(result);
-            if (!result.configurationMissing) {
-                setHistory((prev) => [{ ...result, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` }, ...prev].slice(0, 250));
-            }
+            setHistory((prev) => [{ ...result, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` }, ...prev].slice(0, 250));
+        } catch (error) {
+            if (error.name === "CanceledError" || controller.signal.aborted) return;
+            const errorResult = {
+                timestamp: new Date().toISOString(),
+                received: false,
+                error: "Falha de conexão com a API de diagnóstico. O servidor pode estar indisponível.",
+                services: []
+            };
+            setSnapshot(errorResult);
+            setHistory((prev) => [{ ...errorResult, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` }, ...prev].slice(0, 250));
         } finally {
             busyRef.current = false;
             setLoading(false);
@@ -122,7 +176,7 @@ export default function AdminSaudeSistema() {
             </header>
             <section className={`saude-overall saude-overall-${current.status}`}>
                 <HeartPulse size={27} />
-                <div><h2>O sistema está funcionando?</h2><strong>{current.label}</strong><p>{snapshot?.configurationMissing ? "Configure VITE_SYSTEM_HEALTH_URL para iniciar o diagnóstico." : snapshot?.error || "Status consolidado dos serviços informados pelo backend."}</p></div>
+                <div><h2>O sistema está funcionando?</h2><strong>{current.label}</strong><p>{snapshot?.error || "Status consolidado dos serviços informados pelo backend em tempo real."}</p></div>
                 <span>Última verificação: {dateText(snapshot?.timestamp)}</span>
             </section>
             <section className="saude-section">
@@ -143,7 +197,7 @@ export default function AdminSaudeSistema() {
             <section className="saude-section">
                 <div className="saude-section-heading"><h2>O que está causando o problema?</h2><p>Serviços afetados e causas identificadas pelo diagnóstico técnico.</p></div>
                 <div className="saude-diagnosis">
-                    {snapshot?.configurationMissing ? <p>Nenhum diagnóstico disponível: configure o endpoint seguro no frontend e implemente as verificações no backend.</p> : !snapshot?.received ? <p>{snapshot?.error || "Não foi possível confirmar a situação dos serviços."} Uma falha de conexão no navegador também pode ser causada por CORS ou rede.</p> : affected.length === 0 && issues.length === 0 ? <p>{services.some((s) => s.status === "unknown") ? "Não há falhas declaradas, mas existem serviços sem monitoramento suficiente." : "Nenhuma falha informada pelo diagnóstico atual."}</p> : <>
+                    {!snapshot?.received ? <p>{snapshot?.error || "Não foi possível confirmar a situação dos serviços."} Uma falha de conexão no navegador também pode ser causada por CORS ou rede.</p> : affected.length === 0 && issues.length === 0 ? <p>{services.some((s) => s.status === "unknown") ? "Não há falhas declaradas, mas existem serviços sem monitoramento suficiente." : "Nenhuma falha informada pelo diagnóstico atual."}</p> : <>
                         {affected.map((item) => <div className="saude-issue" key={item.key}><AlertTriangle size={17} /><div><strong>{item.name} — {STATES[item.status]}</strong><p>{item.detail || "Verifique os registros técnicos do serviço."}</p></div></div>)}
                         {issues.map((issue) => <div className="saude-issue" key={`${issue.id}-${issue.service}`}><AlertTriangle size={17} /><div><strong>{issue.title}</strong><p>{issue.detail}</p></div></div>)}
                     </>}
@@ -152,10 +206,9 @@ export default function AdminSaudeSistema() {
             {GROUPS.map((group) => <section className="saude-section" key={group.title}><div className="saude-section-heading"><h2>{group.title}</h2><p>Clique em um serviço para visualizar os detalhes da última verificação.</p></div><div className="saude-services">{group.keys.map((key) => <Service key={key} service={services.find((s) => s.key === key)} open={!!expanded[key]} onToggle={() => setExpanded((old) => ({ ...old, [key]: !old[key] }))} />)}</div></section>)}
             <section className="saude-section">
                 <div className="saude-section-heading saude-history-heading"><div><h2>Histórico de verificações</h2><p>Registros do navegador atual, não representam monitoramento contínuo.</p></div><label>Período<select value={period} onChange={(event) => { setPeriod(event.target.value); setPage(1); }}><option value="24h">Últimas 24 horas</option><option value="7d">Últimos 7 dias</option><option value="todos">Todos</option></select></label></div>
-                <div className="alunos-tabela-scroll"><table className="students-table saude-history-table"><thead><tr><th>Data</th><th>Estado</th><th>Latência</th><th>HTTP</th><th>Diagnóstico</th></tr></thead><tbody>{entries.map((item) => { const state = getOverallState(item); return <tr key={item.id}><td>{dateText(item.timestamp)}</td><td><span className={`saude-chip saude-chip-${state.status}`}>{state.label}</span></td><td>{item.requestLatencyMs == null ? "—" : `${item.requestLatencyMs} ms`}</td><td>{item.httpStatus ?? "—"}</td><td>{item.error || item.services?.filter((service) => ["down", "degraded"].includes(service.status)).map((s) => s.name).join(", ") || "Sem falhas informadas"}</td></tr>; })}{!entries.length && <tr><td colSpan={5} className="saude-empty">Nenhuma verificação registrada neste período.</td></tr>}</tbody></table></div>
+                <div className="alunos-tabela-scroll"><table className="students-table saude-history-table"><thead><tr><th>Data</th><th>Estado</th><th>Latência</th><th>HTTP</th><th>Diagnóstico</th></tr></thead><tbody>{entries.map((item) => { const state = getOverallState(item); return <tr key={item.id}><td>{dateText(item.timestamp)}</td><td><span className={`saude-chip saude-chip-${state.status}`}>{state.label}</span></td><td>{item.services?.find(s => s.key === "api")?.latencyMs == null ? "—" : `${item.services?.find(s => s.key === "api")?.latencyMs} ms`}</td><td>{item.services?.find(s => s.key === "api")?.code ?? "—"}</td><td>{item.error || item.services?.filter((service) => ["down", "degraded"].includes(service.status)).map((s) => s.name).join(", ") || "Sem falhas informadas"}</td></tr>; })}{!entries.length && <tr><td colSpan={5} className="saude-empty">Nenhuma verificação registrada neste período.</td></tr>}</tbody></table></div>
                 <footer className="alunos-paginacao"><span>{filteredHistory.length} verificações</span><div className="alunos-paginas"><button type="button" disabled={pageNow <= 1} onClick={() => setPage(pageNow - 1)}>‹</button><strong>{pageNow}</strong><span>de {pages}</span><button type="button" disabled={pageNow >= pages} onClick={() => setPage(pageNow + 1)}>›</button></div></footer>
             </section>
-            <p className="saude-note">Os resultados dependem de um endpoint de diagnóstico autenticado. Não coloque credenciais, strings de conexão, logs sensíveis ou dados de estudantes nas respostas de monitoramento.</p>
         </div>
     );
 }

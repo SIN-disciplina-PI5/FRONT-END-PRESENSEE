@@ -7,6 +7,9 @@ const menu = [
   { to: "/admin/dashboard", label: "Home", icon: "home" },
   { to: "/admin/escolas", label: "Escolas", icon: "school" },
   { to: "/admin/gestores", label: "Gestores", icon: "users" },
+  { to: "/admin/chamados", label: "Chamados", icon: "message-circle" },
+  { to: "/admin/comunicados", label: "Comunicados", icon: "bell" },
+  { to: "/admin/saude-sistema", label: "Saúde do Sistema", icon: "activity" },
   { to: "/admin/auditoria", label: "Auditoria", icon: "file" }
 ];
 
