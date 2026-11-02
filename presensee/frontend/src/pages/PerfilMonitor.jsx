@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import DashboardLayout from "../layouts/DashboardLayout"
 import { MascotAvatar } from "../components/Icons"
+import api from "../services/api"
 import "../styles/PerfilMonitor.css"
 
 const CHAVE_USUARIO = "usuario"
@@ -12,6 +13,7 @@ function lerUsuario() {
     const salvo = localStorage.getItem(CHAVE_USUARIO)
     const dados = salvo ? JSON.parse(salvo) : {}
     return {
+      id: dados.id || dados._id || "",
       nome: dados.name || dados.nome || "Visitante",
       email: dados.email || "",
       telefone: dados.telefone || "",
@@ -20,6 +22,7 @@ function lerUsuario() {
     }
   } catch {
     return {
+      id: "",
       nome: "Visitante",
       email: "",
       telefone: "",
@@ -33,6 +36,7 @@ function PerfilMonitor() {
   const [usuario, setUsuario] = useState(lerUsuario)
   const [avatar, setAvatar] = useState(() => localStorage.getItem(CHAVE_AVATAR) || "")
   const [mensagem, setMensagem] = useState("")
+  const [salvandoNaAPI, setSalvandoNaAPI] = useState(false)
   const [modoEdicao, setModoEdicao] = useState(false)
   const [abaAtiva, setAbaAtiva] = useState("perfil")
   const [categoriaSuporte, setCategoriaSuporte] = useState("Dúvida sobre o sistema")
@@ -104,7 +108,7 @@ function PerfilMonitor() {
     setAvisoSuporte("Seu aplicativo de e-mail deve abrir com a mensagem preenchida. Revise e envie o e-mail por lá.")
   }
 
-  function salvarPerfil(evento) {
+  async function salvarPerfil(evento) {
     evento.preventDefault()
 
     if (!usuario.nome.trim()) {
@@ -112,7 +116,17 @@ function PerfilMonitor() {
       return
     }
 
+    setSalvandoNaAPI(true)
+
     try {
+      if (usuario.id) {
+        await api.patch(`/users/${usuario.id}`, {
+          name: usuario.nome.trim(),
+          email: usuario.email.trim(),
+          telefone: usuario.telefone.trim()
+        })
+      }
+
       const usuarioAtual = (() => {
         try {
           return JSON.parse(localStorage.getItem(CHAVE_USUARIO) || "{}")
@@ -134,6 +148,7 @@ function PerfilMonitor() {
 
       localStorage.setItem(CHAVE_USUARIO, JSON.stringify(atualizado))
       setUsuario({
+        id: atualizado.id || atualizado._id,
         nome: atualizado.nome,
         email: atualizado.email,
         telefone: atualizado.telefone,
@@ -141,12 +156,14 @@ function PerfilMonitor() {
         instituicao: atualizado.instituicao,
       })
       setModoEdicao(false)
-      setMensagem("Perfil salvo neste navegador.")
+      setMensagem("Perfil salvo com sucesso no banco de dados!")
       
-      // Dispatch custom event to notify other components (like Sidebar/Header)
       window.dispatchEvent(new Event("storage"))
-    } catch {
-      setMensagem("Não foi possível salvar os dados do perfil.")
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error)
+      setMensagem("Erro ao comunicar com o servidor. Tente novamente.")
+    } finally {
+      setSalvandoNaAPI(false)
     }
   }
 
@@ -204,15 +221,15 @@ function PerfilMonitor() {
           <div className="pm-form-grid">
             <label className="pm-campo">
               <span>Nome completo</span>
-              <input name="nome" value={usuario.nome} onChange={alterarCampo} disabled={!modoEdicao} required />
+              <input name="nome" value={usuario.nome} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} required />
             </label>
             <label className="pm-campo">
               <span>E-mail</span>
-              <input name="email" type="email" value={usuario.email} onChange={alterarCampo} disabled={!modoEdicao} placeholder="seuemail@escola.com" />
+              <input name="email" type="email" value={usuario.email} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="seuemail@escola.com" />
             </label>
             <label className="pm-campo">
               <span>Telefone</span>
-              <input name="telefone" type="tel" value={usuario.telefone} onChange={alterarCampo} disabled={!modoEdicao} placeholder="(00) 00000-0000" />
+              <input name="telefone" type="tel" value={usuario.telefone} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="(00) 00000-0000" />
             </label>
             <label className="pm-campo">
               <span>Cargo</span>
@@ -220,18 +237,20 @@ function PerfilMonitor() {
             </label>
             <label className="pm-campo pm-campo-largo">
               <span>Instituição de ensino</span>
-              <input name="instituicao" value={usuario.instituicao} onChange={alterarCampo} disabled={!modoEdicao} placeholder="Nome da escola ou instituição" />
+              <input name="instituicao" value={usuario.instituicao} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="Nome da escola ou instituição" />
             </label>
           </div>
 
-          {mensagem && <p className="pm-mensagem" role="status">{mensagem}</p>}
+          {mensagem && <p className="pm-mensagem" role="status" style={{ color: salvandoNaAPI ? "#666" : undefined }}>{mensagem}</p>}
 
           {modoEdicao && (
             <div className="pm-acoes-form">
-              <button className="pm-botao-secundario" type="button" onClick={() => { setUsuario(lerUsuario()); setModoEdicao(false); setMensagem("") }}>
+              <button className="pm-botao-secundario" type="button" disabled={salvandoNaAPI} onClick={() => { setUsuario(lerUsuario()); setModoEdicao(false); setMensagem("") }}>
                 Cancelar
               </button>
-              <button className="pm-botao-primario" type="submit">Salvar alterações</button>
+              <button className="pm-botao-primario" type="submit" disabled={salvandoNaAPI}>
+                {salvandoNaAPI ? "Salvando..." : "Salvar alterações"}
+              </button>
             </div>
           )}
         </form>
@@ -246,7 +265,7 @@ function PerfilMonitor() {
           </div>
           <div className="pm-info-seguranca">
             <div><strong>Tipo de perfil</strong><span>{usuario.cargo || "Monitor"}</span></div>
-            <div><strong>Armazenamento</strong><span>Alterações locais neste navegador</span></div>
+            <div><strong>Armazenamento</strong><span>Integrado ao banco de dados Neon</span></div>
           </div>
         </section>          </>
         ) : (

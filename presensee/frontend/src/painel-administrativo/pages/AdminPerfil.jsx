@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react"
 import AdminIcon from "../components/AdminIcons"
+import api from "../../services/api"
 import "../styles/admin.css"
 
 export default function AdminPerfil() {
   const [perfil, setPerfil] = useState({
+    id: "",
     nome: "Carregando...",
     email: "",
     telefone: "",
@@ -11,6 +13,7 @@ export default function AdminPerfil() {
     avatar: ""
   })
   const [saved, setSaved] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
     // Carrega o usuário real salvo pelo sistema de login do back-end
@@ -44,21 +47,37 @@ export default function AdminPerfil() {
 
   async function save(e) {
     e.preventDefault()
+    setEnviando(true)
+    setSaved(false)
     
-    // Atualiza a sessão local para refletir no menu e cabeçalho
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuario") || "{}")
-    const usuarioAtualizado = { 
-      ...usuarioLogado, 
-      name: perfil.nome, 
-      email: perfil.email,
-      avatar: perfil.avatar 
-    }
-    
-    localStorage.setItem("usuario", JSON.stringify(usuarioAtualizado))
-    window.dispatchEvent(new Event("admin-profile-updated"))
-    setSaved(true)
+    try {
+      if (perfil.id) {
+        await api.patch(`/users/${perfil.id}`, {
+          name: perfil.nome,
+          email: perfil.email,
+          telefone: perfil.telefone
+        })
+      }
 
-    console.warn("Nota: Para persistir estas alterações no Neon DB, será necessário criar a rota PATCH /users/:id no back-end futuramente.")
+      // Atualiza a sessão local para refletir no menu e cabeçalho
+      const usuarioLogado = JSON.parse(localStorage.getItem("usuario") || "{}")
+      const usuarioAtualizado = { 
+        ...usuarioLogado, 
+        name: perfil.nome, 
+        email: perfil.email,
+        telefone: perfil.telefone,
+        avatar: perfil.avatar 
+      }
+      
+      localStorage.setItem("usuario", JSON.stringify(usuarioAtualizado))
+      window.dispatchEvent(new Event("admin-profile-updated"))
+      setSaved(true)
+    } catch (error) {
+      console.error("Erro ao atualizar perfil administrativo:", error)
+      alert("Falha ao comunicar com o servidor. Tente novamente mais tarde.")
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -77,7 +96,7 @@ export default function AdminPerfil() {
           </span>
           <div>
             <h2>{perfil.nome}</h2>
-            <p>{perfil.cargo} • PresenSee</p>
+            <p>{perfil.cargo} PresenSee</p>
             <label className="admin-avatar-upload">
               <AdminIcon name="camera" size={16} /> Alterar foto
               <input type="file" accept="image/*" onChange={selectAvatar} hidden />
@@ -89,22 +108,24 @@ export default function AdminPerfil() {
           <h3>Informações do administrador</h3>
           <div className="admin-form-grid">
             <label>Nome completo
-              <input value={perfil.nome} onChange={(e) => change("nome", e.target.value)} required />
+              <input value={perfil.nome} onChange={(e) => change("nome", e.target.value)} disabled={enviando} required />
             </label>
             <label>E-mail de contato
-              <input type="email" value={perfil.email} onChange={(e) => change("email", e.target.value)} required />
+              <input type="email" value={perfil.email} onChange={(e) => change("email", e.target.value)} disabled={enviando} required />
             </label>
             <label>Telefone
-              <input type="tel" value={perfil.telefone} onChange={(e) => change("telefone", e.target.value)} placeholder="(81) 99999-9999" />
+              <input type="tel" value={perfil.telefone} onChange={(e) => change("telefone", e.target.value)} disabled={enviando} placeholder="(81) 99999-9999" />
             </label>
             <label>Função
               <input value={perfil.cargo} readOnly disabled />
             </label>
           </div>
-          <p className="admin-hint">Dados vinculados à sua sessão atual. Alterações de credenciais exigirão endpoint específico na API.</p>
+          <p className="admin-hint">As alterações feitas aqui são gravadas definitivamente no banco de dados.</p>
           <div className="admin-actions">
-            {saved && <span className="admin-save-success" role="status">Sessão atualizada!</span>}
-            <button className="admin-btn" type="submit">Salvar alterações</button>
+            {saved && <span className="admin-save-success" role="status">Perfil atualizado com sucesso!</span>}
+            <button className="admin-btn" type="submit" disabled={enviando}>
+              {enviando ? "Salvando..." : "Salvar alterações"}
+            </button>
           </div>
         </form>
       </section>

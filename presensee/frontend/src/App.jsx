@@ -9,7 +9,7 @@ import Calendario from "./pages/Calendario"
 import Relatorios from "./pages/Relatorios"
 import Turmas from "./pages/Turmas"
 import NovaTurma from "./pages/NovaTurma"
-import NovoAluno from "./pages/NovoAluno"
+import CadastroEstudante from "./pages/CadastroEstudante"
 import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
@@ -62,11 +62,12 @@ function App() {
           }
         />
 
+        {/* Rota atualizada para apontar para o novo componente de Cadastro */}
         <Route
           path="/novo-aluno"
           element={
             <ProtectedRoute>
-              <NovoAluno />
+              <CadastroEstudante />
             </ProtectedRoute>
           }
         />
@@ -99,7 +100,6 @@ function App() {
         />
 
         {/* CALENDÁRIO ESCOLAR */}
-
         <Route
           path="/calendario"
           element={
@@ -110,7 +110,6 @@ function App() {
         />
 
         {/* REDIRECIONAMENTO DA ROTA ANTIGA */}
-
         <Route
           path="/alertas"
           element={<Navigate to="/calendario" replace />}

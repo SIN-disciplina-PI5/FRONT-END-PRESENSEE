@@ -7,6 +7,7 @@ import "../styles/AdminGestores.css";
 
 export default function AdminGestores() {
   const [gestores, setGestores] = useState([]);
+  const [escolas, setEscolas] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [selecionado, setSelecionado] = useState(null);
   const [busca, setBusca] = useState("");
@@ -19,25 +20,41 @@ export default function AdminGestores() {
   const [itensPorPagina, setItensPorPagina] = useState(10);
 
   useEffect(() => {
-    async function carregarGestores() {
+    async function carregarDados() {
       try {
         setCarregando(true);
-        const response = await api.get("/users");
+        // Carrega utilizadores e escolas em simultâneo
+        const [resUsers, resEscolas] = await Promise.all([
+          api.get("/users"),
+          api.get("/escolas")
+        ]);
         
-        // Filtra apenas os usuários que são gestores, caso a rota retorne todos
-        const listaUsuarios = Array.isArray(response.data) ? response.data : [];
+        const listaUsuarios = Array.isArray(resUsers.data) ? resUsers.data : [];
+        const listaEscolas = Array.isArray(resEscolas.data) ? resEscolas.data : [];
+        
+        setEscolas(listaEscolas);
+
         const apenasGestores = listaUsuarios.filter(user => 
           user.role === "MANAGER" || user.role === "GESTOR" || user.perfil === "MANAGER"
         );
         
-        setGestores(apenasGestores);
+        // Associa o nome da escola ao gestor utilizando o schoolId
+        const gestoresComEscola = apenasGestores.map(gestor => {
+          const escolaVinculada = listaEscolas.find(e => e.id === gestor.schoolId);
+          return {
+            ...gestor,
+            escolaNome: escolaVinculada ? escolaVinculada.nome : null
+          };
+        });
+
+        setGestores(gestoresComEscola);
       } catch (error) {
-        console.error("Erro ao carregar gestores:", error);
+        console.error("Erro ao carregar dados:", error);
       } finally {
         setCarregando(false);
       }
     }
-    carregarGestores();
+    carregarDados();
   }, []);
 
   const gestoresFiltrados = useMemo(() => {
@@ -47,12 +64,12 @@ export default function AdminGestores() {
       const correspondeStatus =
         filtro === "Todas" || 
         gestor.status === filtro || 
-        String(gestor.status).toUpperCase() === filtro.toUpperCase();
+        String(gestor.status || "Ativa").toUpperCase() === filtro.toUpperCase();
 
       const texto = [
         gestor.nome || gestor.name,
         gestor.email,
-        gestor.escolaNome || "Sem escola associada" // Ajuste conforme o campo retornado pela API
+        gestor.escolaNome || "Sem escola associada"
       ]
         .filter(Boolean)
         .join(" ")
@@ -64,7 +81,6 @@ export default function AdminGestores() {
 
   const gestoresOrdenados = useMemo(() => {
     return [...gestoresFiltrados].sort((a, b) => {
-      // Ajuste para lidar com name ou nome
       const valA = a[ordenacao.campo] || (ordenacao.campo === 'nome' ? a.name : '');
       const valB = b[ordenacao.campo] || (ordenacao.campo === 'nome' ? b.name : '');
       

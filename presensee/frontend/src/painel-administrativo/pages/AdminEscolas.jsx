@@ -1,10 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  IconAlunos,
-  IconAlertas,
-  IconPlus
-} from "../../components/Icons";
 import AdminIcon from "../components/AdminIcons";
 import api from "../../services/api";
 import EscolaDetalhesModal from "../components/EscolaDetalhesModal";
@@ -50,18 +45,39 @@ export default function AdminEscolas() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    async function carregarEscolas() {
+    async function carregarDados() {
       try {
         setCarregando(true);
-        const response = await api.get("/escolas");
-        setEscolas(Array.isArray(response.data) ? response.data : []);
+        // Carrega escolas e usuários ao mesmo tempo
+        const [resEscolas, resUsers] = await Promise.all([
+          api.get("/escolas"),
+          api.get("/users")
+        ]);
+        
+        const listaEscolas = Array.isArray(resEscolas.data) ? resEscolas.data : [];
+        const listaUsuarios = Array.isArray(resUsers.data) ? resUsers.data : [];
+        
+        // Mapeia os usuários para descobrir o gestor de cada escola
+        const escolasComGestor = listaEscolas.map(escola => {
+          const gestorDaEscola = listaUsuarios.find(user => 
+            user.schoolId === escola.id && 
+            (user.role === "MANAGER" || user.role === "GESTOR")
+          );
+          
+          return {
+            ...escola,
+            gestorNome: gestorDaEscola ? (gestorDaEscola.name || gestorDaEscola.nome) : null
+          };
+        });
+
+        setEscolas(escolasComGestor);
       } catch (error) {
-        console.error("Erro ao carregar escolas:", error);
+        console.error("Erro ao carregar escolas e gestores:", error);
       } finally {
         setCarregando(false);
       }
     }
-    carregarEscolas();
+    carregarDados();
   }, []);
 
   const statusUrl = searchParams.get("status");
@@ -87,7 +103,7 @@ export default function AdminEscolas() {
       const texto = [
         escola.nome,
         escola.municipio,
-        escola.gestor,
+        escola.gestorNome, // Atualizado para a nova propriedade
         escola.rede,
         escola.inep
       ]
@@ -154,9 +170,7 @@ export default function AdminEscolas() {
 
   async function alterarStatus(id, novoStatus) {
     try {
-      // Atualiza o status na API real
       await api.patch(`/escolas/${id}/status`, { status: novoStatus });
-      // Atualiza o estado local para refletir a mudança instantaneamente sem recarregar
       setEscolas((atuais) => 
         atuais.map((esc) => esc.id === id ? { ...esc, status: novoStatus } : esc)
       );
@@ -170,9 +184,7 @@ export default function AdminEscolas() {
     if (!excluir) return;
 
     try {
-      // Remove do banco de dados real
       await api.delete(`/escolas/${excluir.id}`);
-      // Remove do estado local
       setEscolas((atuais) => atuais.filter((esc) => esc.id !== excluir.id));
       setExcluir(null);
       setDetalhes(null);
@@ -336,7 +348,7 @@ export default function AdminEscolas() {
                   ["nome", "Escola"],
                   ["municipio", "Município"],
                   ["rede", "Rede"],
-                  ["gestor", "Gestor"],
+                  ["gestorNome", "Gestor"],
                   ["status", "Status"]
                 ].map(([campo, titulo]) => (
                   <th key={campo} scope="col">
@@ -386,7 +398,9 @@ export default function AdminEscolas() {
                     </span>
                   </td>
 
-                  <td>{escola.gestor}</td>
+                  <td className="admin-escolas-gestor">
+                    {escola.gestorNome || <span style={{color: "#888", fontStyle: "italic"}}>Sem gestor</span>}
+                  </td>
 
                   <td>
                     <span
