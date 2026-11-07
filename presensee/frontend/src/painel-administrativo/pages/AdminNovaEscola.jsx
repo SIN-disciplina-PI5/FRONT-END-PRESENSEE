@@ -22,16 +22,40 @@ export default function AdminNovaEscola() {
     setLoading(true)
     
     try {
-      await api.post("/escolas", {
+      // 1. Criar a Escola primeiro enviando TODOS os dados do formulário
+      const respostaEscola = await api.post("/escolas", {
         nome: dados.nome,
-        municipio: dados.municipio,
+        inep: dados.inep,
         rede: dados.rede,
-        status: dados.status
+        status: dados.status,
+        cep: dados.cep,
+        logradouro: dados.logradouro,
+        numero: dados.numero,
+        complemento: dados.complemento,
+        bairro: dados.bairro,
+        municipio: dados.municipio,
+        uf: dados.uf,
+        telefone: dados.telefone
       })
+      
+      const escolaCriada = respostaEscola.data;
+
+      // 2. Se o usuário preencheu o nome do gestor, cria o utilizador e vincula a escola
+      if (dados.gestor && dados.gestor.trim() !== "") {
+        await api.post("/users", {
+          name: dados.gestor,
+          email: dados.email || `${dados.nome.replace(/\s+/g, '').toLowerCase()}@gestor.com`, // email gerado se estiver vazio
+          telefone: dados.telefone, // <-- Telefone agora é repassado para o perfil do Gestor
+          password: "123", // Password padrão para os novos gestores trocarem no primeiro acesso
+          role: "MANAGER",
+          escolaId: escolaCriada.id // Vincula o ID da escola acabada de criar
+        })
+      }
+      
       navigate("/admin/escolas")
     } catch (error) {
-      console.error("Erro ao salvar escola:", error)
-      alert("Falha ao cadastrar. Tente novamente.")
+      console.error("Erro ao salvar escola e gestor:", error)
+      alert("Falha ao cadastrar a escola e o gestor. Verifique o console.")
     } finally {
       setLoading(false)
     }

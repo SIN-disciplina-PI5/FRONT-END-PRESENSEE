@@ -55,7 +55,8 @@ export default function AdminPerfil() {
         await api.patch(`/users/${perfil.id}`, {
           name: perfil.nome,
           email: perfil.email,
-          telefone: perfil.telefone
+          telefone: perfil.telefone,
+          avatar: perfil.avatar // <-- Correção: Agora envia o avatar para a API
         })
       }
 

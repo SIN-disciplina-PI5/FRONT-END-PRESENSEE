@@ -48,31 +48,29 @@ export default function AdminEscolas() {
     async function carregarDados() {
       try {
         setCarregando(true);
-        // Carrega escolas e usuários ao mesmo tempo
-        const [resEscolas, resUsers] = await Promise.all([
-          api.get("/escolas"),
-          api.get("/users")
-        ]);
+        // Só precisamos de carregar as escolas, os usuários já vêm dentro
+        const resEscolas = await api.get("/escolas");
         
         const listaEscolas = Array.isArray(resEscolas.data) ? resEscolas.data : [];
-        const listaUsuarios = Array.isArray(resUsers.data) ? resUsers.data : [];
         
-        // Mapeia os usuários para descobrir o gestor de cada escola
+        // CORREÇÃO AQUI: Aproveita o array "users" enviado pela API
         const escolasComGestor = listaEscolas.map(escola => {
-          const gestorDaEscola = listaUsuarios.find(user => 
-            user.schoolId === escola.id && 
-            (user.role === "MANAGER" || user.role === "GESTOR")
-          );
+          let nomeDoGestor = null;
+          
+          if (escola.users && escola.users.length > 0) {
+             const gestorPrincipal = escola.users.find(u => u.role === "MANAGER" || u.role === "GESTOR") || escola.users[0];
+             nomeDoGestor = gestorPrincipal.name || gestorPrincipal.nome;
+          }
           
           return {
             ...escola,
-            gestorNome: gestorDaEscola ? (gestorDaEscola.name || gestorDaEscola.nome) : null
+            gestorNome: nomeDoGestor
           };
         });
 
         setEscolas(escolasComGestor);
       } catch (error) {
-        console.error("Erro ao carregar escolas e gestores:", error);
+        console.error("Erro ao carregar escolas:", error);
       } finally {
         setCarregando(false);
       }
@@ -103,7 +101,7 @@ export default function AdminEscolas() {
       const texto = [
         escola.nome,
         escola.municipio,
-        escola.gestorNome, // Atualizado para a nova propriedade
+        escola.gestorNome, 
         escola.rede,
         escola.inep
       ]

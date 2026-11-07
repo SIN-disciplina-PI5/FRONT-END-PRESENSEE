@@ -38,11 +38,13 @@ export default function AdminGestores() {
           user.role === "MANAGER" || user.role === "GESTOR" || user.perfil === "MANAGER"
         );
         
-        // Associa o nome da escola ao gestor utilizando o schoolId
+        // CORREÇÃO AQUI: Usa 'escolaId' em vez de 'schoolId'
         const gestoresComEscola = apenasGestores.map(gestor => {
-          const escolaVinculada = listaEscolas.find(e => e.id === gestor.schoolId);
+          const escolaVinculada = listaEscolas.find(e => e.id === gestor.escolaId);
+          
           return {
             ...gestor,
+            nome: gestor.name || gestor.nome,
             escolaNome: escolaVinculada ? escolaVinculada.nome : null
           };
         });
@@ -67,7 +69,7 @@ export default function AdminGestores() {
         String(gestor.status || "Ativa").toUpperCase() === filtro.toUpperCase();
 
       const texto = [
-        gestor.nome || gestor.name,
+        gestor.nome,
         gestor.email,
         gestor.escolaNome || "Sem escola associada"
       ]
@@ -239,7 +241,7 @@ export default function AdminGestores() {
 
             <tbody>
               {gestoresPaginados.map((gestor) => {
-                const nomeExibicao = gestor.nome || gestor.name || "Sem nome";
+                const nomeExibicao = gestor.nome || "Sem nome";
                 const statusExibicao = gestor.status || "Ativa"; 
 
                 return (
