@@ -6,7 +6,12 @@ import "../styles/NotificacoesHome.css";
 const ETIQUETAS = { alto: "Alto risco", medio: "Atenção", baixo: "Informativo" };
 
 function IconeSino() {
-  return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>;
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
+    </svg>
+  );
 }
 
 export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
@@ -89,16 +94,16 @@ export default function NotificacoesHome({ notificacoes: notificacoesProp }) {
   }
 
   return (
-    <div className="pnot-wrapper" ref={areaRef}>
+    <div className="pnot-root" ref={areaRef}>
       <button 
         type="button" 
         className={`pnot-trigger ${naoLidos ? "pnot-trigger--active" : ""}`} 
-        onClick={() => setAberto((a) => !a)} 
+        onClick={(e) => { e.preventDefault(); setAberto((a) => !a); }} 
         aria-label="Ver notificações" 
         aria-expanded={aberto}
       >
         <IconeSino />
-        {naoLidos > 0 && <span className="pnot-badge" aria-label={`${naoLidos} não lidas`}>{naoLidos}</span>}
+        {naoLidos > 0 && <span className="pnot-count" aria-label={`${naoLidos} não lidas`}>{naoLidos}</span>}
       </button>
 
       {aberto && (

@@ -49,6 +49,25 @@ function formatarDataDisplay(iso) {
   return d.toLocaleDateString("pt-BR")
 }
 
+// Função auxiliar para limpar tags estruturais do texto visual
+function limparTags(texto) {
+  if (!texto) return "";
+  return texto
+    .replace(/\[Prioridade:.*?\]\s*/ig, "")
+    .replace(/\[Atendimento\]\s*/ig, "")
+    .replace(/\[Reunião\]\s*/ig, "")
+    .replace(/\[Contato com responsável\]\s*/ig, "")
+    .replace(/\[Administrativo\]\s*/ig, "")
+    .replace(/\[Observação\]\s*/ig, "");
+}
+
+// Função auxiliar para extrair a prioridade do texto salvo no banco
+function extrairPrioridade(texto) {
+  if (!texto) return "Média";
+  const match = texto.match(/\[Prioridade:\s*(Alta|Média|Baixa)\]/i);
+  return match ? match[1] : "Média";
+}
+
 function Diario() {
   const avatar = localStorage.getItem("avatarUsuario") || ""
   const [textoAnotacao, setTextoAnotacao] = useState("")
@@ -65,35 +84,39 @@ function Diario() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        // Carrega intervenções/eventos recentes
-        try {
-          const resEventos = await api.get("/events");
-          setIntervencoes(Array.isArray(resEventos.data) ? resEventos.data : []);
-        } catch (e) { console.warn("Rota /events pendente"); }
+        const resIncidentes = await api.get("/incidents");
+        const dadosInc = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
         
-        // Carrega incidentes/pendências/anotações
-        try {
-          const resIncidentes = await api.get("/incidents");
-          const dadosInc = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
-          
-          const notas = dadosInc.filter(i => i.type === "NOTA" || !i.isPending).map(n => ({
-            id: n.id || n._id,
-            data: n.createdAt || n.data,
-            texto: n.description || n.texto,
-            categoria: n.category || n.categoria || "Observação",
-            titulo: n.title || n.titulo || (n.description ? `${n.description.slice(0, 52)}...` : "Anotação")
-          }));
-          setAnotacoesLocais(notas);
-          
-          const pends = dadosInc.filter(i => i.isPending || i.type === "PENDENCIA").map(p => ({
-            id: p.id || p._id,
-            texto: p.description || p.texto,
-            alunoId: p.studentId || p.alunoId,
-            prioridade: p.priority || p.prioridade || "Média",
-            feita: p.resolved || p.feita || false,
-          }));
-          setPendencias(pends);
-        } catch (e) { console.warn("Rota /incidents pendente"); }
+        // 1. Intervenções
+        const intervs = dadosInc.filter(i => i.studentId || i.alunoId).map(i => ({
+          ...i,
+          id: i.id || i._id,
+          data: i.date || i.createdAt || i.data,
+          titulo: i.title || i.titulo || (i.student ? i.student.name : "Intervenção"),
+          tipo: i.type || i.tipo || "Registro",
+          descricao: limparTags(i.description || i.texto)
+        }));
+        setIntervencoes(intervs);
+
+        // 2. Anotações Locais
+        const notas = dadosInc.filter(i => (i.type === "NOTA" || (!i.isPending && i.type !== "PENDENCIA" && i.type !== "RESOLVIDO")) && !(i.studentId || i.alunoId)).map(n => ({
+          id: n.id || n._id,
+          data: n.date || n.createdAt || n.data,
+          texto: limparTags(n.description || n.texto),
+          categoria: n.category || n.categoria || "Observação",
+          titulo: n.title || n.titulo || (n.description ? `${limparTags(n.description || n.texto).slice(0, 52)}...` : "Anotação")
+        }));
+        setAnotacoesLocais(notas);
+        
+        // 3. Pendências
+        const pends = dadosInc.filter(i => i.isPending || i.type === "PENDENCIA" || i.type === "RESOLVIDO").map(p => ({
+          id: p.id || p._id,
+          texto: limparTags(p.description || p.texto),
+          alunoId: p.studentId || p.alunoId,
+          prioridade: extrairPrioridade(p.description || p.texto),
+          feita: p.resolved || p.feita || p.type === "RESOLVIDO" || false,
+        }));
+        setPendencias(pends);
 
       } catch (error) {
         console.error("Erro geral ao carregar o diário", error);
@@ -105,7 +128,7 @@ function Diario() {
   }, [])
 
   const registrosOrdenados = useMemo(
-    () => [...intervencoes].sort((a, b) => String(b.createdAt || b.data).localeCompare(String(a.createdAt || a.data))),
+    () => [...intervencoes].sort((a, b) => String(b.data).localeCompare(String(a.data))),
     [intervencoes]
   )
 
@@ -125,7 +148,7 @@ function Diario() {
 
   const abertas = pendencias.filter((item) => !item.feita).length
   const diasComRegistro = new Set([
-    ...intervencoes.map((item) => String(item.createdAt || item.data).split('T')[0]),
+    ...intervencoes.map((item) => String(item.data).split('T')[0]),
     ...anotacoesLocais.map((item) => String(item.data).split('T')[0]),
   ]).size
 
@@ -157,17 +180,17 @@ function Diario() {
       if (marcarComoPendencia) {
         setPendencias(lista => [{
           id: novoId,
-          texto: payload.description,
+          texto: limparTags(payload.description),
           prioridade: payload.priority,
           feita: false
         }, ...lista]);
       } else {
         setAnotacoesLocais(lista => [{
           id: novoId,
-          data: novoRegistro.createdAt || dataHojeISO(),
-          texto: payload.description,
+          data: novoRegistro.date || novoRegistro.createdAt || dataHojeISO(),
+          texto: limparTags(payload.description),
           categoria: payload.category,
-          titulo: payload.title
+          titulo: limparTags(payload.title)
         }, ...lista]);
       }
       
@@ -407,7 +430,7 @@ function Diario() {
             ) : registrosOrdenados.length ? (
               <div className="dw-lista-registros">
                 {registrosOrdenados.slice(0, 5).map((item) => {
-                  const dataReg = item.createdAt || item.data;
+                  const dataReg = item.data;
                   const { dia, mes } = partesDaData(dataReg)
                   const tipo = item.type || item.tipo || "Registro";
                   return (
@@ -423,7 +446,7 @@ function Diario() {
                             {tipo}
                           </span>
                         </div>
-                        <p>{item.description || item.descricao || "Intervenção registrada no acompanhamento do aluno."}</p>
+                        <p>{item.descricao}</p>
                         <div className="dw-registro-meta">
                           {(item.time || item.hora) && <span>{item.time || item.hora}</span>}
                           {(item.studentId || item.alunoId) && (

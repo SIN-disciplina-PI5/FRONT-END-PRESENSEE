@@ -399,7 +399,7 @@ function Intervencao() {
                   </select>
                 </label>
                 <label>Data da intervenção
-                  <input type="date" value={data} onChange={(e) => setData(e.target.value)} max={dataHoje()} required />
+                  <input type="date" value={data} onChange={(e) => setData(e.target.value)} required />
                 </label>
                 <label>Descrição da intervenção
                   <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva a ação realizada e os principais pontos tratados..." rows={4} maxLength={1000} required />

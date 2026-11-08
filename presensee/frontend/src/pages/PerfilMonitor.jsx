@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import DashboardLayout from "../layouts/DashboardLayout"
 import { MascotAvatar } from "../components/Icons"
 import api from "../services/api"
@@ -33,8 +34,10 @@ function lerUsuario() {
 }
 
 function PerfilMonitor() {
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState(lerUsuario)
   const [avatar, setAvatar] = useState(() => localStorage.getItem(CHAVE_AVATAR) || "")
+  const [fotoArquivo, setFotoArquivo] = useState(null)
   const [mensagem, setMensagem] = useState("")
   const [salvandoNaAPI, setSalvandoNaAPI] = useState(false)
   const [modoEdicao, setModoEdicao] = useState(false)
@@ -43,6 +46,8 @@ function PerfilMonitor() {
   const [assuntoSuporte, setAssuntoSuporte] = useState("")
   const [mensagemSuporte, setMensagemSuporte] = useState("")
   const [avisoSuporte, setAvisoSuporte] = useState("")
+  
+  const emailOriginal = useRef(lerUsuario().email)
 
   useEffect(() => {
     setUsuario(lerUsuario())
@@ -70,16 +75,14 @@ function PerfilMonitor() {
       return
     }
 
+    setFotoArquivo(arquivo)
+
     const leitor = new FileReader()
     leitor.onload = () => {
       const imagem = String(leitor.result || "")
-      try {
-        localStorage.setItem(CHAVE_AVATAR, imagem)
-        setAvatar(imagem)
-        setMensagem("Foto do perfil atualizada.")
-      } catch {
-        setMensagem("Não foi possível salvar essa imagem. Tente uma foto menor.")
-      }
+      setAvatar(imagem)
+      setMensagem("Foto selecionada. Salve as alterações para enviar.")
+      if(!modoEdicao) setModoEdicao(true)
     }
     leitor.readAsDataURL(arquivo)
   }
@@ -120,11 +123,31 @@ function PerfilMonitor() {
 
     try {
       if (usuario.id) {
+        // Atualiza os dados de texto
         await api.patch(`/users/${usuario.id}`, {
           name: usuario.nome.trim(),
           email: usuario.email.trim(),
           telefone: usuario.telefone.trim()
         })
+
+        // Envia a imagem para a nuvem se uma nova foi selecionada
+        if (fotoArquivo) {
+            const formData = new FormData();
+            formData.append("photo", fotoArquivo);
+            
+            const responseAvatar = await api.patch(`/users/${usuario.id}/avatar`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            // Pega a URL real devolvida pelo back-end/Cloudinary
+            if(responseAvatar.data?.user?.avatar) {
+               const urlReal = responseAvatar.data.user.avatar;
+               localStorage.setItem(CHAVE_AVATAR, urlReal);
+               setAvatar(urlReal);
+            } else {
+               localStorage.setItem(CHAVE_AVATAR, avatar);
+            }
+        }
       }
 
       const usuarioAtual = (() => {
@@ -147,6 +170,7 @@ function PerfilMonitor() {
       }
 
       localStorage.setItem(CHAVE_USUARIO, JSON.stringify(atualizado))
+      
       setUsuario({
         id: atualizado.id || atualizado._id,
         nome: atualizado.nome,
@@ -155,10 +179,23 @@ function PerfilMonitor() {
         cargo: atualizado.cargo,
         instituicao: atualizado.instituicao,
       })
+      
+      setFotoArquivo(null)
       setModoEdicao(false)
-      setMensagem("Perfil salvo com sucesso no banco de dados!")
       
       window.dispatchEvent(new Event("storage"))
+
+      // VERIFICAÇÃO CRÍTICA: Se o email mudou, desloga o usuário para evitar o erro de re-login
+      if (usuario.email.trim() !== emailOriginal.current) {
+         setMensagem("E-mail atualizado. Por segurança, você precisa fazer login novamente com seu novo e-mail.");
+         setTimeout(() => {
+             localStorage.clear();
+             navigate("/"); // Ou a rota de login correta
+         }, 3000);
+         return;
+      }
+
+      setMensagem("Perfil salvo com sucesso no banco de dados!")
     } catch (error) {
       console.error("Erro ao salvar perfil:", error)
       setMensagem("Erro ao comunicar com o servidor. Tente novamente.")
@@ -205,7 +242,7 @@ function PerfilMonitor() {
           </div>
           <label className="pm-botao-secundario pm-upload-foto">
             Alterar foto
-            <input type="file" accept="image/*" onChange={escolherFoto} />
+            <input type="file" accept="image/*" onChange={escolherFoto} disabled={salvandoNaAPI}/>
           </label>
         </section>
 
@@ -245,7 +282,7 @@ function PerfilMonitor() {
 
           {modoEdicao && (
             <div className="pm-acoes-form">
-              <button className="pm-botao-secundario" type="button" disabled={salvandoNaAPI} onClick={() => { setUsuario(lerUsuario()); setModoEdicao(false); setMensagem("") }}>
+              <button className="pm-botao-secundario" type="button" disabled={salvandoNaAPI} onClick={() => { setUsuario(lerUsuario()); setAvatar(localStorage.getItem(CHAVE_AVATAR)); setFotoArquivo(null); setModoEdicao(false); setMensagem("") }}>
                 Cancelar
               </button>
               <button className="pm-botao-primario" type="submit" disabled={salvandoNaAPI}>

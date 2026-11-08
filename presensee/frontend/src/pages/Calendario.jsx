@@ -59,6 +59,7 @@ function calendarioDoMes(mes) {
 
 export default function Calendario() {
   const [eventos, setEventos] = useState([]);
+  const [turmas, setTurmas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mes, setMes] = useState(() => new Date());
   const [visao, setVisao] = useState("mes");
@@ -104,8 +105,18 @@ export default function Calendario() {
     }
   };
 
+  const carregarTurmas = async () => {
+    try {
+      const response = await api.get("/classes");
+      setTurmas(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Erro ao carregar turmas:", error);
+    }
+  };
+
   useEffect(() => {
     carregarEventos();
+    carregarTurmas(); 
   }, []);
 
   function mudarMes(direcao) {
@@ -146,7 +157,7 @@ export default function Calendario() {
     
     if (!form.titulo.trim()) return setErro("Informe um título para o evento.");
     if (!datas.length) return setErro("Selecione as datas do evento. O período deve ter até 366 dias.");
-    if (form.abono === "especificos" && !form.publico.trim()) return setErro("Informe quais alunos ou turmas terão as faltas abonadas.");
+    if (form.abono === "especificos" && !form.publico.trim()) return setErro("Selecione qual turma terá as faltas abonadas.");
     
     const payload = {
       title: form.titulo.trim(),
@@ -161,7 +172,6 @@ export default function Calendario() {
 
     try {
       if (editando) {
-        // Requer que a rota PATCH /events/:id seja adicionada no back-end posteriormente
         await api.patch(`/events/${editando}`, payload); 
         setMensagem("Evento atualizado com sucesso!");
       } else {
@@ -381,7 +391,21 @@ export default function Calendario() {
 
           {painel !== "fechado" && <aside className="ce-card ce-form-panel" key={painel}>
             <div className="ce-form-heading"><h2>{painel === "atestado" ? "Justificativa médica" : editando ? "Editar evento" : "Novo evento"}</h2><button type="button" onClick={fecharPainel} aria-label="Fechar painel">×</button></div>
-            {painel === "atestado" ? <form onSubmit={salvarAtestado} className="ce-form"><p className="ce-info">A justificativa será analisada. O atestado não gera abono automático.</p><label>Aluno<input required value={atestado.aluno} onChange={(e) => setAtestado({ ...atestado, aluno: e.target.value })} placeholder="Nome ou matrícula" /></label><label>Turma<input value={atestado.turma} onChange={(e) => setAtestado({ ...atestado, turma: e.target.value })} placeholder="Ex.: 1A" /></label><div className="ce-form-dates"><label>Início<input required type="date" value={atestado.inicio} onChange={(e) => setAtestado({ ...atestado, inicio: e.target.value })} /></label><label>Término<input required type="date" value={atestado.fim} min={atestado.inicio} onChange={(e) => setAtestado({ ...atestado, fim: e.target.value })} /></label></div><label>Atestado (PDF, PNG ou JPG, até 5 MB)<input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required onChange={(e) => setArquivoAtestado(e.target.files?.[0] || null)} /></label><label>Observação (sem diagnóstico)<textarea value={atestado.observacao} onChange={(e) => setAtestado({ ...atestado, observacao: e.target.value })} rows="3" /></label>{erro && <p role="alert" className="ce-error">{erro}</p>}{mensagem && <p role="status" className="ce-success">{mensagem}</p>}<div className="ce-form-actions"><button type="button" className="ce-btn-outline" onClick={fecharPainel}>Cancelar</button><button className="ce-btn-primary" type="submit">Registrar</button></div></form> : <form onSubmit={salvarEvento} className="ce-form"><label>Título do evento<input required value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex.: Jogos interclasse" /></label><label>Descrição (opcional)<textarea rows="3" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Descreva o evento..." /></label><div><span className="ce-label">Tipo de evento</span><div className="ce-type-grid">{TIPOS.map((tipo) => <button type="button" key={tipo} className={form.tipo === tipo ? "selecionado" : ""} onClick={() => setForm({ ...form, tipo })}>{tipo}</button>)}</div></div><div><span className="ce-label">Datas do evento</span><div className="ce-segments">{[["dia", "Dia específico"], ["periodo", "Período"], ["alternados", "Dias alternados"]].map(([modo, rotulo]) => <button type="button" key={modo} className={form.modo === modo ? "ativo" : ""} onClick={() => setForm({ ...form, modo })}>{rotulo}</button>)}</div></div>{form.modo === "alternados" ? <div><p className="ce-info">Marque as datas desejadas clicando no calendário abaixo.</p><div className="ce-picker-days">{calendarioDoMes(mes).filter((d) => d.noMes).map((d) => <button type="button" key={d.data} className={form.alternados.includes(d.data) ? "marcado" : ""} onClick={() => setForm((prev) => ({ ...prev, alternados: prev.alternados.includes(d.data) ? prev.alternados.filter((x) => x !== d.data) : [...prev.alternados, d.data].sort() }))}>{d.numero}</button>)}</div><small>{form.alternados.length} dia(s) selecionado(s). Navegue entre os meses para incluir outras datas.</small></div> : <div className="ce-form-dates"><label>{form.modo === "dia" ? "Data" : "Data de início"}<input required type="date" value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.target.value })} /></label>{form.modo === "periodo" && <label>Data de término<input required type="date" min={form.inicio} value={form.fim} onChange={(e) => setForm({ ...form, fim: e.target.value })} /></label>}</div>}<div><span className="ce-label">Abono de faltas</span><p className="ce-info">Defina se o evento justifica ausências.</p><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "nenhum"} onChange={() => setForm({ ...form, abono: "nenhum" })} /> Não abonar</label><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "escola"} onChange={() => setForm({ ...form, abono: "escola" })} /> Toda a escola</label><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "especificos"} onChange={() => setForm({ ...form, abono: "especificos" })} /> Turmas ou alunos específicos</label>{form.abono === "especificos" && <label>Turmas ou alunos<input required value={form.publico} onChange={(e) => setForm({ ...form, publico: e.target.value })} placeholder="Ex.: 1A, 2B, matrícula 003" /><small>Campo provisório; seleção pelo cadastro real depende da API.</small></label>}</div><div><span className="ce-label">Cor no calendário</span><div className="ce-colors">{CORES.map((cor) => <button type="button" key={cor} className={cor === form.cor ? "selecionada" : ""} onClick={() => setForm({ ...form, cor })} aria-label={`Selecionar cor ${cor}`} style={{ backgroundColor: cor }} />)}</div></div>{erro && <p className="ce-error" role="alert">{erro}</p>}{mensagem && <p className="ce-success" role="status">{mensagem}</p>}<div className="ce-form-actions"><button type="button" className="ce-btn-outline" onClick={fecharPainel}>Cancelar</button><button type="submit" className="ce-btn-primary">Salvar evento</button></div></form>}
+            {painel === "atestado" ? <form onSubmit={salvarAtestado} className="ce-form"><p className="ce-info">A justificativa será analisada. O atestado não gera abono automático.</p><label>Aluno<input required value={atestado.aluno} onChange={(e) => setAtestado({ ...atestado, aluno: e.target.value })} placeholder="Nome ou matrícula" /></label><label>Turma<input value={atestado.turma} onChange={(e) => setAtestado({ ...atestado, turma: e.target.value })} placeholder="Ex.: 1A" /></label><div className="ce-form-dates"><label>Início<input required type="date" value={atestado.inicio} onChange={(e) => setAtestado({ ...atestado, inicio: e.target.value })} /></label><label>Término<input required type="date" value={atestado.fim} min={atestado.inicio} onChange={(e) => setAtestado({ ...atestado, fim: e.target.value })} /></label></div><label>Atestado (PDF, PNG ou JPG, até 5 MB)<input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required onChange={(e) => setArquivoAtestado(e.target.files?.[0] || null)} /></label><label>Observação (sem diagnóstico)<textarea value={atestado.observacao} onChange={(e) => setAtestado({ ...atestado, observacao: e.target.value })} rows="3" /></label>{erro && <p role="alert" className="ce-error">{erro}</p>}{mensagem && <p role="status" className="ce-success">{mensagem}</p>}<div className="ce-form-actions"><button type="button" className="ce-btn-outline" onClick={fecharPainel}>Cancelar</button><button className="ce-btn-primary" type="submit">Registrar</button></div></form> : <form onSubmit={salvarEvento} className="ce-form"><label>Título do evento<input required value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex.: Jogos interclasse" /></label><label>Descrição (opcional)<textarea rows="3" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Descreva o evento..." /></label><div><span className="ce-label">Tipo de evento</span><div className="ce-type-grid">{TIPOS.map((tipo) => <button type="button" key={tipo} className={form.tipo === tipo ? "selecionado" : ""} onClick={() => setForm({ ...form, tipo })}>{tipo}</button>)}</div></div><div><span className="ce-label">Datas do evento</span><div className="ce-segments">{[["dia", "Dia específico"], ["periodo", "Período"], ["alternados", "Dias alternados"]].map(([modo, rotulo]) => <button type="button" key={modo} className={form.modo === modo ? "ativo" : ""} onClick={() => setForm({ ...form, modo })}>{rotulo}</button>)}</div></div>{form.modo === "alternados" ? <div><p className="ce-info">Marque as datas desejadas clicando no calendário abaixo.</p><div className="ce-picker-days">{calendarioDoMes(mes).filter((d) => d.noMes).map((d) => <button type="button" key={d.data} className={form.alternados.includes(d.data) ? "marcado" : ""} onClick={() => setForm((prev) => ({ ...prev, alternados: prev.alternados.includes(d.data) ? prev.alternados.filter((x) => x !== d.data) : [...prev.alternados, d.data].sort() }))}>{d.numero}</button>)}</div><small>{form.alternados.length} dia(s) selecionado(s). Navegue entre os meses para incluir outras datas.</small></div> : <div className="ce-form-dates"><label>{form.modo === "dia" ? "Data" : "Data de início"}<input required type="date" value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.target.value })} /></label>{form.modo === "periodo" && <label>Data de término<input required type="date" min={form.inicio} value={form.fim} onChange={(e) => setForm({ ...form, fim: e.target.value })} /></label>}</div>}<div><span className="ce-label">Abono de faltas</span><p className="ce-info">Defina se o evento justifica ausências.</p><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "nenhum"} onChange={() => setForm({ ...form, abono: "nenhum" })} /> Não abonar</label><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "escola"} onChange={() => setForm({ ...form, abono: "escola" })} /> Toda a escola</label><label className="ce-radio"><input type="radio" name="abono" checked={form.abono === "especificos"} onChange={() => setForm({ ...form, abono: "especificos" })} /> Turmas específicas</label>
+        
+        {form.abono === "especificos" && (
+          <label>
+            Turma
+            <select required value={form.publico} onChange={(e) => setForm({ ...form, publico: e.target.value })}>
+              <option value="">Selecione uma turma...</option>
+              {turmas.map(t => (
+                <option key={t.id} value={t.name}>{t.name} ({t.shift})</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+      </div><div><span className="ce-label">Cor no calendário</span><div className="ce-colors">{CORES.map((cor) => <button type="button" key={cor} className={cor === form.cor ? "selecionada" : ""} onClick={() => setForm({ ...form, cor })} aria-label={`Selecionar cor ${cor}`} style={{ backgroundColor: cor }} />)}</div></div>{erro && <p className="ce-error" role="alert">{erro}</p>}{mensagem && <p className="ce-success" role="status">{mensagem}</p>}<div className="ce-form-actions"><button type="button" className="ce-btn-outline" onClick={fecharPainel}>Cancelar</button><button type="submit" className="ce-btn-primary">Salvar evento</button></div></form>}
           </aside>}
         </div>
       </main>

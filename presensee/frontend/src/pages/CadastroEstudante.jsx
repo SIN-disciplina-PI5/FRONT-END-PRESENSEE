@@ -6,7 +6,6 @@ import api from "../services/api";
 import "../styles/CadastroEstudante.css";
 
 const PARENTESCOS = ["Mãe", "Pai", "Avó/Avô", "Tio/Tia", "Irmã/Irmão", "Tutor(a) legal", "Outro"];
-const TURNOS = ["Manhã", "Tarde", "Noite", "Integral"];
 const SEXOS = ["Feminino", "Masculino", "Prefiro não informar"];
 
 const FORM_INICIAL = {
@@ -16,7 +15,6 @@ const FORM_INICIAL = {
   cpf: "",
   matricula: "",
   turmaId: "",
-  turno: "Manhã",
   email: "",
   telefone: "",
   cep: "",
@@ -133,7 +131,6 @@ function CadastroEstudante() {
   const [turmasCadastradas, setTurmasCadastradas] = useState([]);
   const refFoto = useRef(null);
 
-  // Busca as turmas reais do banco de dados ao montar o componente
   useEffect(() => {
     async function carregarTurmas() {
       try {
@@ -146,7 +143,6 @@ function CadastroEstudante() {
     carregarTurmas();
   }, []);
 
-  // Fecha o aviso de confirmação com a tecla Esc.
   useEffect(() => {
     if (!confirmando) return undefined;
     const aoTeclar = (e) => { if (e.key === "Escape" && !salvandoNaAPI) setConfirmando(false); };
@@ -156,6 +152,10 @@ function CadastroEstudante() {
 
   const idade = useMemo(() => idadeEmAnos(form.nascimento), [form.nascimento]);
   const menorDeIdade = idade !== null && idade < 18;
+
+  // Lógica para descobrir automaticamente o turno com base na turma selecionada
+  const turmaSelecionadaObj = turmasCadastradas.find(t => String(t.id) === String(form.turmaId));
+  const turnoAutomatico = turmaSelecionadaObj?.shift || "—";
 
   function alterar(campo, valor) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
@@ -175,7 +175,7 @@ function CadastroEstudante() {
       return;
     }
     
-    setFotoArquivo(arquivo); // Guarda o File para envio via FormData
+    setFotoArquivo(arquivo);
     
     const leitor = new FileReader();
     leitor.onload = () => {
@@ -219,46 +219,37 @@ function CadastroEstudante() {
       primeiro?.focus();
       return;
     }
-
     setConfirmando(true);
   }
 
   async function confirmarCadastro() {
     setSalvandoNaAPI(true);
-
     try {
-      // 1. Criar o estudante na API (Corrigido para enviar "registration" em vez de "enrollmentCode")
       const dadosEstudante = {
         name: form.nome.trim(),
         registration: form.matricula.trim(),
         birthDate: form.nascimento,
         classId: form.turmaId,
-        // Envia o e-mail apenas se o campo não estiver vazio
         ...(form.email.trim() && { email: form.email.trim() }),
       };
 
       const respostaEstudante = await api.post("/students", dadosEstudante);
       const alunoCriado = respostaEstudante.data;
 
-      // 2. Fazer upload da biometria se houver foto selecionada
-      if (fotoArquivo && alunoCriado.id) {
+      if (fotoArquivo && (alunoCriado.id || alunoCriado._id)) {
+        const idParaFoto = alunoCriado.id || alunoCriado._id;
         const formData = new FormData();
         formData.append("photo", fotoArquivo);
         
-        await api.patch(`/students/${alunoCriado.id}/biometry`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+        await api.patch(`/students/${idParaFoto}/biometry`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
       
-      // Encontrar o nome da turma para exibir na tela de sucesso
-      const turmaSelecionadaObj = turmasCadastradas.find(t => t.id === form.turmaId);
-
       setSalvo({
         ...alunoCriado,
         turmaNome: turmaSelecionadaObj?.name || "Turma desconhecida",
-        turno: form.turno,
+        turno: turnoAutomatico,
         responsavelNome: form.respNome.trim(),
         responsavelTelefone: form.respTelefone
       });
@@ -268,7 +259,7 @@ function CadastroEstudante() {
 
     } catch (error) {
       console.error("Erro ao cadastrar estudante:", error);
-      alert("Falha ao cadastrar o aluno. Verifique a conexão com o servidor.");
+      alert(error.response?.data?.error || "Falha ao cadastrar o aluno. Verifique a conexão com o servidor.");
       setConfirmando(false);
     } finally {
       setSalvandoNaAPI(false);
@@ -293,29 +284,19 @@ function CadastroEstudante() {
           <section className="cest-sucesso">
             <div className="cest-sucesso-icone" aria-hidden="true">✓</div>
             <h1>Aluno cadastrado!</h1>
-            <p>
-              <strong>{salvo.name}</strong> foi adicionado à turma <strong>{salvo.turmaNome}</strong>.
-            </p>
-
+            <p><strong>{salvo.name || salvo.nome}</strong> foi adicionado à turma <strong>{salvo.turmaNome}</strong>.</p>
             <div className="cest-resumo">
-              {/* Corrigido para exibir salvo.registration conforme o retorno da API */}
-              <div><span>Matrícula</span><strong>{salvo.registration}</strong></div>
+              <div><span>Matrícula</span><strong>{salvo.registration || salvo.matricula}</strong></div>
               <div><span>Turno</span><strong>{salvo.turno}</strong></div>
               <div><span>Responsável</span><strong>{salvo.responsavelNome}</strong></div>
               <div><span>Contato</span><strong>{salvo.responsavelTelefone}</strong></div>
             </div>
-
             <p className="cest-aviso-demo" style={{ color: "#15803d", backgroundColor: "#dcfce7" }}>
               Sucesso: Cadastro realizado com sucesso na base de dados (Neon)!
             </p>
-
             <div className="cest-sucesso-acoes">
-              <button type="button" className="cest-btn cest-btn-secundario" onClick={novoCadastro}>
-                Cadastrar outro aluno
-              </button>
-              <button type="button" className="cest-btn cest-btn-primario" onClick={() => navigate("/alunos")}>
-                Ver lista de alunos
-              </button>
+              <button type="button" className="cest-btn cest-btn-secundario" onClick={novoCadastro}>Cadastrar outro aluno</button>
+              <button type="button" className="cest-btn cest-btn-primario" onClick={() => navigate("/alunos")}>Ver lista de alunos</button>
             </div>
           </section>
         </main>
@@ -327,11 +308,8 @@ function CadastroEstudante() {
     <DashboardLayout>
       <main className="cest-page">
         <div className="cest-breadcrumb">
-          <Link to="/alunos">Alunos</Link>
-          <span>/</span>
-          <span>Cadastrar aluno</span>
+          <Link to="/alunos">Alunos</Link><span>/</span><span>Cadastrar aluno</span>
         </div>
-
         <header className="cest-cabecalho">
           <div>
             <h1>Cadastrar aluno</h1>
@@ -341,247 +319,125 @@ function CadastroEstudante() {
         </header>
 
         <form className="cest-form" onSubmit={salvar} noValidate>
-          {/* DADOS PESSOAIS */}
           <section className="cest-card">
             <SecaoTitulo icone="♙" titulo="Dados pessoais" descricao="Identificação básica do aluno." />
-
             <div className="cest-pessoais">
               <div className="cest-foto">
                 <div className="cest-foto-avatar">
-                  {fotoBase64 ? (
-                    <img src={fotoBase64} alt="Pré-visualização da foto do aluno" />
-                  ) : form.nome.trim() ? (
-                    <span className="cest-foto-iniciais">{iniciais(form.nome)}</span>
-                  ) : (
-                    <MascotAvatar size={84} />
-                  )}
+                  {fotoBase64 ? <img src={fotoBase64} alt="Pré-visualização" /> : form.nome.trim() ? <span className="cest-foto-iniciais">{iniciais(form.nome)}</span> : <MascotAvatar size={84} />}
                 </div>
                 <label className="cest-btn cest-btn-secundario cest-foto-upload">
                   {fotoBase64 ? "Trocar foto" : "Adicionar foto"}
                   <input ref={refFoto} type="file" accept="image/*" onChange={escolherFoto} />
                 </label>
-                {fotoBase64 && (
-                  <button type="button" className="cest-foto-remover" onClick={removerFoto}>Remover</button>
-                )}
-                <small className={avisoFoto ? "cest-erro-texto" : "cest-dica"}>
-                  {avisoFoto || "JPG ou PNG, até 2 MB. Importante para o reconhecimento facial."}
-                </small>
+                {fotoBase64 && <button type="button" className="cest-foto-remover" onClick={removerFoto}>Remover</button>}
+                <small className={avisoFoto ? "cest-erro-texto" : "cest-dica"}>{avisoFoto || "JPG ou PNG, até 2 MB."}</small>
               </div>
-
               <div className="cest-grid">
                 <Campo rotulo="Nome completo" obrigatorio largo erro={erros.nome}>
-                  <input
-                    className="cest-input"
-                    value={form.nome}
-                    onChange={(e) => alterar("nome", e.target.value)}
-                    placeholder="Ex.: Maria Eduarda da Silva"
-                    autoComplete="off"
-                  />
+                  <input className="cest-input" value={form.nome} onChange={(e) => alterar("nome", e.target.value)} placeholder="Ex.: Maria Eduarda da Silva" autoComplete="off" />
                 </Campo>
-
-                <Campo rotulo="Data de nascimento" obrigatorio erro={erros.nascimento}
-                  dica={idade !== null && idade >= 0 ? `${idade} ano${idade === 1 ? "" : "s"}` : undefined}>
-                  <input
-                    className="cest-input"
-                    type="date"
-                    max={hojeISO()}
-                    value={form.nascimento}
-                    onChange={(e) => alterar("nascimento", e.target.value)}
-                  />
+                <Campo rotulo="Data de nascimento" obrigatorio erro={erros.nascimento} dica={idade !== null && idade >= 0 ? `${idade} ano${idade === 1 ? "" : "s"}` : undefined}>
+                  <input className="cest-input" type="date" max={hojeISO()} value={form.nascimento} onChange={(e) => alterar("nascimento", e.target.value)} />
                 </Campo>
-
                 <Campo rotulo="Sexo">
                   <select className="cest-input" value={form.sexo} onChange={(e) => alterar("sexo", e.target.value)}>
                     <option value="">Selecione</option>
                     {SEXOS.map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </Campo>
-
                 <Campo rotulo="CPF" erro={erros.cpf} dica="Opcional">
-                  <input
-                    className="cest-input"
-                    inputMode="numeric"
-                    value={form.cpf}
-                    onChange={(e) => alterar("cpf", mascaraCPF(e.target.value))}
-                    placeholder="000.000.000-00"
-                  />
+                  <input className="cest-input" inputMode="numeric" value={form.cpf} onChange={(e) => alterar("cpf", mascaraCPF(e.target.value))} placeholder="000.000.000-00" />
                 </Campo>
               </div>
             </div>
           </section>
 
-          {/* DADOS ESCOLARES */}
           <section className="cest-card">
             <SecaoTitulo icone="▤" titulo="Dados escolares" descricao="Vínculo do aluno com a escola." />
             <div className="cest-grid cest-grid-3">
               <Campo rotulo="Matrícula" obrigatorio erro={erros.matricula}>
-                <input
-                  className="cest-input"
-                  value={form.matricula}
-                  onChange={(e) => alterar("matricula", e.target.value)}
-                  placeholder="Ex.: 2026001"
-                />
+                <input className="cest-input" value={form.matricula} onChange={(e) => alterar("matricula", e.target.value)} placeholder="Ex.: 2026001" />
               </Campo>
-
               <Campo rotulo="Turma" obrigatorio erro={erros.turmaId}>
                 <select className="cest-input" value={form.turmaId} onChange={(e) => alterar("turmaId", e.target.value)}>
                   <option value="">Selecione a turma</option>
                   {turmasCadastradas.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </Campo>
-
-              <Campo rotulo="Turno">
-                <div className="cest-segmentos" role="radiogroup" aria-label="Turno">
-                  {TURNOS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      role="radio"
-                      aria-checked={form.turno === t}
-                      className={form.turno === t ? "ativo" : ""}
-                      onClick={() => alterar("turno", t)}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+              <Campo rotulo="Turno" dica="Preenchido automaticamente pela turma">
+                 <input className="cest-input" style={{ backgroundColor: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} value={turnoAutomatico} readOnly disabled />
               </Campo>
             </div>
           </section>
 
-          {/* CONTATO E ENDEREÇO */}
           <section className="cest-card">
             <SecaoTitulo icone="✉" titulo="Contato e endereço" descricao="Como encontrar o aluno quando necessário." />
             <div className="cest-grid cest-grid-3">
               <Campo rotulo="E-mail do aluno" erro={erros.email} dica="Opcional">
-                <input
-                  className="cest-input"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => alterar("email", e.target.value)}
-                  placeholder="aluno@email.com"
-                />
+                <input className="cest-input" type="email" value={form.email} onChange={(e) => alterar("email", e.target.value)} placeholder="aluno@email.com" />
               </Campo>
-
               <Campo rotulo="Telefone do aluno" erro={erros.telefone} dica="Opcional">
-                <input
-                  className="cest-input"
-                  type="tel"
-                  inputMode="tel"
-                  value={form.telefone}
-                  onChange={(e) => alterar("telefone", mascaraTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000"
-                />
+                <input className="cest-input" type="tel" inputMode="tel" value={form.telefone} onChange={(e) => alterar("telefone", mascaraTelefone(e.target.value))} placeholder="(00) 00000-0000" />
               </Campo>
-
               <Campo rotulo="CEP" erro={erros.cep} dica="Opcional">
-                <input
-                  className="cest-input"
-                  inputMode="numeric"
-                  value={form.cep}
-                  onChange={(e) => alterar("cep", mascaraCEP(e.target.value))}
-                  placeholder="00000-000"
-                />
+                <input className="cest-input" inputMode="numeric" value={form.cep} onChange={(e) => alterar("cep", mascaraCEP(e.target.value))} placeholder="00000-000" />
               </Campo>
-
               <Campo rotulo="Rua" largo dica="Opcional">
                 <input className="cest-input" value={form.rua} onChange={(e) => alterar("rua", e.target.value)} placeholder="Rua, avenida..." />
               </Campo>
-
               <Campo rotulo="Número" dica="Opcional">
                 <input className="cest-input" value={form.numero} onChange={(e) => alterar("numero", e.target.value)} placeholder="Nº" />
               </Campo>
-
               <Campo rotulo="Bairro" dica="Opcional">
                 <input className="cest-input" value={form.bairro} onChange={(e) => alterar("bairro", e.target.value)} />
               </Campo>
-
               <Campo rotulo="Cidade" dica="Opcional">
                 <input className="cest-input" value={form.cidade} onChange={(e) => alterar("cidade", e.target.value)} />
               </Campo>
-
               <Campo rotulo="Estado" dica="Opcional">
-                <input
-                  className="cest-input"
-                  maxLength={2}
-                  value={form.estado}
-                  onChange={(e) => alterar("estado", e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))}
-                  placeholder="PE"
-                />
+                <input className="cest-input" maxLength={2} value={form.estado} onChange={(e) => alterar("estado", e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))} placeholder="PE" />
               </Campo>
             </div>
           </section>
 
-          {/* RESPONSÁVEL */}
           <section className="cest-card">
-            <SecaoTitulo
-              icone="☎"
-              titulo="Responsável"
-              descricao={menorDeIdade
-                ? "Aluno menor de idade: o contato do responsável é essencial."
-                : "Contato para comunicados e acompanhamento."}
-            />
+            <SecaoTitulo icone="☎" titulo="Responsável" descricao={menorDeIdade ? "Aluno menor de idade: o contato do responsável é essencial." : "Contato para comunicados e acompanhamento."} />
             <div className="cest-grid cest-grid-2">
               <Campo rotulo="Nome do responsável" obrigatorio erro={erros.respNome}>
                 <input className="cest-input" value={form.respNome} onChange={(e) => alterar("respNome", e.target.value)} placeholder="Nome completo" />
               </Campo>
-
               <Campo rotulo="Parentesco">
                 <select className="cest-input" value={form.respParentesco} onChange={(e) => alterar("respParentesco", e.target.value)}>
                   {PARENTESCOS.map((p) => <option key={p}>{p}</option>)}
                 </select>
               </Campo>
-
               <Campo rotulo="Telefone do responsável" obrigatorio erro={erros.respTelefone}>
-                <input
-                  className="cest-input"
-                  type="tel"
-                  inputMode="tel"
-                  value={form.respTelefone}
-                  onChange={(e) => alterar("respTelefone", mascaraTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000"
-                />
+                <input className="cest-input" type="tel" inputMode="tel" value={form.respTelefone} onChange={(e) => alterar("respTelefone", mascaraTelefone(e.target.value))} placeholder="(00) 00000-0000" />
               </Campo>
-
               <Campo rotulo="E-mail do responsável" erro={erros.respEmail} dica="Opcional">
                 <input className="cest-input" type="email" value={form.respEmail} onChange={(e) => alterar("respEmail", e.target.value)} placeholder="responsavel@email.com" />
               </Campo>
             </div>
           </section>
 
-          {/* OBSERVAÇÕES */}
           <section className="cest-card">
             <SecaoTitulo icone="✎" titulo="Observações" descricao="Informações úteis para o acompanhamento (opcional)." />
             <label className="cest-campo">
               <span className="cest-sr-only">Observações</span>
-              <textarea
-                className="cest-input cest-textarea"
-                rows={4}
-                maxLength={500}
-                value={form.observacoes}
-                onChange={(e) => alterar("observacoes", e.target.value)}
-                placeholder="Ex.: aluno transferido, necessidade de acompanhamento especial..."
-              />
+              <textarea className="cest-input cest-textarea" rows={4} maxLength={500} value={form.observacoes} onChange={(e) => alterar("observacoes", e.target.value)} placeholder="Ex.: aluno transferido, necessidade de acompanhamento especial..." />
               <small className="cest-contador">{form.observacoes.length}/500</small>
             </label>
-            <p className="cest-aviso-sensivel">
-              Evite registrar diagnósticos ou dados médicos neste campo.
-            </p>
+            <p className="cest-aviso-sensivel">Evite registrar diagnósticos ou dados médicos neste campo.</p>
           </section>
 
           {Object.keys(erros).some((k) => erros[k]) && (
-            <p className="cest-resumo-erros" role="alert">
-              Revise os campos destacados antes de salvar.
-            </p>
+            <p className="cest-resumo-erros" role="alert">Revise os campos destacados antes de salvar.</p>
           )}
 
           <div className="cest-acoes">
-            <button type="button" className="cest-btn cest-btn-secundario" onClick={limpar} disabled={salvandoNaAPI}>
-              Limpar formulário
-            </button>
-            <button type="button" className="cest-btn cest-btn-secundario" onClick={() => navigate("/alunos")} disabled={salvandoNaAPI}>
-              Cancelar
-            </button>
+            <button type="button" className="cest-btn cest-btn-secundario" onClick={limpar} disabled={salvandoNaAPI}>Limpar formulário</button>
+            <button type="button" className="cest-btn cest-btn-secundario" onClick={() => navigate("/alunos")} disabled={salvandoNaAPI}>Cancelar</button>
             <button type="submit" className="cest-btn cest-btn-primario" disabled={salvandoNaAPI}>
               {salvandoNaAPI ? "Salvando..." : "Cadastrar aluno"}
             </button>
@@ -589,58 +445,22 @@ function CadastroEstudante() {
         </form>
 
         {confirmando && (
-          <div
-            className="cest-modal-fundo"
-            role="presentation"
-            onMouseDown={(e) => { if (e.target === e.currentTarget && !salvandoNaAPI) setConfirmando(false); }}
-          >
-            <section
-              className="cest-modal"
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="cest-confirmar-titulo"
-              aria-describedby="cest-confirmar-desc"
-            >
+          <div className="cest-modal-fundo" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget && !salvandoNaAPI) setConfirmando(false); }}>
+            <section className="cest-modal" role="alertdialog" aria-modal="true" aria-labelledby="cest-confirmar-titulo" aria-describedby="cest-confirmar-desc">
               <div className="cest-modal-icone" aria-hidden="true">!</div>
               <h2 id="cest-confirmar-titulo">Confirmar cadastro?</h2>
-              <p id="cest-confirmar-desc">
-                Confira os dados abaixo. Ao confirmar, o aluno será adicionado ao banco de dados e poderá utilizar o reconhecimento facial.
-              </p>
-
+              <p id="cest-confirmar-desc">Confira os dados abaixo. Ao confirmar, o aluno será adicionado ao banco de dados e poderá utilizar o reconhecimento facial.</p>
               <div className="cest-modal-dados">
                 <div><span>Aluno</span><strong>{form.nome.trim()}</strong></div>
-                <div>
-                  <span>Nascimento</span>
-                  <strong>{form.nascimento.split("-").reverse().join("/")}</strong>
-                </div>
+                <div><span>Nascimento</span><strong>{form.nascimento.split("-").reverse().join("/")}</strong></div>
                 <div><span>Matrícula</span><strong>{form.matricula.trim()}</strong></div>
-                <div>
-                  <span>Turma · Turno</span>
-                  <strong>{turmasCadastradas.find(t => t.id === form.turmaId)?.name} · {form.turno}</strong>
-                </div>
-                <div>
-                  <span>Responsável</span>
-                  <strong>{form.respNome.trim()} ({form.respParentesco})</strong>
-                </div>
+                <div><span>Turma · Turno</span><strong>{turmaSelecionadaObj?.name} · {turnoAutomatico}</strong></div>
+                <div><span>Responsável</span><strong>{form.respNome.trim()} ({form.respParentesco})</strong></div>
                 <div><span>Telefone do responsável</span><strong>{form.respTelefone}</strong></div>
               </div>
-
               <div className="cest-modal-acoes">
-                <button 
-                  type="button" 
-                  className="cest-btn cest-btn-secundario" 
-                  onClick={() => setConfirmando(false)}
-                  disabled={salvandoNaAPI}
-                >
-                  Voltar e revisar
-                </button>
-                <button 
-                  type="button" 
-                  className="cest-btn cest-btn-primario" 
-                  onClick={confirmarCadastro} 
-                  disabled={salvandoNaAPI}
-                  autoFocus
-                >
+                <button type="button" className="cest-btn cest-btn-secundario" onClick={() => setConfirmando(false)} disabled={salvandoNaAPI}>Voltar e revisar</button>
+                <button type="button" className="cest-btn cest-btn-primario" onClick={confirmarCadastro} disabled={salvandoNaAPI} autoFocus>
                   {salvandoNaAPI ? "Enviando..." : "Sim, cadastrar aluno"}
                 </button>
               </div>
