@@ -22,8 +22,8 @@ export default function AdminNovaEscola() {
     setLoading(true)
     
     try {
-      // 1. Criar a Escola primeiro enviando TODOS os dados do formulário
-      const respostaEscola = await api.post("/escolas", {
+      // Cria a escola e o gestor Numa ÚNICA chamada para a nova API do Back-end
+      await api.post("/escolas", {
         nome: dados.nome,
         inep: dados.inep,
         rede: dados.rede,
@@ -35,27 +35,18 @@ export default function AdminNovaEscola() {
         bairro: dados.bairro,
         municipio: dados.municipio,
         uf: dados.uf,
-        telefone: dados.telefone
+        telefone: dados.telefone,
+        // Nomes exatos exigidos pelo SchoolController.ts
+        gestorNome: dados.gestor, 
+        gestorEmail: dados.email 
       })
       
-      const escolaCriada = respostaEscola.data;
-
-      // 2. Se o usuário preencheu o nome do gestor, cria o utilizador e vincula a escola
-      if (dados.gestor && dados.gestor.trim() !== "") {
-        await api.post("/users", {
-          name: dados.gestor,
-          email: dados.email || `${dados.nome.replace(/\s+/g, '').toLowerCase()}@gestor.com`, // email gerado se estiver vazio
-          telefone: dados.telefone, // <-- Telefone agora é repassado para o perfil do Gestor
-          password: "123", // Password padrão para os novos gestores trocarem no primeiro acesso
-          role: "MANAGER",
-          escolaId: escolaCriada.id // Vincula o ID da escola acabada de criar
-        })
-      }
-      
+      alert("Escola e Gestor cadastrados com sucesso! E-mail de acesso enviado.")
       navigate("/admin/escolas")
     } catch (error) {
       console.error("Erro ao salvar escola e gestor:", error)
-      alert("Falha ao cadastrar a escola e o gestor. Verifique o console.")
+      const mensagemErro = error.response?.data?.error || "Falha ao cadastrar a escola e o gestor. Verifique os dados e tente novamente."
+      alert(mensagemErro)
     } finally {
       setLoading(false)
     }
@@ -110,9 +101,9 @@ export default function AdminNovaEscola() {
         
         <h3>Gestor responsável</h3>
         <div className="admin-form-grid">
-          {field("Nome completo", "gestor", false)}
+          {field("Nome completo", "gestor", true)} {/* Agora é obrigatório */}
           {field("Cargo", "cargoGestor", false)}
-          {field("E-mail institucional", "email", false, "email")}
+          {field("E-mail institucional", "email", true, "email")} {/* Agora é obrigatório */}
           {field("Telefone", "telefone", false, "tel")}
         </div>
         
