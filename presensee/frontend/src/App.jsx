@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 
 import Login from "./pages/Login"
@@ -7,10 +6,10 @@ import CadastroEscola from "./pages/CadastroEscola"
 import Dashboard from "./pages/Dashboard"
 import Alunos from "./pages/Alunos"
 import Calendario from "./pages/Calendario"
-import Frequencia from "./pages/Frequencia"
 import Relatorios from "./pages/Relatorios"
 import Turmas from "./pages/Turmas"
-import NovoAluno from "./pages/NovoAluno"
+import NovaTurma from "./pages/NovaTurma"
+import CadastroEstudante from "./pages/CadastroEstudante"
 import Intervencao from "./pages/Intervencao"
 import Diario from "./pages/Diario"
 import AlunoPerfil from "./pages/AlunoPerfil"
@@ -63,11 +62,12 @@ function App() {
           }
         />
 
+        {/* Rota atualizada para apontar para o novo componente de Cadastro */}
         <Route
           path="/novo-aluno"
           element={
             <ProtectedRoute>
-              <NovoAluno />
+              <CadastroEstudante />
             </ProtectedRoute>
           }
         />
@@ -91,16 +91,15 @@ function App() {
         />
 
         <Route
-          path="/frequencia"
+          path="/turmas/nova"
           element={
             <ProtectedRoute>
-              <Frequencia />
+              <NovaTurma />
             </ProtectedRoute>
           }
         />
 
         {/* CALENDÁRIO ESCOLAR */}
-
         <Route
           path="/calendario"
           element={
@@ -111,7 +110,6 @@ function App() {
         />
 
         {/* REDIRECIONAMENTO DA ROTA ANTIGA */}
-
         <Route
           path="/alertas"
           element={<Navigate to="/calendario" replace />}

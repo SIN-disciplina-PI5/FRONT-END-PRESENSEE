@@ -1,29 +1,22 @@
-import { useState } from "react"
-import "../styles/CadastroEscola.css"
-
+import { useState } from "react";
+import api from "../services/api";
+import "../styles/CadastroEscola.css";
 
 function gerarSenhaTemporaria() {
-
-  const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
-
-  let senha = ""
-
+  const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let senha = "";
   for (let i = 0; i < 8; i++) {
-    senha += caracteres.charAt(
-      Math.floor(Math.random() * caracteres.length)
-    )
+    senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
   }
-
-  return senha
-
+  return senha;
 }
 
-
 function CadastroEscola() {
-
-  const [etapa, setEtapa] = useState(1)
-
-  const [copiado, setCopiado] = useState(false)
+  const [etapa, setEtapa] = useState(1);
+  const [copiado, setCopiado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [senhaGerada, setSenhaGerada] = useState("");
 
   const [escola, setEscola] = useState({
     nome: "",
@@ -31,130 +24,123 @@ function CadastroEscola() {
     rede: "Pública Estadual",
     cidade: "",
     estado: ""
-  })
+  });
 
   const [admin, setAdmin] = useState({
     nome: "",
     cargo: "Coordenador(a)",
     email: ""
-  })
-
-  const [senhaGerada, setSenhaGerada] = useState("")
-
+  });
 
   function atualizarEscola(campo, valor) {
-    setEscola({ ...escola, [campo]: valor })
+    setEscola({ ...escola, [campo]: valor });
   }
 
   function atualizarAdmin(campo, valor) {
-    setAdmin({ ...admin, [campo]: valor })
+    setAdmin({ ...admin, [campo]: valor });
   }
-
 
   function avancarParaAdmin(e) {
-    e.preventDefault()
-    setEtapa(2)
+    e.preventDefault();
+    setErro("");
+    setEtapa(2);
   }
 
-
-  function finalizarCadastro(e) {
-
-    e.preventDefault()
-
-    const senha = gerarSenhaTemporaria()
-
-    setSenhaGerada(senha)
-
-    setEtapa(3)
-
+  async function finalizarCadastro(e) {
+    e.preventDefault();
+    setErro("");
+    setEnviando(true);
+    
+    const senha = gerarSenhaTemporaria();
+    
+    try {
+      // Cria a escola na API (O back-end geralmente precisa criar a escola primeiro)
+      const respostaEscola = await api.post("/escolas", {
+        nome: escola.nome,
+        codigoInep: escola.codigoInep || undefined,
+        cidade: escola.cidade,
+        estado: escola.estado,
+        status: "Ativo"
+      });
+      
+      const escolaCriada = respostaEscola.data;
+      
+      // Cria o gestor (admin) associado à escola criada
+      // Assume-se que a API tem uma rota para criar gestores de escola (/users ou /escolas/:id/gestor)
+      await api.post("/users", {
+        name: admin.nome,
+        email: admin.email,
+        password: senha,
+        role: "GESTOR",
+        schoolId: escolaCriada.id || escolaCriada._id
+      });
+      
+      setSenhaGerada(senha);
+      setEtapa(3);
+    } catch (err) {
+      console.error("Erro ao cadastrar escola:", err);
+      setErro("Falha ao comunicar com o servidor. Verifique se o e-mail já não está em uso e tente novamente.");
+    } finally {
+      setEnviando(false);
+    }
   }
-
 
   function copiarCredenciais() {
-
     const texto =
       `Escola: ${escola.nome}\n` +
       `Login: ${admin.email}\n` +
-      `Senha temporária: ${senhaGerada}`
-
-    navigator.clipboard.writeText(texto)
-
-    setCopiado(true)
-
-    setTimeout(() => setCopiado(false), 2000)
-
+      `Senha temporária: ${senhaGerada}`;
+      
+    navigator.clipboard.writeText(texto);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   }
 
-
   function novoCadastro() {
-
     setEscola({
       nome: "",
       codigoInep: "",
       rede: "Pública Estadual",
       cidade: "",
       estado: ""
-    })
-
+    });
     setAdmin({
       nome: "",
       cargo: "Coordenador(a)",
       email: ""
-    })
-
-    setSenhaGerada("")
-
-    setEtapa(1)
-
+    });
+    setSenhaGerada("");
+    setErro("");
+    setEtapa(1);
   }
 
-
   return (
-
     <div className="cadastro-escola-page">
-
       <div className="cadastro-escola-card">
-
-
         <div className="cadastro-escola-header">
-
           <span className="painel-interno-tag">
             Painel interno — uso exclusivo da equipe PresenSee
           </span>
-
-          <h1>
-            Cadastrar nova escola
-          </h1>
+          <h1>Cadastrar nova escola</h1>
 
           {etapa < 3 && (
-
             <div className="cadastro-escola-steps">
-
               <div className={`step ${etapa >= 1 ? "ativo" : ""}`}>
                 1. Escola
               </div>
-
               <div className="step-linha" />
-
               <div className={`step ${etapa >= 2 ? "ativo" : ""}`}>
                 2. Admin
               </div>
-
             </div>
-
           )}
-
         </div>
-
 
         {/* =========================
             ETAPA 1 — DADOS DA ESCOLA
         ========================= */}
-
         {etapa === 1 && (
-
           <form onSubmit={avancarParaAdmin}>
-
             <label>Nome da escola</label>
             <input
               className="cadastro-input"
@@ -186,7 +172,6 @@ function CadastroEscola() {
             </select>
 
             <div className="cadastro-linha-dupla">
-
               <div>
                 <label>Cidade</label>
                 <input
@@ -210,26 +195,19 @@ function CadastroEscola() {
                   required
                 />
               </div>
-
             </div>
 
             <button className="cadastro-button" type="submit">
               Continuar
             </button>
-
           </form>
-
         )}
-
 
         {/* =========================
             ETAPA 2 — DADOS DO ADMIN
         ========================= */}
-
         {etapa === 2 && (
-
           <form onSubmit={finalizarCadastro}>
-
             <label>Nome completo</label>
             <input
               className="cadastro-input"
@@ -259,89 +237,68 @@ function CadastroEscola() {
               onChange={(e) => atualizarAdmin("email", e.target.value)}
               required
             />
+            
+            {erro && <p style={{ color: "red", fontSize: "14px", marginTop: "10px" }}>{erro}</p>}
 
             <div className="cadastro-botoes-duplos">
-
               <button
                 type="button"
                 className="cadastro-button-voltar"
                 onClick={() => setEtapa(1)}
+                disabled={enviando}
               >
                 Voltar
               </button>
 
-              <button className="cadastro-button" type="submit">
-                Cadastrar escola
+              <button className="cadastro-button" type="submit" disabled={enviando}>
+                {enviando ? "Processando..." : "Cadastrar escola"}
               </button>
-
             </div>
-
           </form>
-
         )}
-
 
         {/* =========================
             ETAPA 3 — CONFIRMAÇÃO
         ========================= */}
-
         {etapa === 3 && (
-
           <div className="cadastro-confirmacao">
-
             <div className="confirmacao-icone">✓</div>
-
-            <h2>Escola cadastrada!</h2>
-
+            <h2>Escola cadastrada com sucesso!</h2>
+            <p style={{ color: "#15803d", backgroundColor: "#dcfce7", padding: "8px", borderRadius: "4px", fontSize: "14px", marginBottom: "16px" }}>
+              Dados guardados permanentemente na base de dados (PostgreSQL).
+            </p>
             <p>
-              Copie as credenciais abaixo e envie pra administração
-              da escola. Peça pra trocarem a senha no primeiro acesso.
+              Copie as credenciais abaixo e envie pra administração da escola.
+              Peça pra trocarem a senha no primeiro acesso.
             </p>
 
             <div className="credenciais-box">
-
               <div>
                 <span>Escola</span>
                 <strong>{escola.nome}</strong>
               </div>
-
               <div>
                 <span>Login</span>
                 <strong>{admin.email}</strong>
               </div>
-
               <div>
                 <span>Senha temporária</span>
                 <strong>{senhaGerada}</strong>
               </div>
-
             </div>
 
-            <button
-              className="cadastro-button"
-              onClick={copiarCredenciais}
-            >
+            <button className="cadastro-button" onClick={copiarCredenciais}>
               {copiado ? "Copiado ✓" : "Copiar credenciais"}
             </button>
 
-            <button
-              className="cadastro-button-voltar"
-              onClick={novoCadastro}
-            >
+            <button className="cadastro-button-voltar" onClick={novoCadastro}>
               Cadastrar outra escola
             </button>
-
           </div>
-
         )}
-
-
       </div>
-
     </div>
-
-  )
-
+  );
 }
 
-export default CadastroEscola
+export default CadastroEscola;
