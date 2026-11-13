@@ -1,26 +1,29 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import DashboardLayout from "../layouts/DashboardLayout"
 import { MascotAvatar } from "../components/Icons"
+import api from "../services/api"
 import "../styles/PerfilMonitor.css"
 
 const CHAVE_USUARIO = "usuario"
 const CHAVE_AVATAR = "avatarUsuario"
-// Substitua pelo e-mail oficial da equipe de suporte do PresenSee.
-const EMAIL_SUPORTE = "suporte@seudominio.com.br"
+const EMAIL_SUPORTE = "suporte@presensee.com.br"
 
 function lerUsuario() {
   try {
     const salvo = localStorage.getItem(CHAVE_USUARIO)
     const dados = salvo ? JSON.parse(salvo) : {}
     return {
-      nome: dados.nome || "Visitante",
+      id: dados.id || dados._id || "",
+      nome: dados.name || dados.nome || "Visitante",
       email: dados.email || "",
       telefone: dados.telefone || "",
-      cargo: dados.cargo || dados.perfil || "Monitor",
-      instituicao: dados.instituicao || "",
+      cargo: dados.role || dados.cargo || dados.perfil || "Monitor",
+      instituicao: dados.instituicao || "Minha Escola",
     }
   } catch {
     return {
+      id: "",
       nome: "Visitante",
       email: "",
       telefone: "",
@@ -31,15 +34,20 @@ function lerUsuario() {
 }
 
 function PerfilMonitor() {
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState(lerUsuario)
   const [avatar, setAvatar] = useState(() => localStorage.getItem(CHAVE_AVATAR) || "")
+  const [fotoArquivo, setFotoArquivo] = useState(null)
   const [mensagem, setMensagem] = useState("")
+  const [salvandoNaAPI, setSalvandoNaAPI] = useState(false)
   const [modoEdicao, setModoEdicao] = useState(false)
   const [abaAtiva, setAbaAtiva] = useState("perfil")
   const [categoriaSuporte, setCategoriaSuporte] = useState("Dúvida sobre o sistema")
   const [assuntoSuporte, setAssuntoSuporte] = useState("")
   const [mensagemSuporte, setMensagemSuporte] = useState("")
   const [avisoSuporte, setAvisoSuporte] = useState("")
+  
+  const emailOriginal = useRef(lerUsuario().email)
 
   useEffect(() => {
     setUsuario(lerUsuario())
@@ -67,16 +75,14 @@ function PerfilMonitor() {
       return
     }
 
+    setFotoArquivo(arquivo)
+
     const leitor = new FileReader()
     leitor.onload = () => {
       const imagem = String(leitor.result || "")
-      try {
-        localStorage.setItem(CHAVE_AVATAR, imagem)
-        setAvatar(imagem)
-        setMensagem("Foto do perfil atualizada.")
-      } catch {
-        setMensagem("Não foi possível salvar essa imagem. Tente uma foto menor.")
-      }
+      setAvatar(imagem)
+      setMensagem("Foto selecionada. Salve as alterações para enviar.")
+      if(!modoEdicao) setModoEdicao(true)
     }
     leitor.readAsDataURL(arquivo)
   }
@@ -99,13 +105,13 @@ function PerfilMonitor() {
       `Nome: ${usuario.nome || "Não informado"}`,
       `E-mail para contato: ${usuario.email || "Não informado"}`,
       `Categoria: ${categoriaSuporte}`,
-    ].join("\\n")
+    ].join("\n")
 
     window.location.href = `mailto:${EMAIL_SUPORTE}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
     setAvisoSuporte("Seu aplicativo de e-mail deve abrir com a mensagem preenchida. Revise e envie o e-mail por lá.")
   }
 
-  function salvarPerfil(evento) {
+  async function salvarPerfil(evento) {
     evento.preventDefault()
 
     if (!usuario.nome.trim()) {
@@ -113,7 +119,37 @@ function PerfilMonitor() {
       return
     }
 
+    setSalvandoNaAPI(true)
+
     try {
+      if (usuario.id) {
+        // Atualiza os dados de texto
+        await api.patch(`/users/${usuario.id}`, {
+          name: usuario.nome.trim(),
+          email: usuario.email.trim(),
+          telefone: usuario.telefone.trim()
+        })
+
+        // Envia a imagem para a nuvem se uma nova foi selecionada
+        if (fotoArquivo) {
+            const formData = new FormData();
+            formData.append("photo", fotoArquivo);
+            
+            const responseAvatar = await api.patch(`/users/${usuario.id}/avatar`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            // Pega a URL real devolvida pelo back-end/Cloudinary
+            if(responseAvatar.data?.user?.avatar) {
+               const urlReal = responseAvatar.data.user.avatar;
+               localStorage.setItem(CHAVE_AVATAR, urlReal);
+               setAvatar(urlReal);
+            } else {
+               localStorage.setItem(CHAVE_AVATAR, avatar);
+            }
+        }
+      }
+
       const usuarioAtual = (() => {
         try {
           return JSON.parse(localStorage.getItem(CHAVE_USUARIO) || "{}")
@@ -125,25 +161,46 @@ function PerfilMonitor() {
       const atualizado = {
         ...usuarioAtual,
         nome: usuario.nome.trim(),
+        name: usuario.nome.trim(), 
         email: usuario.email.trim(),
         telefone: usuario.telefone.trim(),
         cargo: usuario.cargo.trim() || "Monitor",
-        perfil: usuarioAtual.perfil || usuario.cargo.trim() || "Monitor",
+        role: usuario.cargo.trim() || "Monitor",
         instituicao: usuario.instituicao.trim(),
       }
 
       localStorage.setItem(CHAVE_USUARIO, JSON.stringify(atualizado))
+      
       setUsuario({
+        id: atualizado.id || atualizado._id,
         nome: atualizado.nome,
         email: atualizado.email,
         telefone: atualizado.telefone,
         cargo: atualizado.cargo,
         instituicao: atualizado.instituicao,
       })
+      
+      setFotoArquivo(null)
       setModoEdicao(false)
-      setMensagem("Perfil salvo neste navegador.")
-    } catch {
-      setMensagem("Não foi possível salvar os dados do perfil.")
+      
+      window.dispatchEvent(new Event("storage"))
+
+      // VERIFICAÇÃO CRÍTICA: Se o email mudou, desloga o usuário para evitar o erro de re-login
+      if (usuario.email.trim() !== emailOriginal.current) {
+         setMensagem("E-mail atualizado. Por segurança, você precisa fazer login novamente com seu novo e-mail.");
+         setTimeout(() => {
+             localStorage.clear();
+             navigate("/"); // Ou a rota de login correta
+         }, 3000);
+         return;
+      }
+
+      setMensagem("Perfil salvo com sucesso no banco de dados!")
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error)
+      setMensagem("Erro ao comunicar com o servidor. Tente novamente.")
+    } finally {
+      setSalvandoNaAPI(false)
     }
   }
 
@@ -185,7 +242,7 @@ function PerfilMonitor() {
           </div>
           <label className="pm-botao-secundario pm-upload-foto">
             Alterar foto
-            <input type="file" accept="image/*" onChange={escolherFoto} />
+            <input type="file" accept="image/*" onChange={escolherFoto} disabled={salvandoNaAPI}/>
           </label>
         </section>
 
@@ -201,15 +258,15 @@ function PerfilMonitor() {
           <div className="pm-form-grid">
             <label className="pm-campo">
               <span>Nome completo</span>
-              <input name="nome" value={usuario.nome} onChange={alterarCampo} disabled={!modoEdicao} required />
+              <input name="nome" value={usuario.nome} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} required />
             </label>
             <label className="pm-campo">
               <span>E-mail</span>
-              <input name="email" type="email" value={usuario.email} onChange={alterarCampo} disabled={!modoEdicao} placeholder="seuemail@escola.com" />
+              <input name="email" type="email" value={usuario.email} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="seuemail@escola.com" />
             </label>
             <label className="pm-campo">
               <span>Telefone</span>
-              <input name="telefone" type="tel" value={usuario.telefone} onChange={alterarCampo} disabled={!modoEdicao} placeholder="(00) 00000-0000" />
+              <input name="telefone" type="tel" value={usuario.telefone} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="(00) 00000-0000" />
             </label>
             <label className="pm-campo">
               <span>Cargo</span>
@@ -217,18 +274,20 @@ function PerfilMonitor() {
             </label>
             <label className="pm-campo pm-campo-largo">
               <span>Instituição de ensino</span>
-              <input name="instituicao" value={usuario.instituicao} onChange={alterarCampo} disabled={!modoEdicao} placeholder="Nome da escola ou instituição" />
+              <input name="instituicao" value={usuario.instituicao} onChange={alterarCampo} disabled={!modoEdicao || salvandoNaAPI} placeholder="Nome da escola ou instituição" />
             </label>
           </div>
 
-          {mensagem && <p className="pm-mensagem" role="status">{mensagem}</p>}
+          {mensagem && <p className="pm-mensagem" role="status" style={{ color: salvandoNaAPI ? "#666" : undefined }}>{mensagem}</p>}
 
           {modoEdicao && (
             <div className="pm-acoes-form">
-              <button className="pm-botao-secundario" type="button" onClick={() => { setUsuario(lerUsuario()); setModoEdicao(false); setMensagem("") }}>
+              <button className="pm-botao-secundario" type="button" disabled={salvandoNaAPI} onClick={() => { setUsuario(lerUsuario()); setAvatar(localStorage.getItem(CHAVE_AVATAR)); setFotoArquivo(null); setModoEdicao(false); setMensagem("") }}>
                 Cancelar
               </button>
-              <button className="pm-botao-primario" type="submit">Salvar alterações</button>
+              <button className="pm-botao-primario" type="submit" disabled={salvandoNaAPI}>
+                {salvandoNaAPI ? "Salvando..." : "Salvar alterações"}
+              </button>
             </div>
           )}
         </form>
@@ -243,7 +302,7 @@ function PerfilMonitor() {
           </div>
           <div className="pm-info-seguranca">
             <div><strong>Tipo de perfil</strong><span>{usuario.cargo || "Monitor"}</span></div>
-            <div><strong>Armazenamento</strong><span>Alterações locais neste navegador</span></div>
+            <div><strong>Armazenamento</strong><span>Integrado ao banco de dados Neon</span></div>
           </div>
         </section>          </>
         ) : (
