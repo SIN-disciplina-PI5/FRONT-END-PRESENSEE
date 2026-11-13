@@ -1,20 +1,22 @@
-import { useState, useEffect } from "react"
-import { Link, useParams } from "react-router-dom"
-import DashboardLayout from "../layouts/DashboardLayout"
-import GaugeChart from "../components/GaugeChart"
-import api from "../services/api"
-import "../styles/AlunoPerfil.css"
+import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import DashboardLayout from "../layouts/DashboardLayout";
+import GaugeChart from "../components/GaugeChart";
+import api from "../services/api";
+import "../styles/AlunoPerfil.css";
+
+const PRIORIDADES = ["Alta", "Média", "Baixa"];
 
 function corFrequencia(valor) {
-  if (valor < 75) return "#ef4444"; 
-  if (valor < 90) return "#eab308"; 
-  return "#22c55e"; 
+  if (valor < 75) return "#ef4444";
+  if (valor < 90) return "#eab308";
+  return "#22c55e";
 }
 
 function corRisco(valor) {
-  if (valor >= 70) return "#ef4444"; 
-  if (valor >= 40) return "#eab308"; 
-  return "#22c55e"; 
+  if (valor >= 70) return "#ef4444";
+  if (valor >= 40) return "#eab308";
+  return "#22c55e";
 }
 
 function iniciais(nome) {
@@ -23,9 +25,9 @@ function iniciais(nome) {
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map(parte => parte[0])
+    .map((parte) => parte[0])
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 }
 
 function formatarDataDisplay(iso) {
@@ -35,81 +37,192 @@ function formatarDataDisplay(iso) {
   return d.toLocaleDateString("pt-BR");
 }
 
+function limparTagsPendencia(texto) {
+  if (!texto) return "";
+  return texto.replace(/\[Prioridade:\s*(Alta|Média|Baixa)\]\s*/gi, "").trim();
+}
+
+function extrairPrioridadePendencia(texto) {
+  if (!texto) return "Média";
+  const match = texto.match(/\[Prioridade:\s*(Alta|Média|Baixa)\]/i);
+  return match ? match[1] : "Média";
+}
+
 function AlunoPerfil() {
-  const { id } = useParams()
-  const [aluno, setAluno] = useState(null)
-  const [historico, setHistorico] = useState([])
-  const [pendencias, setPendencias] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [historicoExpandido, setHistoricoExpandido] = useState(false)
+  const { id } = useParams();
+  const [aluno, setAluno] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const [pendencias, setPendencias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [historicoExpandido, setHistoricoExpandido] = useState(false);
+
+  // Estados do Modal Customizado de Pendência (Criar / Editar)
+  const [modalPendenciaAberto, setModalPendenciaAberto] = useState(false);
+  const [pendenciaEditando, setPendenciaEditando] = useState(null);
+  const [textoPendencia, setTextoPendencia] = useState("");
+  const [prioridadePendencia, setPrioridadePendencia] = useState("Média");
+  const [erroPendencia, setErroPendencia] = useState("");
+  const [salvandoPendencia, setSalvandoPendencia] = useState(false);
+
+  // Estado do Modal de Confirmação de Exclusão
+  const [pendenciaParaExcluir, setPendenciaParaExcluir] = useState(null);
+  const [excluindoPendencia, setExcluindoPendencia] = useState(false);
 
   useEffect(() => {
     async function carregarPerfil() {
       try {
-        // 1. Buscar dados do aluno usando o ID (rota em inglês)
-        const resAluno = await api.get(`/students/${id}`);
-        const dadosAluno = resAluno.data;
-        
-        const frequencia = dadosAluno.attendanceRate ?? dadosAluno.frequencia ?? 100;
-        
-        setAluno({
-          id: dadosAluno.id || dadosAluno._id,
-          nome: dadosAluno.name || dadosAluno.nome || "Aluno sem nome",
-          matricula: dadosAluno.registration || dadosAluno.matricula || "N/A",
-          turma: dadosAluno.class?.name || dadosAluno.turma || "Turma não vinculada",
-          email: dadosAluno.email || "Não informado",
-          frequencia: frequencia,
-          risco: dadosAluno.riskLevel || (frequencia < 75 ? 85 : frequencia < 90 ? 50 : 10),
-          status: dadosAluno.status || (frequencia < 75 ? "Em acompanhamento" : "Regular"),
-          faltas: dadosAluno.absences || dadosAluno.faltas || 0,
-          responsaveis: dadosAluno.guardians || dadosAluno.responsaveis || []
-        });
+        setLoading(true);
+        let dadosAluno = null;
 
-        // 2. Buscar intervenções (Incidentes do tipo que não são pendência) do aluno
         try {
-          // Passamos o studentId na query string para o controlador filtrar
-          const resIncidentes = await api.get(`/incidents?studentId=${id}`);
-          const incidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
-          
-          // Separar em intervenções (histórico) e pendências ativas
-          const historicoFiltrado = incidentes.filter(i => !i.isPending && i.type !== "PENDENCIA");
-          setHistorico(historicoFiltrado.map(e => ({
-            id: e.id || e._id,
-            data: e.createdAt || e.date || e.data,
-            tipo: e.type || e.tipo || "Intervenção",
-            descricao: e.description || e.descricao
-          })).sort((a, b) => String(b.data).localeCompare(String(a.data))));
-
-          // Filtrar as pendências
-          const pends = incidentes.filter(i => i.isPending || i.type === "PENDENCIA");
-          setPendencias(pends.map(p => ({
-            id: p.id || p._id,
-            texto: p.description || p.texto,
-            feita: p.resolved || p.feita || false,
-          })));
-
-        } catch (e) { 
-          console.warn("Rota de incidentes pendente para o aluno"); 
+          const resAluno = await api.get(`/students/${encodeURIComponent(id)}`);
+          dadosAluno = resAluno.data?.student || resAluno.data;
+        } catch (errDireto) {
+          console.warn("Busca direta /students/:id falhou, tentando localizar na listagem geral...", errDireto);
         }
 
+        if (!dadosAluno || !dadosAluno.id) {
+          const resLista = await api.get("/students");
+          const lista = Array.isArray(resLista.data) ? resLista.data : [];
+          dadosAluno = lista.find(
+            (s) => String(s.id) === String(id) || String(s.registration || s.matricula) === String(id)
+          );
+        }
+
+        if (!dadosAluno) {
+          setAluno(null);
+          return;
+        }
+
+        const studentRealId = dadosAluno.id || id;
+
+        let attendances = Array.isArray(dadosAluno.attendances) ? dadosAluno.attendances : [];
+        if (attendances.length === 0) {
+          try {
+            const resFreq = await api.get(`/students/${studentRealId}/attendance-history`);
+            attendances = Array.isArray(resFreq.data) ? resFreq.data : [];
+          } catch {
+            // Segue com attendances vazio se a rota não retornar registros
+          }
+        }
+
+        const totalChamadas = attendances.length;
+        const totalPresentes = attendances.filter((a) => a.status === "PRESENT").length;
+        const totalFaltas =
+          totalChamadas > 0
+            ? attendances.filter((a) => a.status === "ABSENT").length
+            : (dadosAluno.absences ?? dadosAluno.faltas ?? 0);
+
+        const frequenciaCalculada =
+          dadosAluno.attendanceRate ??
+          dadosAluno.frequencia ??
+          (totalChamadas > 0 ? Math.round((totalPresentes / totalChamadas) * 100) : 100);
+
+        const riscoCalculado =
+          dadosAluno.riskLevel ??
+          (frequenciaCalculada < 75 ? 85 : frequenciaCalculada < 90 ? 50 : 10);
+
+        let listaResponsaveis = [];
+        if (Array.isArray(dadosAluno.guardians) && dadosAluno.guardians.length > 0) {
+          listaResponsaveis = dadosAluno.guardians;
+        } else if (Array.isArray(dadosAluno.responsaveis) && dadosAluno.responsaveis.length > 0) {
+          listaResponsaveis = dadosAluno.responsaveis;
+        } else if (
+          dadosAluno.guardianName ||
+          dadosAluno.responsavelNome ||
+          dadosAluno.guardianPhone ||
+          dadosAluno.responsavelTelefone
+        ) {
+          listaResponsaveis = [
+            {
+              nome: dadosAluno.guardianName || dadosAluno.responsavelNome || "Não informado",
+              telefone: dadosAluno.guardianPhone || dadosAluno.responsavelTelefone || "Telefone não informado",
+            },
+          ];
+        }
+
+        setAluno({
+          id: studentRealId,
+          nome: dadosAluno.name || dadosAluno.nome || "Aluno sem nome",
+          matricula: dadosAluno.registration || dadosAluno.matricula || "N/A",
+          turma: dadosAluno.class?.name || dadosAluno.turma?.name || dadosAluno.turma || "Turma não vinculada",
+          email: dadosAluno.email || "Não informado",
+          foto: dadosAluno.biometryUrl || dadosAluno.photoUrl || dadosAluno.avatar || "",
+          frequencia: frequenciaCalculada,
+          risco: riscoCalculado,
+          status: dadosAluno.status || (frequenciaCalculada < 75 ? "Em acompanhamento" : "Regular"),
+          faltas: totalFaltas,
+          responsaveis: listaResponsaveis,
+        });
+
+        try {
+          const resIncidentes = await api.get(`/incidents?studentId=${studentRealId}`);
+          const todosIncidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
+          const incidentes = todosIncidentes.filter(
+            (i) => !i.studentId || String(i.studentId) === String(studentRealId)
+          );
+
+          const historicoFiltrado = incidentes.filter(
+            (i) => !i.isPending && i.type !== "PENDENCIA" && i.type !== "RESOLVIDO"
+          );
+          setHistorico(
+            historicoFiltrado
+              .map((e) => ({
+                id: e.id || e._id,
+                data: e.createdAt || e.date || e.data,
+                tipo: e.type || e.tipo || "Intervenção",
+                descricao: e.description || e.descricao,
+              }))
+              .sort((a, b) => String(b.data).localeCompare(String(a.data)))
+          );
+
+          const pends = incidentes.filter(
+            (i) => i.isPending || i.type === "PENDENCIA" || i.type === "RESOLVIDO"
+          );
+          setPendencias(
+            pends.map((p) => {
+              const bruto = p.description || p.texto || "";
+              return {
+                id: p.id || p._id,
+                texto: limparTagsPendencia(bruto),
+                prioridade: extrairPrioridadePendencia(bruto),
+                feita: p.resolved || p.feita || p.type === "RESOLVIDO" || false,
+              };
+            })
+          );
+        } catch (e) {
+          console.warn("Rota de incidentes pendente para o aluno:", e);
+        }
       } catch (error) {
         console.error("Erro ao buscar perfil do aluno:", error);
       } finally {
         setLoading(false);
       }
     }
-    
+
     if (id) carregarPerfil();
-  }, [id])
+  }, [id]);
+
+  // Fecha modais com ESC
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") {
+        if (modalPendenciaAberto && !salvandoPendencia) fecharModalPendencia();
+        if (pendenciaParaExcluir && !excluindoPendencia) setPendenciaParaExcluir(null);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalPendenciaAberto, salvandoPendencia, pendenciaParaExcluir, excluindoPendencia]);
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="perfil-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <div className="perfil-page" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
           <p>Carregando perfil do estudante...</p>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   if (!aluno) {
@@ -122,80 +235,129 @@ function AlunoPerfil() {
           </Link>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
-  const ultimasIntervencoes = historicoExpandido ? historico : historico.slice(0, 3)
-  const responsavelPrincipal = aluno.responsaveis?.[0]
+  const ultimasIntervencoes = historicoExpandido ? historico : historico.slice(0, 3);
+  const responsavelPrincipal = aluno.responsaveis?.[0];
 
-  async function adicionarPendencia() {
-    const texto = window.prompt("Digite a nova pendência:");
-    if (!texto || !texto.trim()) return;
+  function abrirModalNovaPendencia() {
+    setPendenciaEditando(null);
+    setTextoPendencia("");
+    setPrioridadePendencia("Média");
+    setErroPendencia("");
+    setModalPendenciaAberto(true);
+  }
+
+  function abrirModalEditarPendencia(item) {
+    setPendenciaEditando(item);
+    setTextoPendencia(item.texto);
+    setPrioridadePendencia(item.prioridade || "Média");
+    setErroPendencia("");
+    setModalPendenciaAberto(true);
+  }
+
+  function fecharModalPendencia() {
+    setModalPendenciaAberto(false);
+    setPendenciaEditando(null);
+    setTextoPendencia("");
+    setErroPendencia("");
+  }
+
+  async function salvarPendenciaModal(e) {
+    e.preventDefault();
+    const textoLimpo = textoPendencia.trim();
+    if (!textoLimpo) {
+      setErroPendencia("Descreva a pendência antes de salvar.");
+      return;
+    }
+
+    setSalvandoPendencia(true);
+    setErroPendencia("");
+
+    const descricaoFormatada = `[Prioridade: ${prioridadePendencia}] ${textoLimpo}`;
 
     try {
-      const payload = {
-        description: texto.trim(),
-        studentId: id,
-        isPending: true,
-        type: "PENDENCIA",
-        resolved: false
-      };
-      
-      const response = await api.post("/incidents", payload);
-      const nova = response.data;
-      
-      setPendencias(lista => [...lista, {
-        id: nova.id || nova._id || Date.now(),
-        texto: payload.description,
-        feita: false,
-      }]);
+      if (pendenciaEditando) {
+        await api.patch(`/incidents/${pendenciaEditando.id}`, {
+          description: descricaoFormatada,
+          priority: prioridadePendencia,
+        });
+
+        setPendencias((lista) =>
+          lista.map((p) =>
+            p.id === pendenciaEditando.id
+              ? { ...p, texto: textoLimpo, prioridade: prioridadePendencia }
+              : p
+          )
+        );
+      } else {
+        const payload = {
+          description: descricaoFormatada,
+          studentId: aluno.id,
+          isPending: true,
+          type: "PENDENCIA",
+          priority: prioridadePendencia,
+          resolved: false,
+        };
+
+        const response = await api.post("/incidents", payload);
+        const nova = response.data;
+
+        setPendencias((lista) => [
+          ...lista,
+          {
+            id: nova.id || nova._id || Date.now(),
+            texto: textoLimpo,
+            prioridade: prioridadePendencia,
+            feita: false,
+          },
+        ]);
+      }
+
+      fecharModalPendencia();
     } catch (error) {
-      console.error("Erro ao adicionar pendência", error);
-      alert("Falha ao salvar pendência no servidor.");
+      console.error("Erro ao salvar pendência:", error);
+      setErroPendencia("Não foi possível salvar a pendência no servidor. Tente novamente.");
+    } finally {
+      setSalvandoPendencia(false);
     }
   }
 
-  async function editarPendencia(item) {
-    const texto = window.prompt("Edite a descrição da pendência:", item.texto);
-    if (texto === null || !texto.trim()) return;
+  async function confirmarExclusaoPendencia() {
+    if (!pendenciaParaExcluir) return;
+    setExcluindoPendencia(true);
 
     try {
-      await api.patch(`/incidents/${item.id}`, { description: texto.trim() });
-      setPendencias(lista => lista.map(p => p.id === item.id ? { ...p, texto: texto.trim() } : p));
+      await api.delete(`/incidents/${pendenciaParaExcluir.id}`);
+      setPendencias((lista) => lista.filter((item) => item.id !== pendenciaParaExcluir.id));
+      setPendenciaParaExcluir(null);
     } catch (error) {
-      console.error("Erro ao editar", error);
-    }
-  }
-
-  async function excluirPendencia(idPendencia) {
-    const confirmar = window.confirm("Deseja realmente excluir esta pendência?");
-    if (!confirmar) return;
-
-    try {
-      await api.delete(`/incidents/${idPendencia}`);
-      setPendencias(lista => lista.filter(item => item.id !== idPendencia));
-    } catch (error) {
-      console.error("Erro ao excluir", error);
+      console.error("Erro ao excluir pendência:", error);
+    } finally {
+      setExcluindoPendencia(false);
     }
   }
 
   async function alternarPendencia(idPendencia) {
-    const pendencia = pendencias.find(p => p.id === idPendencia);
+    const pendencia = pendencias.find((p) => p.id === idPendencia);
+    if (!pendencia) return;
     const novoStatus = !pendencia.feita;
-    
-    setPendencias((lista) => lista.map((item) => item.id === idPendencia ? { ...item, feita: novoStatus } : item));
-    
+
+    setPendencias((lista) =>
+      lista.map((item) => (item.id === idPendencia ? { ...item, feita: novoStatus } : item))
+    );
+
     try {
       await api.patch(`/incidents/${idPendencia}`, { resolved: novoStatus });
     } catch (error) {
-      console.error("Erro ao alternar pendência", error);
+      console.error("Erro ao alternar pendência:", error);
     }
   }
 
   return (
     <DashboardLayout>
       <main className="perfil-page perfil-moderno">
-
         <div className="perfil-breadcrumb">
           <Link to="/alunos">Alunos</Link>
           <span>/</span>
@@ -205,12 +367,26 @@ function AlunoPerfil() {
         <section className="perfil-cabecalho">
           <div className="perfil-identificacao">
             <div className="perfil-avatar-iniciais">
-              {iniciais(aluno.nome)}
+              {aluno.foto ? (
+                <img
+                  src={aluno.foto}
+                  alt={aluno.nome}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                />
+              ) : (
+                iniciais(aluno.nome)
+              )}
             </div>
             <div className="perfil-identificacao-texto">
               <h1>{aluno.nome}</h1>
-              <p>{aluno.turma} <span>·</span> Matrícula: {aluno.matricula}</p>
-              <span className={`perfil-status-badge ${aluno.frequencia < 75 ? "alto" : aluno.frequencia < 90 ? "medio" : "baixo"}`}>
+              <p>
+                {aluno.turma} <span>·</span> Matrícula: {aluno.matricula}
+              </p>
+              <span
+                className={`perfil-status-badge ${
+                  aluno.frequencia < 75 ? "alto" : aluno.frequencia < 90 ? "medio" : "baixo"
+                }`}
+              >
                 <span className="perfil-status-ponto" />
                 {aluno.status}
               </span>
@@ -224,11 +400,11 @@ function AlunoPerfil() {
             </div>
             <div className="perfil-contato-item">
               <span className="perfil-contato-icone">♙</span>
-              <span>Responsável: {responsavelPrincipal?.nome || "Não informado"}</span>
+              <span>Responsável: {responsavelPrincipal?.nome || responsavelPrincipal?.name || "Não informado"}</span>
             </div>
             <div className="perfil-contato-item">
               <span className="perfil-contato-icone">☎</span>
-              <span>{responsavelPrincipal?.telefone || "Telefone não informado"}</span>
+              <span>{responsavelPrincipal?.telefone || responsavelPrincipal?.phone || "Telefone não informado"}</span>
             </div>
           </div>
 
@@ -259,10 +435,7 @@ function AlunoPerfil() {
             </div>
             <div className="perfil-frequencia-conteudo">
               <div className="perfil-gauge-moderno">
-                <GaugeChart
-                  value={aluno.frequencia}
-                  color={corFrequencia(aluno.frequencia)}
-                />
+                <GaugeChart value={aluno.frequencia} color={corFrequencia(aluno.frequencia)} />
               </div>
               <div className="perfil-frequencia-legenda">
                 <span className={`perfil-pilula-frequencia ${aluno.frequencia < 75 ? "atencao" : "normal"}`}>
@@ -321,24 +494,53 @@ function AlunoPerfil() {
 
             {historico.length > 0 ? (
               <div className="perfil-timeline">
-                {ultimasIntervencoes.map(item => (
-                  <div className="perfil-timeline-item" key={item.id}>
-                    <div className="perfil-timeline-marcador"><span /></div>
-                    <div className="perfil-timeline-data">{formatarDataDisplay(item.data)}</div>
-                    <div className="perfil-timeline-conteudo">
-                      <span className={`perfil-tipo-badge ${
-                        item.tipo === "Conversa Individual"
-                          ? "conversa"
-                          : item.tipo === "Contato com responsável"
-                            ? "responsavel"
-                            : "encaminhamento"
-                      }`}>
-                        {item.tipo}
-                      </span>
-                      <p>{item.descricao || "Sem descrição registrada."}</p>
+                {ultimasIntervencoes.map((item) => {
+                  const texto = item.descricao || "";
+                  const matchAtestado = texto.match(/\|\s*\[Atestado:\s*(https?:\/\/[^\]]+)\]/i);
+                  const textoLimpo = texto.replace(/\|\s*\[Atestado:\s*https?:\/\/[^\]]+\]/i, "").trim();
+
+                  return (
+                    <div className="perfil-timeline-item" key={item.id}>
+                      <div className="perfil-timeline-marcador">
+                        <span />
+                      </div>
+                      <div className="perfil-timeline-data">{formatarDataDisplay(item.data)}</div>
+                      <div className="perfil-timeline-conteudo">
+                        <span
+                          className={`perfil-tipo-badge ${
+                            item.tipo === "Conversa Individual"
+                              ? "conversa"
+                              : item.tipo === "Contato com responsável"
+                                ? "responsavel"
+                                : "encaminhamento"
+                          }`}
+                        >
+                          {item.tipo}
+                        </span>
+                        <p>{textoLimpo || "Sem descrição registrada."}</p>
+                        {matchAtestado && (
+                          <a
+                            href={matchAtestado[1]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              marginTop: "6px",
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              color: "#633df2",
+                              textDecoration: "none",
+                            }}
+                          >
+                            📄 Abrir documento do atestado ↗
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="perfil-sem-registros">
@@ -356,12 +558,12 @@ function AlunoPerfil() {
               </div>
               <div className="perfil-pendencias-acoes">
                 <span className="perfil-pendencias-contador">
-                  {pendencias.filter(item => !item.feita).length} abertas
+                  {pendencias.filter((item) => !item.feita).length} abertas
                 </span>
                 <button
                   type="button"
                   className="perfil-btn-adicionar-pendencia"
-                  onClick={adicionarPendencia}
+                  onClick={abrirModalNovaPendencia}
                   title="Adicionar pendência"
                   aria-label="Adicionar pendência"
                 >
@@ -372,7 +574,7 @@ function AlunoPerfil() {
 
             {pendencias.length > 0 ? (
               <div className="perfil-pendencias-modernas">
-                {pendencias.map(item => (
+                {pendencias.map((item) => (
                   <div key={item.id} className={`perfil-pendencia-item ${item.feita ? "concluida" : ""}`}>
                     <label className="perfil-pendencia-checkbox">
                       <input
@@ -386,7 +588,7 @@ function AlunoPerfil() {
                       <button
                         type="button"
                         className="perfil-btn-editar-pendencia"
-                        onClick={() => editarPendencia(item)}
+                        onClick={() => abrirModalEditarPendencia(item)}
                         title="Editar pendência"
                         aria-label={`Editar pendência: ${item.texto}`}
                       >
@@ -395,7 +597,7 @@ function AlunoPerfil() {
                       <button
                         type="button"
                         className="perfil-btn-excluir-pendencia"
-                        onClick={() => excluirPendencia(item.id)}
+                        onClick={() => setPendenciaParaExcluir(item)}
                         title="Excluir pendência"
                         aria-label={`Excluir pendência: ${item.texto}`}
                       >
@@ -413,9 +615,261 @@ function AlunoPerfil() {
             )}
           </article>
         </section>
+
+        {/* MODAL CUSTOMIZADO: ADICIONAR / EDITAR PENDÊNCIA */}
+        {modalPendenciaAberto && (
+          <div
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget && !salvandoPendencia) fecharModalPendencia();
+            }}
+            role="presentation"
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.55)",
+              backdropFilter: "blur(3px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              zIndex: 1100,
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="titulo-modal-pendencia"
+              style={{
+                width: "100%",
+                maxWidth: "460px",
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "24px",
+                boxShadow: "0 20px 45px rgba(15, 23, 42, 0.22)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <h2 id="titulo-modal-pendencia" style={{ margin: 0, fontSize: "19px", color: "#0f172a" }}>
+                    {pendenciaEditando ? "Editar pendência" : "Nova pendência"}
+                  </h2>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#64748b" }}>
+                    Estudante: <strong>{aluno.nome}</strong>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fecharModalPendencia}
+                  disabled={salvandoPendencia}
+                  aria-label="Fechar modal"
+                  style={{
+                    background: "#f1f5f9",
+                    border: "none",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    fontSize: "18px",
+                    color: "#475569",
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={salvarPendenciaModal} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#334155" }}>
+                  <span>Descrição da pendência *</span>
+                  <textarea
+                    rows={3}
+                    maxLength={300}
+                    autoFocus
+                    required
+                    disabled={salvandoPendencia}
+                    value={textoPendencia}
+                    onChange={(e) => {
+                      setTextoPendencia(e.target.value);
+                      setErroPendencia("");
+                    }}
+                    placeholder="Ex.: Solicitar assinatura do responsável no termo de compromisso..."
+                    style={{
+                      width: "100%",
+                      boxSizing: "border-box",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      fontFamily: "inherit",
+                      resize: "vertical",
+                    }}
+                  />
+                  <small style={{ fontWeight: 400, color: "#64748b", textAlign: "right" }}>
+                    {textoPendencia.length}/300
+                  </small>
+                </label>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#334155" }}>Prioridade</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                    {PRIORIDADES.map((nivel) => {
+                      const ativa = prioridadePendencia === nivel;
+                      const cores = {
+                        Alta: { bg: "#fee2e2", border: "#ef4444", text: "#b91c1c" },
+                        Média: { bg: "#fef3c7", border: "#f59e0b", text: "#b45309" },
+                        Baixa: { bg: "#dcfce7", border: "#22c55e", text: "#15803d" },
+                      }[nivel];
+                      return (
+                        <button
+                          key={nivel}
+                          type="button"
+                          disabled={salvandoPendencia}
+                          onClick={() => setPrioridadePendencia(nivel)}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                            border: `1.5px solid ${ativa ? cores.border : "#e2e8f0"}`,
+                            backgroundColor: ativa ? cores.bg : "#f8fafc",
+                            color: ativa ? cores.text : "#475569",
+                            fontWeight: 600,
+                            fontSize: "13px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {nivel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {erroPendencia && (
+                  <p role="alert" style={{ margin: 0, padding: "8px 12px", borderRadius: "8px", background: "#fee2e2", color: "#b91c1c", fontSize: "13px" }}>
+                    {erroPendencia}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+                  <button
+                    type="button"
+                    disabled={salvandoPendencia}
+                    onClick={fecharModalPendencia}
+                    style={{
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#475569",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={salvandoPendencia}
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#633df2",
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      cursor: salvandoPendencia ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {salvandoPendencia ? "Salvando..." : pendenciaEditando ? "Salvar alterações" : "Adicionar pendência"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL CUSTOMIZADO: CONFIRMAR EXCLUSÃO DE PENDÊNCIA */}
+        {pendenciaParaExcluir && (
+          <div
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget && !excluindoPendencia) setPendenciaParaExcluir(null);
+            }}
+            role="presentation"
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.55)",
+              backdropFilter: "blur(3px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              zIndex: 1100,
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="titulo-modal-excluir-pendencia"
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "24px",
+                boxShadow: "0 20px 45px rgba(15, 23, 42, 0.22)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <h2 id="titulo-modal-excluir-pendencia" style={{ margin: "0 0 8px 0", fontSize: "18px", color: "#0f172a" }}>
+                Excluir pendência
+              </h2>
+              <p style={{ margin: "0 0 18px 0", fontSize: "14px", color: "#475569", lineHeight: 1.5 }}>
+                Tem certeza que deseja excluir a pendência <strong>“{pendenciaParaExcluir.texto}”</strong>? Esta ação não poderá ser desfeita.
+              </p>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <button
+                  type="button"
+                  disabled={excluindoPendencia}
+                  onClick={() => setPendenciaParaExcluir(null)}
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "#475569",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={excluindoPendencia}
+                  onClick={confirmarExclusaoPendencia}
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "#ef4444",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    cursor: excluindoPendencia ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {excluindoPendencia ? "Excluindo..." : "Sim, excluir"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </DashboardLayout>
-  )
+  );
 }
 
-export default AlunoPerfil
+export default AlunoPerfil;

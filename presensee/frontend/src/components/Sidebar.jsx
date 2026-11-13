@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { getUsuario, logout } from "../services/auth";
+import api from "../services/api";
 import "../styles/Sidebar.css";
 
 import {
@@ -47,11 +48,11 @@ function IconComunicados() {
 }
 
 function IconSaudeSistema() {
-    return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12h4l3-7 4 14 3-7h4" />
-        </svg>
-    );
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h4l3-7 4 14 3-7h4" />
+    </svg>
+  );
 }
 
 const MENU_MONITOR = [
@@ -74,23 +75,46 @@ const MENU_ADMIN = [
   { to: "/admin/auditoria", label: "Auditoria", Icon: IconRelatorio }
 ];
 
-function Sidebar({ tipo = "monitor", mobileOpen = false }) {
+function lerAvatarSidebar() {
+  const direto = localStorage.getItem("avatarUsuario");
+  if (direto) return direto;
+  try {
+    const u = JSON.parse(localStorage.getItem("usuario") || "{}");
+    return u.avatar || "";
+  } catch {
+    return "";
+  }
+}
+
+function persistirAvatarGlobal(novaUrl) {
+  localStorage.setItem("avatarUsuario", novaUrl);
+  try {
+    const u = JSON.parse(localStorage.getItem("usuario") || "{}");
+    u.avatar = novaUrl;
+    localStorage.setItem("usuario", JSON.stringify(u));
+  } catch {
+    /* ignora erro de parse */
+  }
+  window.dispatchEvent(new Event("avatar-atualizado"));
+  window.dispatchEvent(new Event("storage"));
+}
+
+function Sidebar({ tipo = "monitor", mobileOpen = false, onCloseMobile }) {
   const navigate = useNavigate();
   const isAdmin = tipo === "admin";
-  const usuario = getUsuario();
   const inputAvatar = useRef(null);
 
-  const [avatar, setAvatar] = useState(localStorage.getItem("avatarUsuario") || "");
+  const [usuario, setUsuario] = useState(() => getUsuario());
+  const [avatar, setAvatar] = useState(lerAvatarSidebar);
   const [collapsed, setCollapsed] = useState(localStorage.getItem("sidebarCollapsed") === "true");
   const [tema, setTema] = useState(localStorage.getItem("tema") || "light");
 
   const showCollapsed = collapsed && !mobileOpen;
   const menu = isAdmin ? MENU_ADMIN : MENU_MONITOR;
-  
-  // Utiliza diretamente os dados reais do utilizador autenticado
+
   const nomeExibicao = usuario?.name || usuario?.nome || (isAdmin ? "Superadmin" : "Visitante");
   const roleDb = String(usuario?.role || usuario?.perfil || "").toUpperCase();
-  
+
   let cargoExibicao = "Visitante";
   if (isAdmin || roleDb === "ADMIN" || roleDb === "SUPERADMIN") cargoExibicao = "Administrador";
   else if (roleDb === "MANAGER" || roleDb === "GESTOR") cargoExibicao = "Gestor";
@@ -104,24 +128,57 @@ function Sidebar({ tipo = "monitor", mobileOpen = false }) {
     localStorage.setItem("tema", tema);
   }, [tema]);
 
+  useEffect(() => {
+    function sincronizarSidebar() {
+      setUsuario(getUsuario());
+      setAvatar(lerAvatarSidebar());
+    }
+
+    window.addEventListener("avatar-atualizado", sincronizarSidebar);
+    window.addEventListener("storage", sincronizarSidebar);
+    return () => {
+      window.removeEventListener("avatar-atualizado", sincronizarSidebar);
+      window.removeEventListener("storage", sincronizarSidebar);
+    };
+  }, []);
+
   function alternarColapso() {
     const novoValor = !collapsed;
     setCollapsed(novoValor);
     localStorage.setItem("sidebarCollapsed", String(novoValor));
   }
 
-  function alternarTema() { setTema(tema === "light" ? "dark" : "light"); }
+  function alternarTema() {
+    setTema(tema === "light" ? "dark" : "light");
+  }
 
-  function escolherAvatar(e) {
-    const arquivo = e.target.files[0];
+  async function escolherAvatar(e) {
+    const arquivo = e.target.files?.[0];
     if (!arquivo) return;
+
     const leitor = new FileReader();
     leitor.onload = () => {
-      const imagem = leitor.result;
+      const imagem = String(leitor.result || "");
       setAvatar(imagem);
-      localStorage.setItem("avatarUsuario", imagem);
+      persistirAvatarGlobal(imagem);
     };
     leitor.readAsDataURL(arquivo);
+
+    if (usuario?.id) {
+      try {
+        const formData = new FormData();
+        formData.append("photo", arquivo);
+        const { data } = await api.patch(`/users/${usuario.id}/avatar`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        if (data?.user?.avatar) {
+          setAvatar(data.user.avatar);
+          persistirAvatarGlobal(data.user.avatar);
+        }
+      } catch (err) {
+        console.error("Erro ao salvar avatar na nuvem:", err);
+      }
+    }
   }
 
   function handleLogout() {
@@ -130,7 +187,7 @@ function Sidebar({ tipo = "monitor", mobileOpen = false }) {
   }
 
   return (
-    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+    <aside className={`sidebar ${showCollapsed ? "collapsed" : ""} ${mobileOpen ? "open" : ""}`}>
       <div className="sidebar-top">
         <div className="sidebar-logo">
           {!showCollapsed && (
@@ -146,39 +203,46 @@ function Sidebar({ tipo = "monitor", mobileOpen = false }) {
 
       <nav className="sidebar-menu">
         {menu.map(({ to, label, Icon }) => (
-          <NavLink key={to} to={to} title={collapsed ? label : undefined}>
+          <NavLink
+            key={to}
+            to={to}
+            title={showCollapsed ? label : undefined}
+            onClick={() => onCloseMobile?.()}
+          >
             <Icon />
-            {!collapsed && <span className="menu-label">{label}</span>}
+            {!showCollapsed && <span className="menu-label">{label}</span>}
           </NavLink>
         ))}
       </nav>
 
       <button type="button" className="theme-toggle" onClick={alternarTema} title="Alternar Tema">
         {tema === "light" ? <IconMoon /> : <IconSun />}
-        {!collapsed && <span>{tema === "light" ? "Modo escuro" : "Modo claro"}</span>}
+        {!showCollapsed && <span>{tema === "light" ? "Modo escuro" : "Modo claro"}</span>}
       </button>
 
       <div className="sidebar-user">
-        <Link to={rotaPerfil} className="sidebar-user-link" title="Acessar perfil">
+        <Link to={rotaPerfil} className="sidebar-user-link" title="Acessar perfil" onClick={() => onCloseMobile?.()}>
           <div className="sidebar-avatar">
             {foto ? <img src={foto} alt="Foto do usuário" /> : <MascotAvatar size={34} />}
           </div>
-          {!collapsed && (
+          {!showCollapsed && (
             <div className="sidebar-user-info">
               <strong>{nomeExibicao}</strong>
               <span>{cargoExibicao}</span>
             </div>
           )}
         </Link>
-        <button type="button" className="sidebar-avatar-edit" onClick={() => inputAvatar.current?.click()} title="Alterar foto">
-          <IconCamera />
-        </button>
+        {!showCollapsed && (
+          <button type="button" className="sidebar-avatar-edit" onClick={() => inputAvatar.current?.click()} title="Alterar foto">
+            <IconCamera />
+          </button>
+        )}
         <input ref={inputAvatar} type="file" accept="image/*" onChange={escolherAvatar} style={{ display: "none" }} />
       </div>
 
       <button className="logout-button" onClick={handleLogout} title="Encerrar Sessão">
         <IconLogout />
-        {!collapsed && <span>Encerrar Sessão</span>}
+        {!showCollapsed && <span>Encerrar Sessão</span>}
       </button>
     </aside>
   );

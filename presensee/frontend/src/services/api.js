@@ -1,9 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  // Utiliza a variável de ambiente VITE_API_URL. 
-  // Se não estiver definida no .env, usa a nuvem (Render) por padrão de segurança.
-  baseURL: import.meta.env.VITE_API_URL || "https://back-end-presensee.onrender.com/api" 
+  baseURL: import.meta.env.VITE_API_URL || "https://back-end-presensee.onrender.com/api",
+  timeout: 35000, // 35s para suportar o tempo de despertar (cold start) do Render/Neon
 });
 
 api.interceptors.request.use((config) => {
@@ -13,5 +12,18 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Se o token expirar ou for inválido (401), limpa e redireciona para o login (exceto na própria tela de login)
+    if (error.response?.status === 401 && !window.location.pathname.includes("/login")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

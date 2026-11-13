@@ -1,22 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./pages/Login"
-import Welcome from "./pages/Welcome"
-import CadastroEscola from "./pages/CadastroEscola"
-import Dashboard from "./pages/Dashboard"
-import Alunos from "./pages/Alunos"
-import Calendario from "./pages/Calendario"
-import Relatorios from "./pages/Relatorios"
-import Turmas from "./pages/Turmas"
-import NovaTurma from "./pages/NovaTurma"
-import CadastroEstudante from "./pages/CadastroEstudante"
-import Intervencao from "./pages/Intervencao"
-import Diario from "./pages/Diario"
-import AlunoPerfil from "./pages/AlunoPerfil"
-import PerfilMonitor from "./pages/PerfilMonitor"
-import { adminRoutes } from "./painel-administrativo/AdminRoutes"
+import Login from "./pages/Login";
+import Welcome from "./pages/Welcome";
+import CadastroEscola from "./pages/CadastroEscola";
+import Dashboard from "./pages/Dashboard";
+import Alunos from "./pages/Alunos";
+import Calendario from "./pages/Calendario";
+import Relatorios from "./pages/Relatorios";
+import Turmas from "./pages/Turmas";
+import NovaTurma from "./pages/NovaTurma";
+import CadastroEstudante from "./pages/CadastroEstudante";
+import Intervencao from "./pages/Intervencao";
+import Diario from "./pages/Diario";
+import AlunoPerfil from "./pages/AlunoPerfil";
+import PerfilMonitor from "./pages/PerfilMonitor";
+import { adminRoutes } from "./painel-administrativo/AdminRoutes";
 
-import ProtectedRoute from "./components/ProtectedRoute"
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -24,25 +24,20 @@ function App() {
       <Routes>
         {adminRoutes()}
 
-        <Route
-          path="/"
-          element={<Welcome />}
-        />
+        <Route path="/" element={<Welcome />} />
 
         <Route
           path="/perfil-monitor"
-          element={<PerfilMonitor />}
+          element={
+            <ProtectedRoute>
+              <PerfilMonitor />
+            </ProtectedRoute>
+          }
         />
 
-        <Route
-          path="/interno/nova-escola"
-          element={<CadastroEscola />}
-        />
+        <Route path="/interno/nova-escola" element={<CadastroEscola />} />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        <Route path="/login" element={<Login />} />
 
         <Route
           path="/dashboard"
@@ -62,7 +57,6 @@ function App() {
           }
         />
 
-        {/* Rota atualizada para apontar para o novo componente de Cadastro */}
         <Route
           path="/novo-aluno"
           element={
@@ -99,7 +93,6 @@ function App() {
           }
         />
 
-        {/* CALENDÁRIO ESCOLAR */}
         <Route
           path="/calendario"
           element={
@@ -109,11 +102,7 @@ function App() {
           }
         />
 
-        {/* REDIRECIONAMENTO DA ROTA ANTIGA */}
-        <Route
-          path="/alertas"
-          element={<Navigate to="/calendario" replace />}
-        />
+        <Route path="/alertas" element={<Navigate to="/calendario" replace />} />
 
         <Route
           path="/relatorios"
@@ -143,7 +132,7 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

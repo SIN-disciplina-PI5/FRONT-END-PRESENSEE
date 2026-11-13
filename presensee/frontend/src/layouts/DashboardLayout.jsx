@@ -104,7 +104,7 @@ function DashboardLayout({ children }) {
           <strong translate="no">Presen<span>See</span></strong>
           <button ref={closeRef} type="button" className="mobile-drawer-close" aria-label="Fechar menu de navegação" onClick={() => setMobileOpen(false)}>×</button>
         </div>
-        <Sidebar mobileOpen={mobileOpen} />
+        <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       </div>
       <main className="content">{children}</main>
       {calendarDialogOpen && <button type="button" className="ce-mobile-dialog-backdrop" onClick={closeCalendarDialog} aria-label="Fechar formulário do calendário" />}

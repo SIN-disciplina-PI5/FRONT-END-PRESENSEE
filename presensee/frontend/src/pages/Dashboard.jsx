@@ -13,6 +13,14 @@ import "../styles/Dashboard.css";
 const CORES_RISCO = { alto: "#f23b4b", medio: "#ffaf17", baixo: "#11ba7a" };
 const TURMAS_POR_PAGINA = 6;
 
+const SEMANA_ZERADA = [
+  { dia: "Seg", frequencia: 0 },
+  { dia: "Ter", frequencia: 0 },
+  { dia: "Qua", frequencia: 0 },
+  { dia: "Qui", frequencia: 0 },
+  { dia: "Sex", frequencia: 0 }
+];
+
 function obterMesAtual() {
   const texto = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date());
   return texto.charAt(0).toUpperCase() + texto.slice(1);
@@ -86,27 +94,45 @@ function Dashboard() {
     alunosBaixoRisco: 0,
     evolucaoRisco: [],
     taxaFrequenciaGeral: 0,
-    frequenciaPorSemana: [],
+    frequenciaPorSemana: SEMANA_ZERADA,
     turmas: []
   });
   const [loading, setLoading] = useState(true);
   const [filtroTurma, setFiltroTurma] = useState("Todas");
   const [paginaTurmas, setPaginaTurmas] = useState(0);
-  const [mesesExibidos, setMesesExibidos] = useState(4);
+  const [mesesExibidos, setMesesExibidos] = useState(6);
 
   useEffect(() => {
+    let ativo = true;
+
     async function carregarIndicadores() {
       try {
-        const response = await api.get("/dashboard");
-        setDados(prev => ({ ...prev, ...response.data }));
+        const response = await api.get(`/dashboard?meses=${mesesExibidos}`);
+        if (!ativo) return;
+
+        const payload = response.data || {};
+        const semAlunos = !payload.totalAlunos || Number(payload.totalAlunos) === 0;
+
+        setDados((prev) => ({
+          ...prev,
+          ...payload,
+          taxaFrequenciaGeral: semAlunos ? 0 : (payload.taxaFrequenciaGeral || 0),
+          frequenciaPorSemana: semAlunos
+            ? SEMANA_ZERADA
+            : (Array.isArray(payload.frequenciaPorSemana) && payload.frequenciaPorSemana.length > 0
+                ? payload.frequenciaPorSemana
+                : SEMANA_ZERADA)
+        }));
       } catch (error) {
-        console.warn("Rota /dashboard pendente ou erro ao carregar dados.", error);
+        console.warn("Erro ao carregar dados do dashboard:", error);
       } finally {
-        setLoading(false);
+        if (ativo) setLoading(false);
       }
     }
+
     carregarIndicadores();
-  }, []);
+    return () => { ativo = false; };
+  }, [mesesExibidos]);
 
   const distribuicao = [
     { nome: "Alto", valor: dados.alunosAltoRisco || 0, cor: CORES_RISCO.alto },
@@ -129,7 +155,7 @@ function Dashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="pd-dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <div className="pd-dashboard" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
           <p>Carregando painel...</p>
         </div>
       </DashboardLayout>
@@ -178,7 +204,7 @@ function Dashboard() {
             <div className="pd-grafico-evolucao">
               {dados.evolucaoRisco && dados.evolucaoRisco.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={dados.evolucaoRisco.slice(-mesesExibidos)} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+                  <AreaChart data={dados.evolucaoRisco} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="pdRiscoDemo" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0%" stopColor="#633df2" stopOpacity={0.25} />
@@ -221,7 +247,10 @@ function Dashboard() {
 
         <div className="pd-grade-inferior">
           <section className="pd-painel pd-painel-pequeno">
-            <CabecalhoPainel titulo="Frequência por dia da semana" descricao="Média de presença dos estudantes." />
+            <CabecalhoPainel
+              titulo="Frequência por dia da semana"
+              descricao={dados.totalAlunos > 0 ? "Média de presença dos estudantes." : "Nenhum estudante cadastrado ainda."}
+            />
             <div className="pd-grafico-inferior">
               <GraficoFrequencia dados={dados.frequenciaPorSemana} />
             </div>

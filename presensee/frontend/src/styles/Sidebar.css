@@ -3,8 +3,9 @@
 ========================= */
 
 .sidebar {
-  width: var(--sidebar-width);
+  width: var(--sidebar-width, 240px);
   height: 100vh;
+  height: 100dvh;
   position: sticky;
   top: 0;
   background: var(--color-sidebar);
@@ -15,11 +16,22 @@
   color: white;
   flex-shrink: 0;
   overflow: hidden;
-  transition: width 0.2s ease, background 0.2s ease;
+  transition: width 0.2s ease, transform 0.25s ease, background 0.2s ease;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: normal;
+  gap: 0;
+}
+
+.sidebar button,
+.sidebar a {
+  font-family: inherit;
+  line-height: normal;
 }
 
 .sidebar.collapsed {
-  width: var(--sidebar-width-collapsed);
+  width: var(--sidebar-width-collapsed, 72px);
   align-items: center;
   padding: 20px 10px;
 }
@@ -34,6 +46,7 @@
   justify-content: space-between;
   margin-bottom: 25px;
   width: 100%;
+  min-height: 26px;
   flex-shrink: 0;
 }
 
@@ -72,7 +85,6 @@
 
 /* =========================
    MENU
-   (rola por dentro, se precisar, sem empurrar o resto)
 ========================= */
 
 .sidebar-menu {
@@ -80,7 +92,6 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -105,7 +116,16 @@
   color: white;
   text-decoration: none;
   font-size: 13px;
+  font-weight: 400;
   transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.sidebar-menu a svg,
+.theme-toggle svg,
+.logout-button svg {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -159,7 +179,6 @@
 
 /* =========================
    USUÁRIO
-   (sempre visível, nunca é empurrado pra fora)
 ========================= */
 
 .sidebar-user {
@@ -167,15 +186,30 @@
   margin-top: 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 8px;
+  gap: 8px;
+  padding: 10px 6px;
   margin-bottom: 8px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar.collapsed .sidebar-user {
   justify-content: center;
   padding: 10px 0;
+}
+
+.sidebar-user-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar.collapsed .sidebar-user-link {
+  justify-content: center;
 }
 
 .sidebar-avatar {
@@ -199,45 +233,54 @@
   border-radius: 50%;
 }
 
-.avatar-camera {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: white;
-  color: var(--color-primary-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: 0.2s;
-}
-
-.sidebar-avatar:hover .avatar-camera {
-  opacity: 1;
-}
-
-.sidebar-user div:last-child {
+.sidebar-user-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
-.sidebar-user strong {
-  color: white;
+.sidebar-user-info strong {
+  display: block;
   font-size: 12px;
+  font-weight: 700;
+  line-height: normal;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sidebar-user span {
-  color: rgba(255, 255, 255, 0.75);
+.sidebar-user-info span {
+  display: block;
   font-size: 10px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.sidebar-avatar-edit {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.sidebar-avatar-edit:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* =========================
    SAIR
-   (sempre visível, nunca é empurrado pra fora)
 ========================= */
 
 .logout-button {
@@ -269,20 +312,45 @@
    RESPONSIVIDADE
 ========================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .sidebar {
-    width: 200px;
+    width: 210px;
   }
 
   .sidebar.collapsed {
-    width: var(--sidebar-width-collapsed);
+    width: var(--sidebar-width-collapsed, 72px);
   }
 }
 
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 250px;
+    max-width: 82vw;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.28);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 250px;
+    align-items: stretch;
+    padding: 20px 14px;
+  }
+
+  .collapse-toggle {
+    display: none;
+  }
+}
 
 /* =========================
-   MODO ESCURO — a própria sidebar
-   (ciano no lugar do roxo, como combinado)
+   MODO ESCURO
 ========================= */
 
 [data-theme="dark"] .sidebar {
@@ -313,80 +381,4 @@
 
 [data-theme="dark"] .logout-button:hover {
   background: rgba(239, 68, 68, 0.15);
-}
-
-
-
-.sidebar {
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: normal;
-  gap: 0;
-}
-
-.sidebar button,
-.sidebar a {
-  font-family: inherit;
-  line-height: normal;
-}
-
-.sidebar-top {
-  min-height: 26px;
-}
-
-.sidebar-menu a {
-  font-size: 13px;
-  font-weight: 400;
-  gap: 10px;
-  padding: 10px;
-}
-
-.sidebar-menu a svg,
-.theme-toggle svg,
-.logout-button svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.sidebar-user-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  color: inherit;
-  text-decoration: none;
-}
-
-.sidebar-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.sidebar-user-info strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: normal;
-  color: white;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-user-info span {
-  display: block;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: normal;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.sidebar.collapsed .sidebar-user-link {
-  justify-content: center;
 }
