@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import "../styles/Mobile.css";
+import ChatAssistente from "../components/ChatAssistente";
 
 function DashboardLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -107,6 +108,7 @@ function DashboardLayout({ children }) {
         <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       </div>
       <main className="content">{children}</main>
+      <ChatAssistente /> 
       {calendarDialogOpen && <button type="button" className="ce-mobile-dialog-backdrop" onClick={closeCalendarDialog} aria-label="Fechar formulário do calendário" />}
     </div>
   );
