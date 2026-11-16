@@ -360,14 +360,19 @@ export default function Calendario() {
       }
       formData.append("file", arquivoAtestado);
 
-      await api.post("/incidents/certificate", formData, {
+      const res = await api.post("/incidents/certificate", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      const diasAbonados = res.data?.diasJustificados;
       setAtestado({ alunoId: "", aluno: "", turma: "", inicio: "", fim: "", observacao: "" });
       setArquivoAtestado(null);
       formEl?.reset();
-      setMensagem("Atestado enviado para a nuvem e registrado no histórico do estudante!");
+      setMensagem(
+        diasAbonados !== undefined
+          ? `Atestado enviado e ${diasAbonados} dia(s) útil(is) abonado(s) na Frequência Geral do estudante!`
+          : "Atestado enviado e faltas abonadas automaticamente na Frequência Geral do estudante!"
+      );
     } catch (error) {
       console.error("Erro ao registrar justificativa:", error.response?.data || error);
       const detalheApi = error.response?.data?.error || error.response?.data?.detalhes;
@@ -675,7 +680,9 @@ export default function Calendario() {
 
               {painel === "atestado" ? (
                 <form onSubmit={salvarAtestado} className="ce-form">
-                  <p className="ce-info">A justificativa será registrada no histórico do estudante. O atestado não gera abono automático.</p>
+                  <p className="ce-info">
+                    A justificativa será registrada no histórico e abonará automaticamente os dias úteis na Frequência Geral do estudante.
+                  </p>
 
                   {/* CAMPO TURMA COM AUTOCOMPLETE + TOGGLE LIST */}
                   <div ref={buscaTurmaRef} style={{ position: "relative" }}>
