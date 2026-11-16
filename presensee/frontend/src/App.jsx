@@ -15,13 +15,11 @@ import Diario from "./pages/Diario";
 import AlunoPerfil from "./pages/AlunoPerfil";
 import PerfilMonitor from "./pages/PerfilMonitor";
 import { adminRoutes } from "./painel-administrativo/AdminRoutes";
-import { GraficosProvider } from "./context/GraficosContext";
+
 import ProtectedRoute from "./components/ProtectedRoute";
-import Personalizado from "./pages/Personalizado";
 
 function App() {
   return (
-    <GraficosProvider>
     <BrowserRouter>
       <Routes>
         {adminRoutes()}
@@ -114,16 +112,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
-         <Route
-  path="/personalizado"
-  element={
-    <ProtectedRoute>
-      <Personalizado />
-    </ProtectedRoute>
-  }
-/>
-
 
         <Route
           path="/diario"
@@ -144,8 +132,6 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
-    </GraficosProvider>
-    
   );
 }
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import GaugeChart from "../components/GaugeChart";
 import api from "../services/api";
@@ -41,6 +41,27 @@ function formatarDataDisplay(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return iso;
   return d.toLocaleDateString("pt-BR");
+}
+
+function valorOuNaoInformado(v) {
+  return v !== undefined && v !== null && String(v).trim() ? v : "Não informado";
+}
+
+function formatarNascimento(valor) {
+  if (!valor) return "";
+  const m = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return formatarDataDisplay(valor);
+}
+
+function calcularIdade(valor) {
+  const m = String(valor || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - Number(m[1]);
+  const mes = hoje.getMonth() + 1 - Number(m[2]);
+  if (mes < 0 || (mes === 0 && hoje.getDate() < Number(m[3]))) idade--;
+  return idade >= 0 ? idade : null;
 }
 
 function limparTagsPendencia(texto) {
@@ -95,9 +116,35 @@ function formatarDescricaoIntervencao(texto) {
   return limpo;
 }
 
+// Risco atual: 0% quando frequência >= 90%, proporcional às ausências abaixo disso
+function calcularPercentualRisco(riskLevel, frequencia) {
+  if (typeof riskLevel === "number" && Number.isFinite(riskLevel)) {
+    return Math.min(100, Math.max(0, Math.round(riskLevel)));
+  }
+  if (frequencia >= 90) return 0;
+  return Math.min(100, Math.max(0, Math.round(100 - frequencia)));
+}
+
+function formatarTurmaCompleta(classObj, fallbackNome) {
+  const nome = classObj?.name || fallbackNome || "Turma não vinculada";
+  const curso = classObj?.course || "";
+  const turno = classObj?.shift || "";
+  const detalhe = [curso, turno].filter(Boolean).join(" · ");
+  return {
+    nome,
+    curso,
+    turno,
+    detalhe,
+    rotuloCompleto: detalhe ? `${nome} (${detalhe})` : nome,
+  };
+}
+
 function AlunoPerfil() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [aluno, setAluno] = useState(null);
+  const [turmasLista, setTurmasLista] = useState([]);
   const [historico, setHistorico] = useState([]);
   const [pendencias, setPendencias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,182 +158,265 @@ function AlunoPerfil() {
   const [erroPendencia, setErroPendencia] = useState("");
   const [salvandoPendencia, setSalvandoPendencia] = useState(false);
 
-  // Estado do Modal de Confirmação de Exclusão
+  // Estado do Modal de Confirmação de Exclusão de Pendência
   const [pendenciaParaExcluir, setPendenciaParaExcluir] = useState(null);
   const [excluindoPendencia, setExcluindoPendencia] = useState(false);
 
-  useEffect(() => {
-    async function carregarPerfil() {
-      try {
-        setLoading(true);
-        let dadosAluno = null;
+  // Estados do Modal de Edição do Aluno (CRUD completo com Endereço)
+  const [modalEditarAlunoAberto, setModalEditarAlunoAberto] = useState(false);
+  const [formEdicaoAluno, setFormEdicaoAluno] = useState({
+    name: "",
+    registration: "",
+    classId: "",
+    email: "",
+    birthDate: "",
+    gender: "",
+    cpf: "",
+    phone: "",
+    guardianName: "",
+    guardianRelationship: "",
+    guardianPhone: "",
+    guardianEmail: "",
+    cep: "",
+    rua: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+    notes: "",
+  });
+  const [salvandoEdicaoAluno, setSalvandoEdicaoAluno] = useState(false);
+  const [erroEdicaoAluno, setErroEdicaoAluno] = useState("");
 
-        try {
-          const resAluno = await api.get(`/students/${encodeURIComponent(id)}`);
-          dadosAluno = resAluno.data?.student || resAluno.data;
-        } catch (errDireto) {
-          console.warn("Busca direta /students/:id falhou, tentando localizar na listagem geral...", errDireto);
-        }
+  const carregarPerfil = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      let dadosAluno = null;
 
-        if (!dadosAluno || !dadosAluno.id) {
-          const resLista = await api.get("/students");
-          const lista = Array.isArray(resLista.data) ? resLista.data : [];
-          dadosAluno = lista.find(
-            (s) => String(s.id) === String(id) || String(s.registration || s.matricula) === String(id)
-          );
-        }
+      const [resAlunoResult, resTurmasResult] = await Promise.allSettled([
+        api.get(`/students/${encodeURIComponent(id)}`),
+        api.get("/classes"),
+      ]);
 
-        if (!dadosAluno) {
-          setAluno(null);
-          return;
-        }
-
-        const studentRealId = dadosAluno.id || id;
-
-        let attendances = Array.isArray(dadosAluno.attendances) ? dadosAluno.attendances : [];
-        if (attendances.length === 0) {
-          try {
-            const resFreq = await api.get(`/students/${studentRealId}/attendance-history`);
-            attendances = Array.isArray(resFreq.data) ? resFreq.data : [];
-          } catch {
-            // Segue com attendances vazio se a rota não retornar registros
-          }
-        }
-
-        const totalChamadas = attendances.length;
-        const totalPresentes = attendances.filter((a) => a.status === "PRESENT").length;
-        const totalFaltas =
-          totalChamadas > 0
-            ? attendances.filter((a) => a.status === "ABSENT").length
-            : (dadosAluno.absences ?? dadosAluno.faltas ?? 0);
-
-        const frequenciaCalculada =
-          dadosAluno.attendanceRate ??
-          dadosAluno.frequencia ??
-          (totalChamadas > 0 ? Math.round((totalPresentes / totalChamadas) * 100) : 100);
-
-        const riscoCalculado =
-          dadosAluno.riskLevel ??
-          (frequenciaCalculada < 75 ? 85 : frequenciaCalculada < 90 ? 50 : 10);
-
-        let todosIncidentes = [];
-        try {
-          const resIncidentes = await api.get(`/incidents?studentId=${studentRealId}`);
-          todosIncidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
-        } catch (e) {
-          console.warn("Rota de incidentes pendente para o aluno:", e);
-        }
-
-        const incidentes = todosIncidentes.filter(
-          (i) => !i.studentId || String(i.studentId) === String(studentRealId)
-        );
-
-        const fichaCadastro = extrairDadosFichaCadastro(incidentes);
-
-        let listaResponsaveis = [];
-        if (Array.isArray(dadosAluno.guardians) && dadosAluno.guardians.length > 0) {
-          listaResponsaveis = dadosAluno.guardians;
-        } else if (Array.isArray(dadosAluno.responsaveis) && dadosAluno.responsaveis.length > 0) {
-          listaResponsaveis = dadosAluno.responsaveis;
-        } else if (
-          dadosAluno.guardianName ||
-          dadosAluno.responsavelNome ||
-          dadosAluno.guardianPhone ||
-          dadosAluno.responsavelTelefone
-        ) {
-          listaResponsaveis = [
-            {
-              nome: dadosAluno.guardianName || dadosAluno.responsavelNome || "Não informado",
-              telefone: dadosAluno.guardianPhone || dadosAluno.responsavelTelefone || "Telefone não informado",
-            },
-          ];
-        } else if (fichaCadastro?.guardianName || fichaCadastro?.guardianPhone) {
-          listaResponsaveis = [
-            {
-              nome: fichaCadastro.guardianName || "Não informado",
-              telefone: fichaCadastro.guardianPhone || "Telefone não informado",
-            },
-          ];
-        }
-
-        setAluno({
-          id: studentRealId,
-          nome: dadosAluno.name || dadosAluno.nome || "Aluno sem nome",
-          matricula: dadosAluno.registration || dadosAluno.matricula || "N/A",
-          turma: dadosAluno.class?.name || dadosAluno.turma?.name || dadosAluno.turma || "Turma não vinculada",
-          email: dadosAluno.email || "Não informado",
-          foto:
-            dadosAluno.biometricDataUrl ||
-            dadosAluno.biometryUrl ||
-            dadosAluno.photoUrl ||
-            dadosAluno.avatar ||
-            "",
-          frequencia: frequenciaCalculada,
-          risco: riscoCalculado,
-          status: dadosAluno.status || (frequenciaCalculada < 75 ? "Em acompanhamento" : "Regular"),
-          faltas: totalFaltas,
-          responsaveis: listaResponsaveis,
-        });
-
-        // Exclui registros internos de FICHA_CADASTRO e pendências da linha do tempo de intervenções
-        const historicoFiltrado = incidentes.filter(
-          (i) =>
-            !i.isPending &&
-            i.type !== "PENDENCIA" &&
-            i.type !== "RESOLVIDO" &&
-            i.type !== "FICHA_CADASTRO"
-        );
-        setHistorico(
-          historicoFiltrado
-            .map((e) => ({
-              id: e.id || e._id,
-              data: e.createdAt || e.date || e.data,
-              tipo: e.type || e.tipo || "Intervenção",
-              descricao: formatarDescricaoIntervencao(e.description || e.descricao),
-            }))
-            .sort((a, b) => String(b.data).localeCompare(String(a.data)))
-        );
-
-        const pends = incidentes.filter(
-          (i) => i.isPending || i.type === "PENDENCIA" || i.type === "RESOLVIDO"
-        );
-        setPendencias(
-          pends.map((p) => {
-            const bruto = p.description || p.texto || "";
-            return {
-              id: p.id || p._id,
-              texto: limparTagsPendencia(bruto),
-              prioridade: p.priority || p.prioridade || extrairPrioridadePendencia(bruto),
-              feita: p.resolved || p.feita || p.type === "RESOLVIDO" || false,
-            };
-          })
-        );
-      } catch (error) {
-        console.error("Erro ao buscar perfil do aluno:", error);
-      } finally {
-        setLoading(false);
+      if (resTurmasResult.status === "fulfilled" && Array.isArray(resTurmasResult.value.data)) {
+        setTurmasLista(resTurmasResult.value.data);
       }
-    }
 
-    if (id) carregarPerfil();
+      if (resAlunoResult.status === "fulfilled") {
+        dadosAluno = resAlunoResult.value.data?.student || resAlunoResult.value.data;
+      } else {
+        console.warn("Busca direta /students/:id falhou, tentando localizar na listagem geral...");
+      }
+
+      if (!dadosAluno || !dadosAluno.id) {
+        const resLista = await api.get("/students");
+        const lista = Array.isArray(resLista.data) ? resLista.data : [];
+        dadosAluno = lista.find(
+          (s) => String(s.id) === String(id) || String(s.registration || s.matricula) === String(id)
+        );
+      }
+
+      if (!dadosAluno) {
+        setAluno(null);
+        return;
+      }
+
+      const studentRealId = dadosAluno.id || id;
+
+      let attendances = Array.isArray(dadosAluno.attendances) ? dadosAluno.attendances : [];
+      if (attendances.length === 0) {
+        try {
+          const resFreq = await api.get(`/students/${studentRealId}/attendance-history`);
+          attendances = Array.isArray(resFreq.data) ? resFreq.data : [];
+        } catch {
+          // Segue sem registros caso falhe
+        }
+      }
+
+      const totalChamadas = attendances.length;
+      const totalPresentes = attendances.filter(
+        (a) => a.status === "PRESENT" || a.status === "EXCUSED"
+      ).length;
+      const totalFaltas =
+        totalChamadas > 0
+          ? attendances.filter((a) => a.status === "ABSENT").length
+          : dadosAluno.absences ?? dadosAluno.faltas ?? 0;
+
+      const frequenciaCalculada =
+        totalChamadas > 0
+          ? Math.round((totalPresentes / totalChamadas) * 100)
+          : dadosAluno.attendanceRate ?? dadosAluno.frequencia ?? 100;
+
+      const riscoCalculado = calcularPercentualRisco(dadosAluno.riskLevel, frequenciaCalculada);
+
+      let todosIncidentes = Array.isArray(dadosAluno.incidents) ? [...dadosAluno.incidents] : [];
+      try {
+        const resIncidentes = await api.get(`/incidents?studentId=${studentRealId}`);
+        if (Array.isArray(resIncidentes.data)) {
+          const mapaInc = new Map();
+          [...todosIncidentes, ...resIncidentes.data].forEach((item) => {
+            if (item?.id) mapaInc.set(item.id, item);
+          });
+          todosIncidentes = Array.from(mapaInc.values());
+        }
+      } catch (e) {
+        console.warn("Rota auxiliar de incidentes pendente para o aluno:", e);
+      }
+
+      const incidentes = todosIncidentes.filter(
+        (i) => !i.studentId || String(i.studentId) === String(studentRealId)
+      );
+
+      const fichaCadastro = extrairDadosFichaCadastro(incidentes);
+
+      let listaResponsaveis = [];
+      if (Array.isArray(dadosAluno.guardians) && dadosAluno.guardians.length > 0) {
+        listaResponsaveis = dadosAluno.guardians;
+      } else if (Array.isArray(dadosAluno.responsaveis) && dadosAluno.responsaveis.length > 0) {
+        listaResponsaveis = dadosAluno.responsaveis;
+      } else if (
+        dadosAluno.guardianName ||
+        dadosAluno.responsavelNome ||
+        dadosAluno.guardianPhone ||
+        dadosAluno.responsavelTelefone ||
+        fichaCadastro?.guardianName ||
+        fichaCadastro?.guardianPhone
+      ) {
+        listaResponsaveis = [
+          {
+            nome:
+              dadosAluno.guardianName ||
+              dadosAluno.responsavelNome ||
+              fichaCadastro?.guardianName ||
+              "Não informado",
+            telefone:
+              dadosAluno.guardianPhone ||
+              dadosAluno.responsavelTelefone ||
+              fichaCadastro?.guardianPhone ||
+              "Telefone não informado",
+            parentesco:
+              dadosAluno.guardianRelationship || fichaCadastro?.guardianRelationship || "",
+            email: dadosAluno.guardianEmail || fichaCadastro?.guardianEmail || "",
+          },
+        ];
+      }
+
+      const brutoEndereco = dadosAluno.address || dadosAluno.endereco;
+      const end = brutoEndereco && typeof brutoEndereco === "object" ? brutoEndereco : {};
+      const turmaInfo = formatarTurmaCompleta(dadosAluno.class || dadosAluno.turma, dadosAluno.turma);
+
+      setAluno({
+        id: studentRealId,
+        classId: dadosAluno.classId || dadosAluno.class?.id || "",
+        nome: dadosAluno.name || dadosAluno.nome || "Aluno sem nome",
+        matricula: dadosAluno.registration || dadosAluno.matricula || "N/A",
+        turma: turmaInfo.nome,
+        curso: turmaInfo.curso,
+        turno: turmaInfo.turno,
+        turmaRotuloCompleto: turmaInfo.rotuloCompleto,
+        email: dadosAluno.email || "Não informado",
+        foto:
+          dadosAluno.biometricDataUrl ||
+          dadosAluno.biometryUrl ||
+          dadosAluno.photoUrl ||
+          dadosAluno.avatar ||
+          "",
+        frequencia: frequenciaCalculada,
+        risco: riscoCalculado,
+        status:
+          dadosAluno.status || (frequenciaCalculada < 75 ? "Em acompanhamento" : "Regular"),
+        faltas: totalFaltas,
+        responsaveis: listaResponsaveis,
+        nascimento:
+          dadosAluno.birthDate || dadosAluno.nascimento || fichaCadastro?.birthDate || "",
+        sexo: dadosAluno.gender || dadosAluno.sexo || fichaCadastro?.gender || "",
+        cpf: dadosAluno.cpf || fichaCadastro?.cpf || "",
+        telefone: dadosAluno.phone || dadosAluno.telefone || fichaCadastro?.phone || "",
+        observacoes: dadosAluno.notes || dadosAluno.observacoes || fichaCadastro?.notes || "",
+        cep:
+          end.zipCode || end.cep || dadosAluno.zipCode || dadosAluno.cep || fichaCadastro?.cep || "",
+        rua:
+          end.street || end.rua || dadosAluno.street || dadosAluno.rua || fichaCadastro?.rua || "",
+        numero:
+          end.number || end.numero || dadosAluno.number || dadosAluno.numero || fichaCadastro?.numero || "",
+        bairro:
+          end.neighborhood || end.bairro || dadosAluno.neighborhood || dadosAluno.bairro || fichaCadastro?.bairro || "",
+        cidade:
+          end.city || end.cidade || dadosAluno.city || dadosAluno.cidade || fichaCadastro?.cidade || "",
+        estado:
+          end.state || end.estado || dadosAluno.state || dadosAluno.estado || fichaCadastro?.estado || "",
+      });
+
+      const historicoFiltrado = incidentes.filter(
+        (i) =>
+          !i.isPending &&
+          i.type !== "PENDENCIA" &&
+          i.type !== "RESOLVIDO" &&
+          i.type !== "FICHA_CADASTRO"
+      );
+      setHistorico(
+        historicoFiltrado
+          .map((e) => ({
+            id: e.id || e._id,
+            data: e.createdAt || e.date || e.data,
+            tipo: e.type || e.tipo || "Intervenção",
+            descricao: formatarDescricaoIntervencao(e.description || e.descricao),
+          }))
+          .sort((a, b) => String(b.data).localeCompare(String(a.data)))
+      );
+
+      const pends = incidentes.filter(
+        (i) => i.isPending || i.type === "PENDENCIA" || i.type === "RESOLVIDO"
+      );
+      setPendencias(
+        pends.map((p) => {
+          const bruto = p.description || p.texto || "";
+          return {
+            id: p.id || p._id,
+            texto: limparTagsPendencia(bruto),
+            prioridade: p.priority || p.prioridade || extrairPrioridadePendencia(bruto),
+            feita: p.resolved || p.feita || p.type === "RESOLVIDO" || false,
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Erro ao buscar perfil do aluno:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  // Fecha modais com ESC
+  useEffect(() => {
+    carregarPerfil();
+  }, [carregarPerfil]);
+
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === "Escape") {
         if (modalPendenciaAberto && !salvandoPendencia) fecharModalPendencia();
         if (pendenciaParaExcluir && !excluindoPendencia) setPendenciaParaExcluir(null);
+        if (modalEditarAlunoAberto && !salvandoEdicaoAluno) setModalEditarAlunoAberto(false);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalPendenciaAberto, salvandoPendencia, pendenciaParaExcluir, excluindoPendencia]);
+  }, [
+    modalPendenciaAberto,
+    salvandoPendencia,
+    pendenciaParaExcluir,
+    excluindoPendencia,
+    modalEditarAlunoAberto,
+    salvandoEdicaoAluno,
+  ]);
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="perfil-page" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+        <div
+          className="perfil-page"
+          style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}
+        >
           <p>Carregando perfil do estudante...</p>
         </div>
       </DashboardLayout>
@@ -309,10 +439,153 @@ function AlunoPerfil() {
   const ultimasIntervencoes = historicoExpandido ? historico : historico.slice(0, 3);
   const responsavelPrincipal = aluno.responsaveis?.[0];
 
+  const idadeAluno = calcularIdade(aluno.nascimento);
+  const nascimentoTexto = aluno.nascimento
+    ? `${formatarNascimento(aluno.nascimento)}${idadeAluno !== null ? ` · ${idadeAluno} anos` : ""}`
+    : "";
+
+  const dadosPessoais = [
+    ["Data de nascimento", nascimentoTexto],
+    ["Sexo", aluno.sexo],
+    ["CPF", aluno.cpf],
+    ["Matrícula", aluno.matricula !== "N/A" ? aluno.matricula : ""],
+    ["Turma", aluno.turma !== "Turma não vinculada" ? aluno.turma : ""],
+    ["Modalidade / Curso", aluno.curso],
+    ["Turno", aluno.turno],
+    ["E-mail", aluno.email !== "Não informado" ? aluno.email : ""],
+    ["Telefone", aluno.telefone],
+  ];
+
+  const limparPlaceholder = (v) =>
+    v === "Não informado" || v === "Telefone não informado" ? "" : v;
+
+  const dadosResponsavel = [
+    ["Nome", limparPlaceholder(responsavelPrincipal?.nome || responsavelPrincipal?.name)],
+    ["Parentesco", responsavelPrincipal?.parentesco],
+    ["Telefone", limparPlaceholder(responsavelPrincipal?.telefone || responsavelPrincipal?.phone)],
+    ["E-mail", responsavelPrincipal?.email],
+  ];
+
+  const dadosEndereco = [
+    ["CEP", aluno.cep],
+    ["Rua", aluno.rua],
+    ["Número", aluno.numero],
+    ["Bairro", aluno.bairro],
+    ["Cidade", aluno.cidade],
+    ["Estado", aluno.estado],
+  ];
+
   const pendenciasOrdenadas = [...pendencias].sort((a, b) => {
     if (a.feita !== b.feita) return a.feita ? 1 : -1;
     return PRIORIDADES.indexOf(a.prioridade) - PRIORIDADES.indexOf(b.prioridade);
   });
+
+  async function buscarCepAutomatico(cepDigitado) {
+    const cepLimpo = cepDigitado.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) return;
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await resp.json();
+      if (!data.erro) {
+        setFormEdicaoAluno((prev) => ({
+          ...prev,
+          rua: data.logradouro || prev.rua,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          estado: data.uf || prev.estado,
+        }));
+      }
+    } catch {
+      // Ignora erro de rede no ViaCEP
+    }
+  }
+
+  function abrirModalEdicaoAluno() {
+    const dataNascInput = aluno.nascimento ? String(aluno.nascimento).slice(0, 10) : "";
+
+    setFormEdicaoAluno({
+      name: aluno.nome || "",
+      registration: aluno.matricula !== "N/A" ? aluno.matricula : "",
+      classId: aluno.classId || "",
+      email: aluno.email !== "Não informado" ? aluno.email : "",
+      birthDate: dataNascInput,
+      gender: aluno.sexo || "",
+      cpf: aluno.cpf || "",
+      phone: aluno.telefone || "",
+      guardianName: limparPlaceholder(responsavelPrincipal?.nome || responsavelPrincipal?.name) || "",
+      guardianRelationship: responsavelPrincipal?.parentesco || "",
+      guardianPhone: limparPlaceholder(responsavelPrincipal?.telefone || responsavelPrincipal?.phone) || "",
+      guardianEmail: responsavelPrincipal?.email || "",
+      cep: aluno.cep || "",
+      rua: aluno.rua || "",
+      numero: aluno.numero || "",
+      bairro: aluno.bairro || "",
+      cidade: aluno.cidade || "",
+      estado: aluno.estado || "",
+      notes: aluno.observacoes || "",
+    });
+    setErroEdicaoAluno("");
+    setModalEditarAlunoAberto(true);
+  }
+
+  async function salvarEdicaoAluno(e) {
+    e.preventDefault();
+    setErroEdicaoAluno("");
+
+    if (!formEdicaoAluno.name.trim() || !formEdicaoAluno.registration.trim() || !formEdicaoAluno.classId) {
+      setErroEdicaoAluno("Nome, matrícula e turma são obrigatórios.");
+      return;
+    }
+
+    setSalvandoEdicaoAluno(true);
+    try {
+      await api.patch(`/students/${aluno.id}`, {
+        name: formEdicaoAluno.name.trim(),
+        registration: formEdicaoAluno.registration.trim(),
+        classId: formEdicaoAluno.classId,
+        email: formEdicaoAluno.email.trim(),
+        birthDate: formEdicaoAluno.birthDate || null,
+        gender: formEdicaoAluno.gender.trim(),
+        cpf: formEdicaoAluno.cpf.trim(),
+        phone: formEdicaoAluno.phone.trim(),
+        guardianName: formEdicaoAluno.guardianName.trim(),
+        guardianRelationship: formEdicaoAluno.guardianRelationship.trim(),
+        guardianPhone: formEdicaoAluno.guardianPhone.trim(),
+        guardianEmail: formEdicaoAluno.guardianEmail.trim(),
+        cep: formEdicaoAluno.cep.trim(),
+        rua: formEdicaoAluno.rua.trim(),
+        numero: formEdicaoAluno.numero.trim(),
+        bairro: formEdicaoAluno.bairro.trim(),
+        cidade: formEdicaoAluno.cidade.trim(),
+        estado: formEdicaoAluno.estado.trim(),
+        notes: formEdicaoAluno.notes.trim(),
+      });
+
+      setModalEditarAlunoAberto(false);
+      await carregarPerfil();
+    } catch (error) {
+      console.error("Erro ao atualizar aluno:", error);
+      setErroEdicaoAluno(
+        error.response?.data?.error || "Não foi possível salvar as alterações do aluno."
+      );
+    } finally {
+      setSalvandoEdicaoAluno(false);
+    }
+  }
+
+  async function excluirAlunoPerfil() {
+    const confirmar = window.confirm(
+      `Deseja realmente excluir o estudante "${aluno.nome}"? Todos os registros vinculados serão removidos.`
+    );
+    if (!confirmar) return;
+
+    try {
+      await api.delete(`/students/${aluno.id}`);
+      navigate("/alunos");
+    } catch (error) {
+      alert(error.response?.data?.error || "Não foi possível excluir o estudante.");
+    }
+  }
 
   function abrirModalNovaPendencia() {
     setPendenciaEditando(null);
@@ -431,10 +704,56 @@ function AlunoPerfil() {
   return (
     <DashboardLayout>
       <main className="perfil-page perfil-moderno">
-        <div className="perfil-breadcrumb">
-          <Link to="/alunos">Alunos</Link>
-          <span>/</span>
-          <span>Perfil do aluno</span>
+        <div
+          className="perfil-breadcrumb"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <div>
+            <Link to="/alunos">Alunos</Link>
+            <span> / </span>
+            <span>Perfil do aluno</span>
+          </div>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={abrirModalEdicaoAluno}
+              style={{
+                padding: "7px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                color: "#1e293b",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              ✎ Editar cadastro
+            </button>
+            <button
+              type="button"
+              onClick={excluirAlunoPerfil}
+              style={{
+                padding: "7px 14px",
+                borderRadius: "8px",
+                border: "1px solid #fecaca",
+                background: "#fef2f2",
+                color: "#b91c1c",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Excluir aluno
+            </button>
+          </div>
         </div>
 
         <section className="perfil-cabecalho">
@@ -453,7 +772,7 @@ function AlunoPerfil() {
             <div className="perfil-identificacao-texto">
               <h1>{aluno.nome}</h1>
               <p>
-                {aluno.turma} <span>·</span> Matrícula: {aluno.matricula}
+                {aluno.turmaRotuloCompleto} <span>·</span> Matrícula: {aluno.matricula}
               </p>
               <span
                 className={`perfil-status-badge ${
@@ -463,21 +782,6 @@ function AlunoPerfil() {
                 <span className="perfil-status-ponto" />
                 {aluno.status}
               </span>
-            </div>
-          </div>
-
-          <div className="perfil-contatos">
-            <div className="perfil-contato-item">
-              <span className="perfil-contato-icone">✉</span>
-              <span>{aluno.email}</span>
-            </div>
-            <div className="perfil-contato-item">
-              <span className="perfil-contato-icone">♙</span>
-              <span>Responsável: {responsavelPrincipal?.nome || responsavelPrincipal?.name || "Não informado"}</span>
-            </div>
-            <div className="perfil-contato-item">
-              <span className="perfil-contato-icone">☎</span>
-              <span>{responsavelPrincipal?.telefone || responsavelPrincipal?.phone || "Telefone não informado"}</span>
             </div>
           </div>
 
@@ -498,6 +802,68 @@ function AlunoPerfil() {
                 : "Continue acompanhando a frequência e o desempenho do aluno."}
             </p>
           </div>
+
+          <div className="perfil-detalhes">
+            <div className="perfil-detalhes-titulo">
+              <span className="perfil-detalhes-icone">▤</span>
+              <h2>Informações do cadastro</h2>
+            </div>
+
+            <div className="perfil-detalhes-grupos">
+              <div className="perfil-detalhes-grupo">
+                <h3>
+                  <span className="perfil-detalhes-grupo-icone">♙</span>
+                  Dados pessoais
+                </h3>
+                <dl className="perfil-dados-grid">
+                  {dadosPessoais.map(([rotulo, valor]) => (
+                    <div className="perfil-dados-item" key={rotulo}>
+                      <dt>{rotulo}</dt>
+                      <dd>{valorOuNaoInformado(valor)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              <div className="perfil-detalhes-grupo">
+                <h3>
+                  <span className="perfil-detalhes-grupo-icone">☎</span>
+                  Responsável
+                </h3>
+                <dl className="perfil-dados-grid perfil-dados-grid-unica">
+                  {dadosResponsavel.map(([rotulo, valor]) => (
+                    <div className="perfil-dados-item" key={rotulo}>
+                      <dt>{rotulo}</dt>
+                      <dd>{valorOuNaoInformado(valor)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              <div className="perfil-detalhes-grupo">
+                <h3>
+                  <span className="perfil-detalhes-grupo-icone">⌂</span>
+                  Endereço
+                </h3>
+                <dl className="perfil-dados-grid">
+                  {dadosEndereco.map(([rotulo, valor]) => (
+                    <div className="perfil-dados-item" key={rotulo}>
+                      <dt>{rotulo}</dt>
+                      <dd>{valorOuNaoInformado(valor)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+
+            <div className="perfil-detalhes-obs">
+              <h3>
+                <span className="perfil-detalhes-grupo-icone">✎</span>
+                Observações
+              </h3>
+              <p>{valorOuNaoInformado(aluno.observacoes)}</p>
+            </div>
+          </div>
         </section>
 
         <section className="perfil-indicadores">
@@ -511,22 +877,16 @@ function AlunoPerfil() {
                 <GaugeChart value={aluno.frequencia} color={corFrequencia(aluno.frequencia)} />
               </div>
               <div className="perfil-frequencia-legenda">
-                <span className={`perfil-pilula-frequencia ${aluno.frequencia < 75 ? "atencao" : "normal"}`}>
+                <span
+                  className={`perfil-pilula-frequencia ${
+                    aluno.frequencia < 75 ? "atencao" : "normal"
+                  }`}
+                >
                   {aluno.frequencia < 75 ? "Abaixo do esperado" : "Frequência registrada"}
                 </span>
                 <p>Frequência atual do aluno</p>
               </div>
             </div>
-          </article>
-
-          <article className="perfil-indicador perfil-indicador-faltas">
-            <div className="perfil-indicador-titulo">
-              <span className="perfil-indicador-icone">▦</span>
-              <h2>Faltas</h2>
-            </div>
-            <strong className="perfil-indicador-numero">{aluno.faltas}</strong>
-            <span className="perfil-indicador-descricao">Faltas registradas</span>
-            <span className="perfil-indicador-detalhe">Histórico de frequência</span>
           </article>
 
           <article className="perfil-indicador perfil-indicador-intervencoes">
@@ -543,6 +903,16 @@ function AlunoPerfil() {
                 Última em {formatarDataDisplay(historico[0].data)}
               </span>
             )}
+          </article>
+
+          <article className="perfil-indicador perfil-indicador-faltas">
+            <div className="perfil-indicador-titulo">
+              <span className="perfil-indicador-icone">▦</span>
+              <h2>Faltas</h2>
+            </div>
+            <strong className="perfil-indicador-numero">{aluno.faltas}</strong>
+            <span className="perfil-indicador-descricao">Faltas registradas</span>
+            <span className="perfil-indicador-detalhe">Histórico de frequência</span>
           </article>
         </section>
 
@@ -570,7 +940,9 @@ function AlunoPerfil() {
                 {ultimasIntervencoes.map((item) => {
                   const texto = item.descricao || "";
                   const matchAtestado = texto.match(/\|\s*\[Atestado:\s*(https?:\/\/[^\]]+)\]/i);
-                  const textoLimpo = texto.replace(/\|\s*\[Atestado:\s*https?:\/\/[^\]]+\]/i, "").trim();
+                  const textoLimpo = texto
+                    .replace(/\|\s*\[Atestado:\s*https?:\/\/[^\]]+\]/i, "")
+                    .trim();
 
                   return (
                     <div className="perfil-timeline-item" key={item.id}>
@@ -584,8 +956,8 @@ function AlunoPerfil() {
                             item.tipo === "Conversa Individual"
                               ? "conversa"
                               : item.tipo === "Contato com responsável"
-                                ? "responsavel"
-                                : "encaminhamento"
+                              ? "responsavel"
+                              : "encaminhamento"
                           }`}
                         >
                           {item.tipo}
@@ -652,7 +1024,10 @@ function AlunoPerfil() {
                   const estiloPrio = ESTILOS_PRIORIDADE[nivelPrio];
 
                   return (
-                    <div key={item.id} className={`perfil-pendencia-item ${item.feita ? "concluida" : ""}`}>
+                    <div
+                      key={item.id}
+                      className={`perfil-pendencia-item ${item.feita ? "concluida" : ""}`}
+                    >
                       <label className="perfil-pendencia-checkbox">
                         <input
                           type="checkbox"
@@ -661,7 +1036,10 @@ function AlunoPerfil() {
                         />
                         <span className="perfil-pendencia-texto">{item.texto}</span>
                       </label>
-                      <div className="perfil-pendencia-botoes" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div
+                        className="perfil-pendencia-botoes"
+                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                      >
                         <span
                           style={{
                             ...estiloPrio,
@@ -707,6 +1085,429 @@ function AlunoPerfil() {
           </article>
         </section>
 
+        {/* MODAL CUSTOMIZADO: EDITAR CADASTRO COMPLETO DO ALUNO (INCLUINDO ENDEREÇO) */}
+        {modalEditarAlunoAberto && (
+          <div
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget && !salvandoEdicaoAluno)
+                setModalEditarAlunoAberto(false);
+            }}
+            role="presentation"
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.55)",
+              backdropFilter: "blur(3px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              zIndex: 1100,
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Editar cadastro do aluno"
+              style={{
+                width: "100%",
+                maxWidth: "620px",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "24px",
+                boxShadow: "0 20px 45px rgba(15, 23, 42, 0.22)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <h2 style={{ margin: 0, fontSize: "19px", color: "#0f172a" }}>
+                  Editar Cadastro do Aluno
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setModalEditarAlunoAberto(false)}
+                  disabled={salvandoEdicaoAluno}
+                  style={{
+                    background: "#f1f5f9",
+                    border: "none",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    fontSize: "18px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form
+                onSubmit={salvarEdicaoAluno}
+                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              >
+                <strong style={{ fontSize: "13px", color: "#633df2" }}>Dados Pessoais</strong>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                  Nome completo *
+                  <input
+                    type="text"
+                    required
+                    value={formEdicaoAluno.name}
+                    onChange={(e) => setFormEdicaoAluno({ ...formEdicaoAluno, name: e.target.value })}
+                    style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                  />
+                </label>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Matrícula *
+                    <input
+                      type="text"
+                      required
+                      value={formEdicaoAluno.registration}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, registration: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Data de nascimento
+                    <input
+                      type="date"
+                      value={formEdicaoAluno.birthDate}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, birthDate: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Sexo
+                    <select
+                      value={formEdicaoAluno.gender}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, gender: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="Feminino">Feminino</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    CPF
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      value={formEdicaoAluno.cpf}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, cpf: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    E-mail
+                    <input
+                      type="email"
+                      value={formEdicaoAluno.email}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, email: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Telefone
+                    <input
+                      type="tel"
+                      value={formEdicaoAluno.phone}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, phone: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+                </div>
+
+                {/* TOGGLE LIST PADRONIZADO DE TURMAS */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600 }}>Turma *</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      maxHeight: "130px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {turmasLista.map((t) => {
+                      const tId = t.id || t._id;
+                      const ativo = String(formEdicaoAluno.classId) === String(tId);
+                      const info = formatarTurmaCompleta(t, t.name);
+                      return (
+                        <button
+                          key={tId}
+                          type="button"
+                          onClick={() => setFormEdicaoAluno({ ...formEdicaoAluno, classId: tId })}
+                          style={{
+                            padding: "7px 12px",
+                            borderRadius: "8px",
+                            border: ativo ? "2px solid #633df2" : "1px solid #cbd5e1",
+                            background: ativo ? "#633df2" : "#ffffff",
+                            color: ativo ? "#ffffff" : "#1e293b",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            textAlign: "left",
+                          }}
+                        >
+                          <div>{info.nome}</div>
+                          {info.detalhe && (
+                            <div style={{ fontSize: "10px", opacity: 0.85 }}>{info.detalhe}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <strong style={{ fontSize: "13px", color: "#633df2", marginTop: "4px" }}>
+                  Responsável
+                </strong>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Nome do Responsável
+                    <input
+                      type="text"
+                      value={formEdicaoAluno.guardianName}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, guardianName: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Parentesco
+                    <input
+                      type="text"
+                      placeholder="Ex: Mãe, Pai, Avó"
+                      value={formEdicaoAluno.guardianRelationship}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({
+                          ...formEdicaoAluno,
+                          guardianRelationship: e.target.value,
+                        })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Telefone do Responsável
+                    <input
+                      type="tel"
+                      value={formEdicaoAluno.guardianPhone}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, guardianPhone: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    E-mail do Responsável
+                    <input
+                      type="email"
+                      value={formEdicaoAluno.guardianEmail}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, guardianEmail: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+                </div>
+
+                <strong style={{ fontSize: "13px", color: "#633df2", marginTop: "4px" }}>
+                  Endereço
+                </strong>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    CEP
+                    <input
+                      type="text"
+                      placeholder="50000-000"
+                      value={formEdicaoAluno.cep}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormEdicaoAluno({ ...formEdicaoAluno, cep: val });
+                        buscarCepAutomatico(val);
+                      }}
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Rua / Logradouro
+                    <input
+                      type="text"
+                      value={formEdicaoAluno.rua}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, rua: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Número
+                    <input
+                      type="text"
+                      value={formEdicaoAluno.numero}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, numero: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.6fr", gap: "10px" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Bairro
+                    <input
+                      type="text"
+                      value={formEdicaoAluno.bairro}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, bairro: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    Cidade
+                    <input
+                      type="text"
+                      value={formEdicaoAluno.cidade}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({ ...formEdicaoAluno, cidade: e.target.value })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+
+                  <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                    UF
+                    <input
+                      type="text"
+                      maxLength={2}
+                      placeholder="PE"
+                      value={formEdicaoAluno.estado}
+                      onChange={(e) =>
+                        setFormEdicaoAluno({
+                          ...formEdicaoAluno,
+                          estado: e.target.value.toUpperCase(),
+                        })
+                      }
+                      style={{ padding: "9px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                    />
+                  </label>
+                </div>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", fontWeight: 600 }}>
+                  Observações
+                  <textarea
+                    rows={2}
+                    value={formEdicaoAluno.notes}
+                    onChange={(e) =>
+                      setFormEdicaoAluno({ ...formEdicaoAluno, notes: e.target.value })
+                    }
+                    style={{
+                      padding: "9px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </label>
+
+                {erroEdicaoAluno && (
+                  <p
+                    style={{
+                      margin: 0,
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      background: "#fee2e2",
+                      color: "#b91c1c",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {erroEdicaoAluno}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+                  <button
+                    type="button"
+                    disabled={salvandoEdicaoAluno}
+                    onClick={() => setModalEditarAlunoAberto(false)}
+                    style={{
+                      padding: "9px 16px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={salvandoEdicaoAluno}
+                    style={{
+                      padding: "9px 18px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#633df2",
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {salvandoEdicaoAluno ? "Salvando..." : "Salvar Alterações"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* MODAL CUSTOMIZADO: ADICIONAR / EDITAR PENDÊNCIA */}
         {modalPendenciaAberto && (
           <div
@@ -740,7 +1541,14 @@ function AlunoPerfil() {
                 border: "1px solid #e2e8f0",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: "16px",
+                }}
+              >
                 <div>
                   <h2 id="titulo-modal-pendencia" style={{ margin: 0, fontSize: "19px", color: "#0f172a" }}>
                     {pendenciaEditando ? "Editar pendência" : "Nova pendência"}
@@ -872,7 +1680,11 @@ function AlunoPerfil() {
                       cursor: salvandoPendencia ? "not-allowed" : "pointer",
                     }}
                   >
-                    {salvandoPendencia ? "Salvando..." : pendenciaEditando ? "Salvar alterações" : "Adicionar pendência"}
+                    {salvandoPendencia
+                      ? "Salvando..."
+                      : pendenciaEditando
+                      ? "Salvar alterações"
+                      : "Adicionar pendência"}
                   </button>
                 </div>
               </form>

@@ -17,8 +17,7 @@ import {
   IconCamera,
   IconSun,
   IconMoon,
-  MascotAvatar,
-  IconPersonalizado,
+  MascotAvatar
 } from "./Icons";
 
 function IconEscola() {
@@ -63,8 +62,7 @@ const MENU_MONITOR = [
   { to: "/diario", label: "Diário", Icon: IconDiario },
   { to: "/intervencao", label: "Intervenção", Icon: IconIntervencao },
   { to: "/turmas", label: "Turma", Icon: IconTurma },
-  { to: "/relatorios", label: "Relatório", Icon: IconRelatorio },
-  { to: "/personalizado", label: "Personalizado", Icon: IconPersonalizado },
+  { to: "/relatorios", label: "Relatório", Icon: IconRelatorio }
 ];
 
 const MENU_ADMIN = [

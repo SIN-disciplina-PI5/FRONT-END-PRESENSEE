@@ -204,12 +204,16 @@
   font-size: 15px;
 }
 
-/* Risco: rótulo sempre em uma linha */
+/* Risco: rótulo sempre em uma linha
+   + linha vertical na divisa com o bloco de identificação
+   + mais afastamento para a direita */
 .perfil-moderno .perfil-risco {
   position: relative;
   z-index: 1;
   min-width: 0;
-  padding-left: 2px;
+  padding: 6px 0 6px 40px;
+  margin-left: 16px;
+  border-left: 1px solid #e7e3f0;
 }
 
 .perfil-moderno .perfil-risco-label {
@@ -260,10 +264,148 @@
   line-height: 1.55;
 }
 
+/* =====================================================
+   INFORMAÇÕES DO CADASTRO (visual limpo, sem caixas)
+===================================================== */
+.perfil-moderno .perfil-detalhes {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding-top: 22px;
+  border-top: 1px solid #e7e3f0;
+}
+
+.perfil-moderno .perfil-detalhes-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.perfil-moderno .perfil-detalhes-titulo h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.perfil-moderno .perfil-detalhes-icone {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: #f0eaff;
+  color: var(--perfil-roxo);
+  font-size: 15px;
+}
+
+/* Três grupos separados por linhas verticais (mesmo estilo da linha do risco atual) */
+.perfil-moderno .perfil-detalhes-grupos {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 20px 0;
+  align-items: stretch;
+}
+
+/* Sem caixa, sem fundo, sem borda */
+.perfil-moderno .perfil-detalhes-grupo,
+.perfil-moderno .perfil-detalhes-obs {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Espaço dos dois lados de cada linha vertical */
+.perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo {
+  padding: 0 32px;
+}
+
+.perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:first-child {
+  padding-left: 0;
+}
+
+.perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:last-child {
+  padding-right: 0;
+}
+
+/* Linha vertical entre Dados pessoais | Responsável | Endereço */
+.perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:not(:first-child) {
+  border-left: 1px solid #e7e3f0;
+}
+
+.perfil-moderno .perfil-detalhes-grupo h3,
+.perfil-moderno .perfil-detalhes-obs h3 {
+  margin: 0 0 12px;
+  color: var(--perfil-roxo-escuro);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* Ícones quadrados dos títulos removidos */
+.perfil-moderno .perfil-detalhes-grupo-icone {
+  display: none;
+}
+
+.perfil-moderno .perfil-dados-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.perfil-moderno .perfil-dados-grid-unica {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.perfil-moderno .perfil-dados-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.perfil-moderno .perfil-dados-item dt {
+  margin: 0 0 3px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.perfil-moderno .perfil-dados-item dd {
+  margin: 0;
+  color: #24213b;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.perfil-moderno .perfil-detalhes-obs h3 {
+  margin-bottom: 6px;
+}
+
+.perfil-moderno .perfil-detalhes-obs p {
+  margin: 0;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 /* Cards de indicadores */
 .perfil-moderno .perfil-indicadores {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, .7fr);
   gap: 18px;
   margin-bottom: 24px;
 }
@@ -272,12 +414,37 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 190px;
-  padding: 22px 24px;
+  min-height: 160px;
+  padding: 20px 22px;
   border: 1px solid var(--perfil-borda);
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 4px 16px rgb(17 24 39 / 3%);
+}
+
+/* Card de faltas: compacto e posicionado à direita */
+.perfil-moderno .perfil-indicador-faltas {
+  min-height: 160px;
+  padding: 18px 20px;
+}
+
+.perfil-moderno .perfil-indicador-faltas .perfil-indicador-titulo {
+  margin-bottom: 12px;
+}
+
+.perfil-moderno .perfil-indicador-faltas .perfil-indicador-icone {
+  flex-basis: 36px;
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
+}
+
+.perfil-moderno .perfil-indicador-faltas .perfil-indicador-titulo h2 {
+  font-size: 15px;
+}
+
+.perfil-moderno .perfil-indicador-faltas .perfil-indicador-numero {
+  font-size: 28px;
 }
 
 .perfil-moderno .perfil-indicador-titulo {
@@ -765,9 +932,30 @@
     border-right: 0;
   }
 
+  /* Risco vai para a linha de baixo: linha vertical vira horizontal */
   .perfil-moderno .perfil-risco {
     grid-column: 1 / -1;
+    margin-left: 0;
     padding: 18px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e7e3f0;
+  }
+
+  .perfil-moderno .perfil-detalhes-grupos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 0;
+  }
+
+  /* Responsável fica na 2ª coluna: mantém a linha à esquerda, sem espaço à direita */
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:nth-child(2) {
+    padding-right: 0;
+  }
+
+  /* Endereço ocupa a linha de baixo inteira: linha vertical vira horizontal */
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:last-child {
+    grid-column: 1 / -1;
+    padding: 20px 0 0;
+    border-left: 0;
     border-top: 1px solid #e7e3f0;
   }
 
@@ -776,7 +964,7 @@
   }
 
   .perfil-moderno .perfil-indicador {
-    padding: 20px;
+    padding: 18px;
   }
 }
 
@@ -816,6 +1004,35 @@
 
   .perfil-moderno .perfil-risco {
     grid-column: auto;
+    margin-left: 0;
+    padding: 18px 0 0;
+    border-left: 0;
+    border-top: 1px solid #e7e3f0;
+  }
+
+  .perfil-moderno .perfil-detalhes {
+    padding-top: 18px;
+  }
+
+  .perfil-moderno .perfil-detalhes-grupos {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  /* Em coluna única, sem linhas verticais nem espaçamentos laterais */
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo,
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:first-child,
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:nth-child(2),
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:last-child,
+  .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:not(:first-child) {
+    grid-column: auto;
+    padding: 0;
+    border-left: 0;
+    border-top: 0;
+  }
+
+  .perfil-moderno .perfil-dados-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .perfil-moderno .perfil-indicadores {
@@ -823,8 +1040,9 @@
     gap: 14px;
   }
 
-  .perfil-moderno .perfil-indicador {
-    min-height: 150px;
+  .perfil-moderno .perfil-indicador,
+  .perfil-moderno .perfil-indicador-faltas {
+    min-height: 140px;
     padding: 18px;
   }
 
@@ -901,6 +1119,7 @@
 [data-theme="dark"] .perfil-moderno .perfil-indicador-titulo h2,
 [data-theme="dark"] .perfil-moderno .perfil-indicador-numero,
 [data-theme="dark"] .perfil-moderno .perfil-bloco-titulo h2,
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-titulo h2,
 [data-theme="dark"] .perfil-moderno .perfil-risco > strong {
   color: #f8fafc;
 }
@@ -923,6 +1142,7 @@
 [data-theme="dark"] .perfil-moderno .perfil-contato-icone,
 [data-theme="dark"] .perfil-moderno .perfil-indicador-icone,
 [data-theme="dark"] .perfil-moderno .perfil-bloco-icone,
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-icone,
 [data-theme="dark"] .perfil-moderno .perfil-pendencias-contador {
   border-color: #45396b;
   background: #292044;
@@ -931,9 +1151,32 @@
 
 [data-theme="dark"] .perfil-moderno .perfil-contatos,
 [data-theme="dark"] .perfil-moderno .perfil-risco,
+[data-theme="dark"] .perfil-moderno .perfil-detalhes,
 [data-theme="dark"] .perfil-moderno .perfil-timeline-conteudo,
 [data-theme="dark"] .perfil-moderno .perfil-pendencia-item {
   border-color: #303954;
+}
+
+/* Linhas verticais entre os grupos do cadastro no modo escuro */
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-grupos > .perfil-detalhes-grupo:not(:first-child) {
+  border-color: #303954;
+}
+
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-grupo h3,
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-obs h3 {
+  color: #d0c4ff;
+}
+
+[data-theme="dark"] .perfil-moderno .perfil-dados-item dt {
+  color: #a8b3c7;
+}
+
+[data-theme="dark"] .perfil-moderno .perfil-dados-item dd {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .perfil-moderno .perfil-detalhes-obs p {
+  color: #b8c3d5;
 }
 
 [data-theme="dark"] .perfil-moderno .perfil-risco-barra {

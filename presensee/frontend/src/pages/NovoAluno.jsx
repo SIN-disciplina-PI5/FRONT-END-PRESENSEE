@@ -7,6 +7,7 @@ import "../styles/NovoAluno.css";
 function NovoAluno() {
   const navigate = useNavigate();
   const [turmas, setTurmas] = useState([]);
+  const [filtroTurma, setFiltroTurma] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [dados, setDados] = useState({
@@ -16,7 +17,7 @@ function NovoAluno() {
     email: "",
     dataNascimento: "",
     responsavelNome: "",
-    responsavelTelefone: ""
+    responsavelTelefone: "",
   });
   const [foto, setFoto] = useState(null);
 
@@ -42,6 +43,11 @@ function NovoAluno() {
     }
   }
 
+  const turmasFiltradas = turmas.filter((t) => {
+    const texto = `${t.name || t.nome} ${t.course || t.curso || ""} ${t.shift || t.turno || ""}`.toLowerCase();
+    return texto.includes(filtroTurma.trim().toLowerCase());
+  });
+
   async function submeterFormulario(event) {
     event.preventDefault();
     setErro("");
@@ -61,7 +67,7 @@ function NovoAluno() {
         email: dados.email.trim() || undefined,
         birthDate: dados.dataNascimento ? new Date(dados.dataNascimento).toISOString() : undefined,
         guardianName: dados.responsavelNome.trim() || undefined,
-        guardianPhone: dados.responsavelTelefone.trim() || undefined
+        guardianPhone: dados.responsavelTelefone.trim() || undefined,
       };
 
       const response = await api.post("/students", payload);
@@ -75,8 +81,8 @@ function NovoAluno() {
 
           await api.patch(`/students/${alunoId}/biometry`, formData, {
             headers: {
-              "Content-Type": "multipart/form-data"
-            }
+              "Content-Type": "multipart/form-data",
+            },
           });
         } catch (photoError) {
           console.error("Aluno criado, mas falha ao enviar foto:", photoError);
@@ -97,7 +103,7 @@ function NovoAluno() {
   return (
     <DashboardLayout>
       <div style={{ padding: "2rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: "520px", marginBottom: "0.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: "640px", marginBottom: "0.5rem" }}>
           <h1 style={{ margin: 0 }}>Cadastrar Aluno</h1>
           <button
             type="button"
@@ -112,12 +118,12 @@ function NovoAluno() {
         </p>
 
         {erro && (
-          <div style={{ maxWidth: "520px", padding: "12px 16px", marginBottom: "1rem", borderRadius: "8px", background: "#fee2e2", color: "#b91c1c", fontSize: "14px" }}>
+          <div style={{ maxWidth: "640px", padding: "12px 16px", marginBottom: "1rem", borderRadius: "8px", background: "#fee2e2", color: "#b91c1c", fontSize: "14px" }}>
             {erro}
           </div>
         )}
 
-        <form className="student-form" onSubmit={submeterFormulario} style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "520px" }}>
+        <form className="student-form" onSubmit={submeterFormulario} style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "640px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "14px", fontWeight: 600 }}>Nome completo *</label>
             <input
@@ -144,23 +150,72 @@ function NovoAluno() {
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "14px", fontWeight: 600 }}>Turma *</label>
-            <select
-              name="turmaId"
-              value={dados.turmaId}
-              onChange={atualizarCampo}
-              required
-              disabled={loading}
-              style={{ padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
+          {/* TOGGLE LIST PADRONIZADO DE TURMAS (IGUAL À CRIAÇÃO DE TURMAS) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600 }}>Turma *</span>
+              {turmas.length > 6 && (
+                <input
+                  type="text"
+                  value={filtroTurma}
+                  onChange={(e) => setFiltroTurma(e.target.value)}
+                  placeholder="Filtrar turma..."
+                  style={{ padding: "5px 10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
+                />
+              )}
+            </div>
+
+            <div
+              role="radiogroup"
+              aria-label="Selecionar turma do aluno"
+              style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
             >
-              <option value="">Selecione a Turma *</option>
-              {turmas.map((turma) => (
-                <option key={turma.id || turma._id} value={turma.id || turma._id}>
-                  {turma.nome || turma.name}
-                </option>
-              ))}
-            </select>
+              {turmasFiltradas.map((turma) => {
+                const id = turma.id || turma._id;
+                const ativo = String(dados.turmaId) === String(id);
+                const nome = turma.name || turma.nome;
+                const curso = turma.course || turma.curso || "Ensino Médio";
+                const turno = turma.shift || turma.turno || "";
+
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={ativo}
+                    disabled={loading}
+                    onClick={() => {
+                      setDados({ ...dados, turmaId: id });
+                      setErro("");
+                    }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      border: ativo ? "2px solid #633df2" : "1.5px solid #cbd5e1",
+                      backgroundColor: ativo ? "#633df2" : "#ffffff",
+                      color: ativo ? "#ffffff" : "#1e293b",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      transition: "all 0.15s ease",
+                      boxShadow: ativo ? "0 4px 12px rgba(99, 61, 242, 0.25)" : "none",
+                    }}
+                  >
+                    <strong style={{ fontSize: "14px" }}>{nome}</strong>
+                    <span style={{ fontSize: "11px", opacity: ativo ? 0.9 : 0.7 }}>
+                      {curso}{turno ? ` · ${turno}` : ""}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {turmasFiltradas.length === 0 && (
+                <span style={{ fontSize: "13px", color: "#64748b" }}>
+                  Nenhuma turma encontrada. Cadastre uma turma primeiro.
+                </span>
+              )}
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -233,7 +288,7 @@ function NovoAluno() {
               border: "none",
               borderRadius: "8px",
               fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer"
+              cursor: loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Salvando..." : "Salvar Aluno"}

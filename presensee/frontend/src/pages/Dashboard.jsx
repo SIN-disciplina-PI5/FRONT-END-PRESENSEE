@@ -26,6 +26,15 @@ function obterMesAtual() {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+function lerAvatarUsuario() {
+  try {
+    const u = JSON.parse(localStorage.getItem("usuario") || "{}");
+    return u.avatar || localStorage.getItem("avatarUsuario") || "";
+  } catch {
+    return localStorage.getItem("avatarUsuario") || "";
+  }
+}
+
 function IconCalendario() {
   return (
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
@@ -84,9 +93,25 @@ function GraficoFrequencia({ dados, eixo = "dia", campo = "frequencia", unidade 
 }
 
 function Dashboard() {
-  const usuario = getUsuario();
-  const avatar = localStorage.getItem("avatarUsuario") || "";
-  
+  const [usuario, setUsuario] = useState(() => getUsuario());
+  const [avatar, setAvatar] = useState(lerAvatarUsuario);
+
+  useEffect(() => {
+    function sincronizarUsuario() {
+      setUsuario(getUsuario());
+      setAvatar(lerAvatarUsuario());
+    }
+
+    window.addEventListener("avatar-atualizado", sincronizarUsuario);
+    window.addEventListener("admin-profile-updated", sincronizarUsuario);
+    window.addEventListener("storage", sincronizarUsuario);
+    return () => {
+      window.removeEventListener("avatar-atualizado", sincronizarUsuario);
+      window.removeEventListener("admin-profile-updated", sincronizarUsuario);
+      window.removeEventListener("storage", sincronizarUsuario);
+    };
+  }, []);
+
   const [dados, setDados] = useState({
     totalAlunos: 0,
     alunosRisco: 0,
@@ -152,6 +177,8 @@ function Dashboard() {
     setPaginaTurmas(0);
   }
 
+  const fotoUsuario = avatar || usuario?.avatar || "";
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -167,8 +194,16 @@ function Dashboard() {
       <div className="pd-dashboard">
         <header className="pd-cabecalho">
           <div className="pd-usuario">
-            <div className="pd-avatar">
-              {avatar ? <img src={avatar} alt="Foto do usuário" /> : <MascotAvatar size={55} />}
+            <div className="pd-avatar" style={{ overflow: "hidden" }}>
+              {fotoUsuario ? (
+                <img
+                  src={fotoUsuario}
+                  alt="Foto do usuário"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                />
+              ) : (
+                <MascotAvatar size={55} />
+              )}
             </div>
             <div>
               <h1>E aí, {usuario?.name || usuario?.nome || "Gestor(a)"}!</h1>
