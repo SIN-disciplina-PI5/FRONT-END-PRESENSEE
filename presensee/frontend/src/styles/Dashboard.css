@@ -1384,3 +1384,20 @@
 [data-theme="dark"] .pd-dashboard .recharts-cartesian-axis-tick-value {
   fill: #a8b3c2;
 }
+
+.chat-add {
+  width: 100%; margin-top: 10px; padding: 9px 12px;
+  border: 0; border-radius: 10px; background: #633df2; color: #fff;
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.chat-add:hover { background: #4b25c9; }
+
+.chat-adicionado {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 10px; font-size: 12px; font-weight: 600; color: #00b894;
+}
+.chat-adicionado button {
+  border: 0; background: none; padding: 0;
+  color: #633df2; font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer;
+}
+[data-theme="dark"] .chat-adicionado button { color: #b39dfa; }
