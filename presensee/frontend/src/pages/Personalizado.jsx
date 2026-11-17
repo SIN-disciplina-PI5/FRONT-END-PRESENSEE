@@ -85,6 +85,7 @@ export default function Personalizado() {
   const [avisoTopo, setAvisoTopo] = useState("");
   const [avisoErro, setAvisoErro] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
+  const [graficoParaRemover, setGraficoParaRemover] = useState(null);
   const avisoTimerRef = useRef(null);
   const gridRef = useRef(null);
 
@@ -106,11 +107,20 @@ export default function Personalizado() {
   useEffect(() => {
     if (!editandoId) return undefined;
     const onKeyDown = (e) => {
-      if (e.key === "Escape") sairEdicao();
+      if (e.key === "Escape" && !graficoParaRemover) sairEdicao();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [editandoId]);
+  }, [editandoId, graficoParaRemover]);
+
+  useEffect(() => {
+    if (!graficoParaRemover) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setGraficoParaRemover(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [graficoParaRemover]);
 
   function salvarEdicao() {
     if (!graficoEditando) return;
@@ -125,6 +135,13 @@ export default function Personalizado() {
     });
     sairEdicao();
     mostrarAviso("Alterações salvas!");
+  }
+
+  function confirmarRemocao() {
+    if (!graficoParaRemover) return;
+    if (graficoParaRemover.id === editandoId) sairEdicao();
+    removerGrafico(graficoParaRemover.id);
+    setGraficoParaRemover(null);
   }
 
   function mostrarAviso(msg, duracao = 3000, erro = false) {
@@ -552,8 +569,7 @@ export default function Personalizado() {
                     className="pers-remover"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (emEdicao) sairEdicao();
-                      removerGrafico(g.id);
+                      setGraficoParaRemover(g);
                     }}
                     aria-label={`Remover gráfico ${g.titulo}`}
                   >
@@ -644,6 +660,46 @@ export default function Personalizado() {
           </div>
         )}
       </div>
+
+      {graficoParaRemover && (
+        <div
+          className="pers-confirmacao-overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setGraficoParaRemover(null);
+          }}
+        >
+          <section
+            className="pers-confirmacao-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="pers-confirmacao-titulo"
+            aria-describedby="pers-confirmacao-descricao"
+          >
+            <h2 id="pers-confirmacao-titulo">Tem certeza que quer excluir o gráfico?</h2>
+            <p id="pers-confirmacao-descricao">
+              O gráfico <strong>{graficoParaRemover.titulo}</strong> será removido do dashboard.
+            </p>
+            <div className="pers-confirmacao-acoes">
+              <button
+                type="button"
+                className="pers-confirmacao-cancelar"
+                onClick={() => setGraficoParaRemover(null)}
+                autoFocus
+              >
+                Não, manter gráfico
+              </button>
+              <button
+                type="button"
+                className="pers-confirmacao-excluir"
+                onClick={confirmarRemocao}
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
