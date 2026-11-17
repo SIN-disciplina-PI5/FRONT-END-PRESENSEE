@@ -752,3 +752,36 @@
   background: #171d2e;
   border-color: #69748d;
 }
+
+[data-theme="dark"] .diario-workspace .dw-switch-label,
+.diario-workspace .dw-switch-label {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 12px;
+  width: auto;
+  height: 48px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .diario-workspace .dw-switch-visual {
+  order: 2;
+  margin-left: 0;
+  border: 2px solid #52627a;
+  background: #20283a;
+}
+
+[data-theme="dark"] .diario-workspace .dw-switch-visual::after {
+  background: #aeb9ca;
+}
+
+[data-theme="dark"] .diario-workspace .dw-switch-label input:checked + .dw-switch-visual {
+  border-color: #8b75ff;
+  background: #633df2;
+}
+
+[data-theme="dark"] .diario-workspace .dw-switch-label input:checked + .dw-switch-visual::after {
+  background: #ffffff;
+}
