@@ -1347,7 +1347,7 @@ export default function Alunos() {
       {alunoEditando && (
         <div className="student-modal-overlay" onClick={() => setAlunoEditando(null)}>
           <div
-            className="student-modal"
+            className="student-modal edit-student-modal"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -1365,6 +1365,7 @@ export default function Alunos() {
 
             <form
               onSubmit={salvarEdicaoAluno}
+              className="edit-student-form"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}
             >
               <label
@@ -1447,6 +1448,7 @@ export default function Alunos() {
                       <button
                         key={id}
                         type="button"
+                        className={`edit-student-class-option${ativo ? " active" : ""}`}
                         onClick={() => setFormAluno({ ...formAluno, classId: id })}
                         style={{
                           padding: "7px 12px",
@@ -1537,6 +1539,7 @@ export default function Alunos() {
               >
                 <button
                   type="button"
+                  className="edit-student-cancel"
                   onClick={() => setAlunoEditando(null)}
                   style={{
                     padding: "9px 14px",

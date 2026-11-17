@@ -920,6 +920,60 @@
     color:#fff
 }
 
+/* Modal de edição de aluno no modo escuro */
+[data-theme="dark"] .edit-student-modal {
+    border: 1px solid #27344d;
+    background: #141b2d !important;
+    color: #f1f5f9;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+}
+
+[data-theme="dark"] .edit-student-modal h2,
+[data-theme="dark"] .edit-student-modal label,
+[data-theme="dark"] .edit-student-modal .edit-student-form > span {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .edit-student-modal input,
+[data-theme="dark"] .edit-student-modal textarea,
+[data-theme="dark"] .edit-student-modal select {
+    border: 1px solid #35465f !important;
+    background: #20283a !important;
+    color: #f1f5f9 !important;
+    color-scheme: dark;
+}
+
+[data-theme="dark"] .edit-student-modal input::placeholder,
+[data-theme="dark"] .edit-student-modal textarea::placeholder {
+    color: #a8b3c2;
+}
+
+[data-theme="dark"] .edit-student-modal .edit-student-class-option {
+    border: 1px solid #35465f !important;
+    background: #20283a !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .edit-student-modal .edit-student-class-option.active {
+    border: 2px solid #8b75ff !important;
+    background: #633df2 !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .edit-student-modal .close-modal {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .edit-student-modal .close-modal:hover {
+    color: #fff;
+}
+
+[data-theme="dark"] .edit-student-modal .edit-student-cancel {
+    border: 1px solid #35465f !important;
+    background: #20283a !important;
+    color: #f1f5f9 !important;
+}
+
 [data-theme="dark"] .student-actions button,[data-theme="dark"] .frequency-month-select,[data-theme="dark"] .notes-filter select {
     background:#1b2639;
     color:#e8edf5;
