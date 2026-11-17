@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useGraficos } from "../context/GraficosContext";
 import GraficoRenderer from "../components/GraficoRenderer";
+import api from "../services/api";
 import "../styles/Personalizado.css";
 
 const OPCOES_TIPO = [
@@ -28,6 +29,33 @@ const TAMANHOS = [
   { valor: "medio", rotulo: "M", nome: "Médio (2 cols)" },
   { valor: "grande", rotulo: "G", nome: "Grande (Largura total)" },
 ];
+
+// Quantos gráficos são atualizados ao mesmo tempo (evita sobrecarregar o /chat)
+const ATUALIZACOES_SIMULTANEAS = 3;
+
+// Dispersão usa pontos { x, y }; os demais tipos usam { nome, valor }
+const formatoDoTipo = (tipo) => (tipo === "dispersao" ? "xy" : "nomevalor");
+
+function formatoDosDados(dados) {
+  const primeiro = dados[0];
+  return primeiro && typeof primeiro === "object" && "x" in primeiro && "y" in primeiro
+    ? "xy"
+    : "nomevalor";
+}
+
+// Refaz a pergunta que originou o gráfico e devolve a versão atual dele
+async function buscarGraficoAtualizado(grafico) {
+  const res = await api.post("/chat", {
+    mensagem: grafico.promptOriginal || grafico.titulo,
+    historico: [],
+  });
+
+  const novo = res.data?.grafico;
+  if (!novo || !Array.isArray(novo.dados) || novo.dados.length === 0) {
+    throw new Error("O assistente não retornou dados para este gráfico.");
+  }
+  return novo;
+}
 
 export default function Personalizado() {
   const {
@@ -55,6 +83,9 @@ export default function Personalizado() {
   // Menu exportar e notificações
   const [menuExportarAberto, setMenuExportarAberto] = useState(false);
   const [avisoTopo, setAvisoTopo] = useState("");
+  const [avisoErro, setAvisoErro] = useState(false);
+  const [atualizando, setAtualizando] = useState(false);
+  const avisoTimerRef = useRef(null);
   const gridRef = useRef(null);
 
   const graficoEditando = graficos.find((g) => g.id === editandoId) || null;
@@ -96,9 +127,69 @@ export default function Personalizado() {
     mostrarAviso("Alterações salvas!");
   }
 
-  function mostrarAviso(msg) {
+  function mostrarAviso(msg, duracao = 3000, erro = false) {
+    clearTimeout(avisoTimerRef.current);
     setAvisoTopo(msg);
-    setTimeout(() => setAvisoTopo(""), 3000);
+    setAvisoErro(erro);
+    avisoTimerRef.current = setTimeout(() => setAvisoTopo(""), duracao);
+  }
+
+  // Evita setState/timer pendente se o usuário sair da página
+  useEffect(() => () => clearTimeout(avisoTimerRef.current), []);
+
+  // Recarrega os dados de todos os gráficos a partir do que está cadastrado agora
+  async function atualizarGraficos() {
+    if (atualizando || graficos.length === 0) return;
+    setAtualizando(true);
+
+    const alvos = [...graficos];
+    let sucessos = 0;
+    let falhas = 0;
+    let proximo = 0;
+
+    async function trabalhador() {
+      while (proximo < alvos.length) {
+        const g = alvos[proximo++];
+        try {
+          const novo = await buscarGraficoAtualizado(g);
+
+          // Mantém o tipo escolhido pelo usuário, a menos que os novos dados
+          // venham num formato que esse tipo não consegue desenhar.
+          const compativel = formatoDoTipo(g.tipo) === formatoDosDados(novo.dados);
+          const tipo = compativel ? g.tipo : novo.tipo || g.tipo;
+
+          atualizarGrafico(g.id, {
+            dados: novo.dados,
+            tipo,
+            eixoX: novo.eixoX ?? g.eixoX,
+            eixoY: novo.eixoY ?? g.eixoY,
+            ...(novo.subtitulo ? { subtitulo: novo.subtitulo } : {}),
+          });
+          if (g.id === editandoId && tipo !== g.tipo) setTipoTemp(tipo);
+          sucessos++;
+        } catch (error) {
+          console.error(`Erro ao atualizar o gráfico "${g.titulo}":`, error);
+          falhas++;
+        }
+      }
+    }
+
+    await Promise.all(
+      Array.from({ length: Math.min(ATUALIZACOES_SIMULTANEAS, alvos.length) }, trabalhador)
+    );
+    setAtualizando(false);
+
+    if (falhas === 0) {
+      mostrarAviso(sucessos === 1 ? "Gráfico atualizado!" : `${sucessos} gráficos atualizados!`);
+    } else if (sucessos === 0) {
+      mostrarAviso("Não foi possível atualizar agora. Tente novamente em instantes.", 5000, true);
+    } else {
+      mostrarAviso(
+        `${sucessos} de ${alvos.length} gráficos atualizados. Tente novamente para os demais.`,
+        5000,
+        true
+      );
+    }
   }
 
   // Arrastar o painel flutuante "Editar tipo de gráfico" pela tela
@@ -167,39 +258,6 @@ export default function Personalizado() {
 
     window.addEventListener("pointermove", aoMover);
     window.addEventListener("pointerup", aoSoltar);
-  }
-
-  function abrirChatIA() {
-    const fab = document.querySelector(".chat-fab");
-    if (fab) fab.click();
-  }
-
-  async function compartilharPainel() {
-    const resumo = graficos
-      .map(
-        (g) =>
-          `• ${g.titulo} (${NOMES_TIPO[g.tipo] || g.tipo}): ` +
-          (g.dados || []).map((d) => `${d.nome ?? d.x}: ${d.valor ?? d.y}`).join(", ")
-      )
-      .join("\n");
-
-    const textoCompartilhar = `PresenSee — Dashboard Personalizado\n\n${
-      resumo || "Nenhum gráfico criado ainda."
-    }`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "PresenSee — Gráficos Personalizados",
-          text: textoCompartilhar,
-        });
-      } else {
-        await navigator.clipboard.writeText(textoCompartilhar);
-        mostrarAviso("Resumo copiado para compartilhar!");
-      }
-    } catch {
-      /* cancelado */
-    }
   }
 
   function exportarCSV() {
@@ -300,19 +358,30 @@ export default function Personalizado() {
           </div>
 
           <div className="pers-acoes-topo">
-            {avisoTopo && <span className="pers-toast">{avisoTopo}</span>}
-
-            <button type="button" className="pers-btn-sec" onClick={abrirChatIA}>
-              + Perguntar à IA
-            </button>
+            {avisoTopo && (
+              <span
+                className={`pers-toast${avisoErro ? " pers-toast--erro" : ""}`}
+                role="status"
+              >
+                {avisoTopo}
+              </span>
+            )}
 
             <button
               type="button"
               className="pers-btn-sec"
-              onClick={compartilharPainel}
-              disabled={graficos.length === 0}
+              onClick={atualizarGraficos}
+              disabled={graficos.length === 0 || atualizando}
+              aria-busy={atualizando}
+              title="Recarrega os dados dos gráficos com as informações mais recentes"
             >
-              ↑ Compartilhar
+              <span
+                className={`pers-atualizar-icone${atualizando ? " girando" : ""}`}
+                aria-hidden="true"
+              >
+                ↻
+              </span>{" "}
+              {atualizando ? "Atualizando…" : "Atualizar"}
             </button>
 
             <div className="pers-export-wrap">
