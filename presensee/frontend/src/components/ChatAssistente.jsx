@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import GraficoRenderer from "./GraficoRenderer";
 import mascoteImg from "../assets/mascote-chat.png";
 import "../styles/ChatAssistente.css";
@@ -67,7 +67,9 @@ export default function ChatAssistente() {
   const [texto, setTexto] = useState("");
   const [digitando, setDigitando] = useState(false);
   const [carregandoHistorico, setCarregandoHistorico] = useState(true);
+  const mensagensContainerRef = useRef(null);
   const fimRef = useRef(null);
+  const chatWasOpenRef = useRef(false);
   const mensagensRef = useRef(historicoInicial.mensagens);
   const filaPersistenciaRef = useRef(Promise.resolve());
   const { adicionarGrafico } = useGraficos();
@@ -114,9 +116,6 @@ export default function ChatAssistente() {
       } catch (error) {
         if (!ativo) return;
         console.error("Não foi possível sincronizar o histórico do chat:", error);
-        setErroHistorico(
-          "Não foi possível sincronizar a conversa entre dispositivos. A cópia local foi mantida."
-        );
       } finally {
         if (ativo) setCarregandoHistorico(false);
       }
@@ -134,9 +133,6 @@ export default function ChatAssistente() {
       .then(() => setErroHistorico(""))
       .catch((error) => {
         console.error("Não foi possível sincronizar o histórico do chat:", error);
-        setErroHistorico(
-          "Conversa não sincronizada entre dispositivos. A cópia local foi mantida."
-        );
       });
   }
 
@@ -153,9 +149,23 @@ export default function ChatAssistente() {
     sincronizarHistorico(novasMensagens);
   }
 
+  useLayoutEffect(() => {
+    if (!aberto || !chatVisivel) {
+      chatWasOpenRef.current = false;
+      return;
+    }
+
+    const container = mensagensContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+    chatWasOpenRef.current = true;
+  }, [aberto, chatVisivel]);
+
   useEffect(() => {
-    if (aberto) fimRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensagens, digitando, aberto]);
+    if (chatWasOpenRef.current) {
+      fimRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [mensagens, digitando]);
 
   useEffect(() => {
     if (!aberto) return undefined;
@@ -248,7 +258,7 @@ export default function ChatAssistente() {
             </button>
           </header>
 
-          <div className="chat-mensagens" aria-live="polite">
+          <div ref={mensagensContainerRef} className="chat-mensagens" aria-live="polite">
             {mensagens.map((m) => (
               <div key={m.id} className={`chat-linha ${m.autor}`}>
                 {m.autor === "ia" && <img src={mascoteImg} alt="" className="chat-avatar" />}
