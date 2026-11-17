@@ -21,6 +21,9 @@ import {
   IconPersonalizado,
 } from "./Icons";
 
+const URL_TOTEM_FACIAL =
+  import.meta.env.VITE_TOTEM_URL || "https://reconhecimento-facial-presensee.vercel.app";
+
 function IconEscola() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -52,6 +55,20 @@ function IconSaudeSistema() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 12h4l3-7 4 14 3-7h4" />
+    </svg>
+  );
+}
+
+function IconReconhecimentoFacial() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
     </svg>
   );
 }
@@ -216,6 +233,25 @@ function Sidebar({ tipo = "monitor", mobileOpen = false, onCloseMobile }) {
             {!showCollapsed && <span className="menu-label">{label}</span>}
           </NavLink>
         ))}
+
+        {/* Redirecionamento para o Terminal de Reconhecimento Facial (apenas perfil monitor/gestor) */}
+        {!isAdmin && (
+          <a
+            href={URL_TOTEM_FACIAL}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Abrir Terminal de Reconhecimento Facial"
+            onClick={() => onCloseMobile?.()}
+          >
+            <IconReconhecimentoFacial />
+            {!showCollapsed && (
+              <span className="menu-label" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                Totem Facial
+                <span style={{ fontSize: "11px", opacity: 0.75 }} aria-hidden="true">↗</span>
+              </span>
+            )}
+          </a>
+        )}
       </nav>
 
       <button type="button" className="theme-toggle" onClick={alternarTema} title="Alternar Tema">
