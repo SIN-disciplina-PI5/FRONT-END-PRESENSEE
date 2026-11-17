@@ -183,6 +183,12 @@
   min-height: 120px;
   overflow: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pers-grid--canvas::-webkit-scrollbar {
+  display: none;
 }
 
 .pers-grid--canvas .pers-card {

@@ -78,12 +78,12 @@
    FORMULÁRIO
 ========================= */
 
-form {
+.cadastro-escola-card form {
   display: flex;
   flex-direction: column;
 }
 
-label {
+.cadastro-escola-card label {
   margin-bottom: 7px;
   color: #5135c9;
   font-weight: bold;
@@ -197,6 +197,15 @@ label {
   line-height: 1.5;
 }
 
+.cadastro-mensagem-sucesso {
+  color: #15803d;
+  background-color: #dcfce7;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
 .credenciais-box {
   background: #f7f7fb;
   border-radius: 14px;
@@ -226,4 +235,73 @@ label {
 .credenciais-box strong {
   font-size: 15px;
   color: #1a1030;
+}
+
+[data-theme="dark"] .cadastro-escola-page {
+  background: #0b1220;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cadastro-escola-card {
+  background: #141b2d;
+  color: #f1f5f9;
+  border: 1px solid #27344d;
+}
+
+[data-theme="dark"] .cadastro-escola-header h1,
+[data-theme="dark"] .cadastro-confirmacao h2 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .painel-interno-tag {
+  background: #3b321d;
+  color: #f5c451;
+}
+
+[data-theme="dark"] .step {
+  color: #8c96aa;
+}
+
+[data-theme="dark"] .step-linha {
+  background: #35465f;
+}
+
+[data-theme="dark"] .cadastro-escola-card .cadastro-input {
+  background: #0f1828;
+  border-color: #35465f;
+  color: #f1f5f9;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .cadastro-escola-card .cadastro-input::placeholder {
+  color: #a8b3c2;
+  opacity: 1;
+}
+
+[data-theme="dark"] .cadastro-button-voltar {
+  background: #20283a;
+  border-color: #35465f;
+  color: #e8edf5;
+}
+
+[data-theme="dark"] .cadastro-confirmacao p {
+  color: #a8b3c2;
+}
+
+[data-theme="dark"] .cadastro-escola-card .cadastro-mensagem-sucesso {
+  background: #173a30;
+  color: #92efbd;
+}
+
+[data-theme="dark"] .credenciais-box {
+  background: #1c2639;
+  border: 1px solid #27344d;
+}
+
+[data-theme="dark"] .credenciais-box span {
+  color: #a8b3c2;
+}
+
+[data-theme="dark"] .credenciais-box strong {
+  color: #f1f5f9;
 }

@@ -59,6 +59,7 @@ function carregarHistorico(chave) {
 
 export default function ChatAssistente() {
   const [aberto, setAberto] = useState(false);
+  const [chatVisivel, setChatVisivel] = useState(false);
   const [chaveHistorico] = useState(obterChaveHistorico);
   const [historicoInicial] = useState(() => carregarHistorico(chaveHistorico));
   const [mensagens, setMensagens] = useState(historicoInicial.mensagens);
@@ -71,6 +72,18 @@ export default function ChatAssistente() {
   const filaPersistenciaRef = useRef(Promise.resolve());
   const { adicionarGrafico } = useGraficos();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (aberto) {
+      setChatVisivel(true);
+      return undefined;
+    }
+
+    if (!chatVisivel) return undefined;
+
+    const timeout = window.setTimeout(() => setChatVisivel(false), 180);
+    return () => window.clearTimeout(timeout);
+  }, [aberto, chatVisivel]);
 
   useEffect(() => {
     let ativo = true;
@@ -221,8 +234,13 @@ export default function ChatAssistente() {
 
   return (
     <>
-      {aberto && (
-        <section className="chat-janela" role="dialog" aria-label="Assistente PresenSee">
+      {chatVisivel && (
+        <section
+          className={`chat-janela${aberto ? "" : " chat-janela--fechando"}`}
+          role="dialog"
+          aria-label="Assistente PresenSee"
+          aria-hidden={!aberto}
+        >
           <header className="chat-topo">
             <strong>✦ Assistente PresenSee</strong>
             <button type="button" onClick={() => setAberto(false)} aria-label="Fechar chat">

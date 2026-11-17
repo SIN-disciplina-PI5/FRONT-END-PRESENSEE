@@ -5,10 +5,23 @@
   background: #22d3ee;
   box-shadow: 0 8px 24px rgba(99, 61, 242, .45);
   cursor: pointer; display: block;
-  transition: transform .2s;
+  animation: chat-fab-pulse 2.8s ease-in-out infinite;
+  transition: transform .2s, box-shadow .2s;
 }
-.chat-fab:hover { transform: scale(1.06); }
-.chat-fab img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chat-fab:hover { transform: scale(1.06); animation-play-state: paused; }
+.chat-fab[aria-expanded="true"] { transform: scale(.94); animation: none; }
+.chat-fab:focus-visible { outline: 3px solid #a99aff; outline-offset: 4px; }
+.chat-fab img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1);
+}
+.chat-fab:hover img { transform: scale(1.08) rotate(4deg); }
+.chat-fab[aria-expanded="true"] img { transform: scale(.88) rotate(-12deg); }
+
+@keyframes chat-fab-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(99, 61, 242, .4), 0 0 0 0 rgba(99, 61, 242, .2); }
+  50% { box-shadow: 0 10px 28px rgba(99, 61, 242, .55), 0 0 0 9px rgba(99, 61, 242, 0); }
+}
 
 
 .chat-janela {
@@ -17,6 +30,19 @@
   display: flex; flex-direction: column; overflow: hidden;
   color: #1a1a1a; background: #fff; border: 2px solid #633df2; border-radius: 16px;
   box-shadow: 0 16px 40px rgba(20, 10, 60, .28);
+  transform-origin: bottom right;
+  animation: chat-janela-entrar .28s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes chat-janela-entrar {
+  from { opacity: 0; transform: translateY(16px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-janela--fechando {
+  pointer-events: none;
+  animation: chat-janela-sair .16s ease-in both;
+}
+@keyframes chat-janela-sair {
+  to { opacity: 0; transform: translateY(10px) scale(.96); }
 }
 [data-theme="dark"] .chat-janela {
   color: #e8edf5; background: #131c2e; border-color: #263449;
@@ -39,7 +65,13 @@
 
 
 .chat-mensagens { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
-.chat-linha { display: flex; align-items: flex-start; gap: 8px; }
+.chat-linha {
+  display: flex; align-items: flex-start; gap: 8px;
+  animation: chat-mensagem-entrar .3s cubic-bezier(.2, .8, .2, 1) both;
+}
+.chat-linha:nth-child(2) { animation-delay: .035s; }
+.chat-linha:nth-child(3) { animation-delay: .07s; }
+.chat-linha:nth-child(4) { animation-delay: .105s; }
 .chat-linha.user { justify-content: flex-end; }
 .chat-avatar { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; object-fit: cover; }
 .chat-balao { max-width: 82%; padding: 10px 12px; border-radius: 14px; font-size: 13px; line-height: 1.45; }
@@ -49,6 +81,10 @@
 [data-theme="dark"] .chat-linha.ia .chat-balao { background: #1d2940; color: #e8edf5; }
 [data-theme="dark"] .chat-linha.user .chat-balao { background: #6747e8; color: #fff; }
 
+@keyframes chat-mensagem-entrar {
+  from { opacity: 0; transform: translateY(9px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .chat-grafico {
   margin-top: 10px; padding: 10px; background: #fff; color: #1a1a1a;
@@ -78,7 +114,7 @@
 .chat-digitando { display: flex; gap: 4px; padding: 14px 16px; }
 .chat-digitando i {
   width: 6px; height: 6px; border-radius: 50%; background: #8b6cf6;
-  animation: chat-pulo 1s infinite ease-in-out;
+  animation: chat-pulo .9s infinite ease-in-out;
 }
 .chat-digitando i:nth-child(2) { animation-delay: .15s; }
 .chat-digitando i:nth-child(3) { animation-delay: .3s; }
@@ -98,8 +134,12 @@
 [data-theme="dark"] .chat-form input:focus { outline-color: #8f7bff; }
 .chat-form button {
   width: 40px; border: 0; border-radius: 10px; background: #633df2; color: #fff; cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
-.chat-form button:hover:not(:disabled) { background: #4b25c9; }
+.chat-form button:hover:not(:disabled) {
+  background: #4b25c9; transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(99, 61, 242, .28);
+}
 .chat-form button:disabled { opacity: .5; cursor: not-allowed; }
 [data-theme="dark"] .chat-form button { background: #6747e8; color: #fff; }
 [data-theme="dark"] .chat-form button:hover:not(:disabled) { background: #7c5cff; }
@@ -147,4 +187,15 @@ section.chat-janela form.chat-form button {
   justify-content: center !important;
   padding: 0 !important;
   box-sizing: border-box !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-fab,
+  .chat-fab img,
+  .chat-janela,
+  .chat-linha,
+  .chat-form button {
+    animation: none !important;
+    transition: none !important;
+  }
 }
