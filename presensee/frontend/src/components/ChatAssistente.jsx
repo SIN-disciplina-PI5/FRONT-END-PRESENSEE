@@ -4,31 +4,13 @@ import mascoteImg from "../assets/mascote-chat.png";
 import "../styles/ChatAssistente.css";
 import { useNavigate } from "react-router-dom";
 import { useGraficos } from "../context/GraficosContext";
+import api from "../services/api";
 
 const BOAS_VINDAS = {
   id: "boas-vindas",
   autor: "ia",
   texto: "Olá! Sou o assistente do PresenSee. Pergunte sobre a escola ou peça um gráfico.",
 };
-
-
-function respostaFalsa() {
-  return {
-    texto: "Analisei os dados dos alunos e identifiquei a seguinte distribuição por bairros do Recife:",
-    grafico: {
-      titulo: "Alunos por bairro de Recife-PE",
-      subtitulo: "Porcentagem de alunos em cada bairro",
-      tipo: "colunas",
-      dados: [
-        { nome: "Ibura", valor: 25 },
-        { nome: "Várzea", valor: 22 },
-        { nome: "Boa Viagem", valor: 20 },
-        { nome: "Cohab", valor: 18 },
-        { nome: "Bom Martins", valor: 15 },
-      ],
-    },
-  };
-}
 
 export default function ChatAssistente() {
   const [aberto, setAberto] = useState(false);
@@ -38,94 +20,84 @@ export default function ChatAssistente() {
   const fimRef = useRef(null);
   const { adicionarGrafico } = useGraficos();
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     if (aberto) fimRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens, digitando, aberto]);
 
-  
   useEffect(() => {
     if (!aberto) return undefined;
     const aoTeclar = (e) => e.key === "Escape" && setAberto(false);
     document.addEventListener("keydown", aoTeclar);
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [aberto]);
+
   function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
+    const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
+    adicionarGrafico({
+      titulo,
+      subtitulo,
+      tipo,
+      dados,
+      eixoX,
+      eixoY,
+      promptOriginal: mensagem.promptOriginal || titulo,
+    });
 
-  // marca a mensagem como "já adicionada" para trocar o botão
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
+    setMensagens((prev) =>
+      prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
+    );
+  }
 
-function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
+  function verPersonalizado() {
+    setAberto(false);
+    navigate("/personalizado");
+  }
 
-  // marca a mensagem como "já adicionada" para trocar o botão
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
-
-function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
-
-  // marca a mensagem como "já adicionada" para trocar o botão
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
-function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
-
-  // marca a mensagem como "já adicionada" para trocar o botão
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
-function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
-
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
-
-function adicionarNoDashboard(mensagem) {
-  const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
-  adicionarGrafico({ titulo, subtitulo, tipo, dados, eixoX, eixoY });
-
-  
-  setMensagens((prev) =>
-    prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
-  );
-}
-
-function verPersonalizado() {
-  setAberto(false);
-  navigate("/personalizado");
-}
-
-
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault();
     const pergunta = texto.trim();
     if (!pergunta || digitando) return;
-    
-    setMensagens((prev) => [...prev, { id: crypto.randomUUID(), autor: "user", texto: pergunta }]);
+
+    const historicoAtual = mensagens.slice(-6);
+    setMensagens((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), autor: "user", texto: pergunta },
+    ]);
     setTexto("");
     setDigitando(true);
 
-    setTimeout(() => {
-      setMensagens((prev) => [...prev, { id: crypto.randomUUID(), autor: "ia", ...respostaFalsa() }]);
+    try {
+      const res = await api.post("/chat", {
+        mensagem: pergunta,
+        historico: historicoAtual,
+      });
+
+      setMensagens((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          autor: "ia",
+          texto: res.data.texto || "Não consegui processar a resposta.",
+          grafico: res.data.grafico || null,
+          promptOriginal: pergunta,
+        },
+      ]);
+    } catch (error) {
+      console.error("Erro no chat:", error);
+      setMensagens((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          autor: "ia",
+          texto:
+            error.response?.data?.error ||
+            "Não foi possível conectar ao assistente agora. Tente novamente em instantes.",
+        },
+      ]);
+    } finally {
       setDigitando(false);
-    }, 900);
+    }
   }
 
   return (
@@ -151,17 +123,21 @@ function verPersonalizado() {
                       <span>{m.grafico.subtitulo}</span>
                       <GraficoRenderer grafico={m.grafico} altura={160} />
                       {m.adicionado ? (
-           <div className="chat-adicionado">
-             <span>✓ Adicionado</span>
-              <button type="button" onClick={verPersonalizado}>
-                  Ver em Personalizado
-                     </button>
+                        <div className="chat-adicionado">
+                          <span>✓ Adicionado</span>
+                          <button type="button" onClick={verPersonalizado}>
+                            Ver em Personalizado
+                          </button>
                         </div>
-) : (
-  <button type="button" className="chat-add" onClick={() => adicionarNoDashboard(m)}>
-    Adicionar no Dashboard
-  </button>
-)}
+                      ) : (
+                        <button
+                          type="button"
+                          className="chat-add"
+                          onClick={() => adicionarNoDashboard(m)}
+                        >
+                          Adicionar no Dashboard
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -172,7 +148,9 @@ function verPersonalizado() {
               <div className="chat-linha ia">
                 <img src={mascoteImg} alt="" className="chat-avatar" />
                 <div className="chat-balao chat-digitando" aria-label="Assistente digitando">
-                  <i /><i /><i />
+                  <i />
+                  <i />
+                  <i />
                 </div>
               </div>
             )}
@@ -190,7 +168,9 @@ function verPersonalizado() {
               ➤
             </button>
           </form>
-          <small className="chat-aviso">O assistente pode cometer erros. Verifique as informações.</small>
+          <small className="chat-aviso">
+            O assistente pode cometer erros. Verifique as informações.
+          </small>
         </section>
       )}
 
