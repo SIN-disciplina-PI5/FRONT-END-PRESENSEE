@@ -101,7 +101,7 @@
 [data-theme="dark"] .report-filtro { color: #bbc5e2; }
 [data-theme="dark"] .report-select-wrap { background: #1a2440; border-color: #3a4563; color: #adb9ef; }
 [data-theme="dark"] .report-select-wrap select { color: #f4f5ff; }
-[data-theme="dark"] .report-select-wrap select option { color: #19213b; background: #fff; }
+[data-theme="dark"] .report-select-wrap select option { color: #f1f5f9; background: #141b2d; }
 [data-theme="dark"] .report-card p { color: #a999ff; }
 [data-theme="dark"] .report-card-icon--frequencia { color: #bdacff; background: #33274f; }
 [data-theme="dark"] .report-card-icon--alunos { color: #8cddff; background: #1b3651; }

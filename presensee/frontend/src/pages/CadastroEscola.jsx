@@ -264,7 +264,7 @@ function CadastroEscola() {
           <div className="cadastro-confirmacao">
             <div className="confirmacao-icone">✓</div>
             <h2>Escola cadastrada com sucesso!</h2>
-            <p style={{ color: "#15803d", backgroundColor: "#dcfce7", padding: "8px", borderRadius: "4px", fontSize: "14px", marginBottom: "16px" }}>
+            <p className="cadastro-mensagem-sucesso">
               Dados guardados permanentemente na base de dados (PostgreSQL).
             </p>
             <p>

@@ -269,12 +269,12 @@
   margin-bottom: 26px;
 }
 
-form {
+.login-card form {
   display: flex;
   flex-direction: column;
 }
 
-form label {
+.login-card form label {
   margin-bottom: 7px;
   color: #5135c9;
   font-weight: bold;
@@ -572,4 +572,47 @@ form label {
   .login-page .scan-face,
   .login-page .scan-dot,
   .login-page .scan-badge { animation: none; }
+}
+
+[data-theme="dark"] .login-card {
+  background-color: rgba(15, 23, 42, 0.96);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .login-card h1 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .login-card h1 span {
+  color: #b8a6ff;
+}
+
+[data-theme="dark"] .login-subtitle {
+  color: #a8b3c2;
+}
+
+[data-theme="dark"] .login-card form label {
+  color: #c6b7ff;
+}
+
+[data-theme="dark"] .login-input {
+  background: #0f1828;
+  border-color: #34445d;
+  color: #f1f5f9;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .login-input::placeholder {
+  color: #a8b3c2;
+  opacity: 1;
+}
+
+[data-theme="dark"] .show-password,
+[data-theme="dark"] .create-account {
+  color: #b8a6ff;
+}
+
+[data-theme="dark"] .error-message {
+  background-color: #3a2028;
+  color: #ff9a9a;
 }
