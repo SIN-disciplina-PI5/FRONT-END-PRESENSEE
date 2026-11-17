@@ -12,14 +12,133 @@ const BOAS_VINDAS = {
   texto: "Olá! Sou o assistente do PresenSee. Pergunte sobre a escola ou peça um gráfico.",
 };
 
+function obterChaveHistorico() {
+  try {
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+    const identificador = usuario.id || usuario._id || usuario.email || "padrao";
+    return `presensee_chat_historico_${encodeURIComponent(String(identificador).toLowerCase())}`;
+  } catch (error) {
+    console.error("Não foi possível identificar o usuário do histórico do chat:", error);
+    return "presensee_chat_historico_padrao";
+  }
+}
+
+function historicoValido(mensagens) {
+  return (
+    Array.isArray(mensagens) &&
+    mensagens.every(
+      (mensagem) =>
+        mensagem &&
+        typeof mensagem.id === "string" &&
+        (mensagem.autor === "user" || mensagem.autor === "ia") &&
+        typeof mensagem.texto === "string"
+    )
+  );
+}
+
+function carregarHistorico(chave) {
+  try {
+    const salvo = localStorage.getItem(chave);
+    if (!salvo) return { mensagens: [BOAS_VINDAS], erro: "" };
+
+    const mensagens = JSON.parse(salvo);
+    if (!historicoValido(mensagens)) throw new Error("Formato de histórico inválido.");
+
+    return {
+      mensagens: mensagens.length ? mensagens : [BOAS_VINDAS],
+      erro: "",
+    };
+  } catch (error) {
+    console.error("Não foi possível carregar o histórico do chat:", error);
+    return {
+      mensagens: [BOAS_VINDAS],
+      erro: "Não foi possível carregar o histórico salvo desta conversa.",
+    };
+  }
+}
+
 export default function ChatAssistente() {
   const [aberto, setAberto] = useState(false);
-  const [mensagens, setMensagens] = useState([BOAS_VINDAS]);
+  const [chaveHistorico] = useState(obterChaveHistorico);
+  const [historicoInicial] = useState(() => carregarHistorico(chaveHistorico));
+  const [mensagens, setMensagens] = useState(historicoInicial.mensagens);
+  const [erroHistorico, setErroHistorico] = useState(historicoInicial.erro);
   const [texto, setTexto] = useState("");
   const [digitando, setDigitando] = useState(false);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(true);
   const fimRef = useRef(null);
+  const mensagensRef = useRef(historicoInicial.mensagens);
+  const filaPersistenciaRef = useRef(Promise.resolve());
   const { adicionarGrafico } = useGraficos();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarHistoricoDoServidor() {
+      try {
+        const { data } = await api.get("/chat/historico");
+        const mensagensServidor = data?.mensagens;
+        if (!historicoValido(mensagensServidor)) {
+          throw new Error("O servidor retornou um histórico inválido.");
+        }
+
+        if (!ativo) return;
+
+        if (mensagensServidor.length > 0) {
+          mensagensRef.current = mensagensServidor;
+          setMensagens(mensagensServidor);
+          try {
+            localStorage.setItem(chaveHistorico, JSON.stringify(mensagensServidor));
+          } catch (error) {
+            console.error("Não foi possível atualizar a cópia local do histórico:", error);
+          }
+        } else if (mensagensRef.current.length > 1) {
+          await api.put("/chat/historico", { mensagens: mensagensRef.current });
+        }
+
+        if (ativo) setErroHistorico("");
+      } catch (error) {
+        if (!ativo) return;
+        console.error("Não foi possível sincronizar o histórico do chat:", error);
+        setErroHistorico(
+          "Não foi possível sincronizar a conversa entre dispositivos. A cópia local foi mantida."
+        );
+      } finally {
+        if (ativo) setCarregandoHistorico(false);
+      }
+    }
+
+    void carregarHistoricoDoServidor();
+    return () => {
+      ativo = false;
+    };
+  }, [chaveHistorico]);
+
+  function sincronizarHistorico(mensagens) {
+    filaPersistenciaRef.current = filaPersistenciaRef.current
+      .then(() => api.put("/chat/historico", { mensagens }))
+      .then(() => setErroHistorico(""))
+      .catch((error) => {
+        console.error("Não foi possível sincronizar o histórico do chat:", error);
+        setErroHistorico(
+          "Conversa não sincronizada entre dispositivos. A cópia local foi mantida."
+        );
+      });
+  }
+
+  function atualizarMensagens(atualizar) {
+    const novasMensagens = atualizar(mensagensRef.current);
+    mensagensRef.current = novasMensagens;
+    setMensagens(novasMensagens);
+
+    try {
+      localStorage.setItem(chaveHistorico, JSON.stringify(novasMensagens));
+    } catch (error) {
+      console.error("Não foi possível salvar o histórico do chat:", error);
+    }
+    sincronizarHistorico(novasMensagens);
+  }
 
   useEffect(() => {
     if (aberto) fimRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,7 +163,7 @@ export default function ChatAssistente() {
       promptOriginal: mensagem.promptOriginal || titulo,
     });
 
-    setMensagens((prev) =>
+    atualizarMensagens((prev) =>
       prev.map((m) => (m.id === mensagem.id ? { ...m, adicionado: true } : m))
     );
   }
@@ -57,10 +176,10 @@ export default function ChatAssistente() {
   async function enviar(e) {
     e.preventDefault();
     const pergunta = texto.trim();
-    if (!pergunta || digitando) return;
+    if (!pergunta || digitando || carregandoHistorico) return;
 
     const historicoAtual = mensagens.slice(-6);
-    setMensagens((prev) => [
+    atualizarMensagens((prev) => [
       ...prev,
       { id: crypto.randomUUID(), autor: "user", texto: pergunta },
     ]);
@@ -73,7 +192,7 @@ export default function ChatAssistente() {
         historico: historicoAtual,
       });
 
-      setMensagens((prev) => [
+      atualizarMensagens((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
@@ -85,7 +204,7 @@ export default function ChatAssistente() {
       ]);
     } catch (error) {
       console.error("Erro no chat:", error);
-      setMensagens((prev) => [
+      atualizarMensagens((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
@@ -163,14 +282,29 @@ export default function ChatAssistente() {
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Pergunte algo sobre a escola..."
               aria-label="Mensagem para o assistente"
+              disabled={carregandoHistorico}
             />
-            <button type="submit" disabled={!texto.trim() || digitando} aria-label="Enviar">
+            <button
+              type="submit"
+              disabled={!texto.trim() || digitando || carregandoHistorico}
+              aria-label="Enviar"
+            >
               ➤
             </button>
           </form>
+          {carregandoHistorico && (
+            <small className="chat-sincronizando" role="status">
+              Sincronizando histórico...
+            </small>
+          )}
           <small className="chat-aviso">
             O assistente pode cometer erros. Verifique as informações.
           </small>
+          {erroHistorico && (
+            <small className="chat-erro" role="alert">
+              {erroHistorico}
+            </small>
+          )}
         </section>
       )}
 
