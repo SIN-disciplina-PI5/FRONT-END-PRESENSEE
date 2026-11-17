@@ -32,6 +32,18 @@ const limparDescricaoIncidente = (texto) =>
     .replace(/\|\s*\[Atestado:\s*https?:\/\/[^\]]+\]/gi, "")
     .trim();
 
+function formatarTurmaCompleta(classObj, fallbackNome) {
+  const nome = classObj?.name || classObj?.nome || fallbackNome || "Sem turma";
+  const curso = classObj?.course || classObj?.curso || "";
+  const turno = classObj?.shift || classObj?.turno || "";
+  const detalhe = [curso, turno].filter(Boolean).join(" · ");
+  return {
+    nome,
+    detalhe,
+    rotuloCompleto: detalhe ? `${nome} (${detalhe})` : nome,
+  };
+}
+
 /* ---------- Helpers de data (sempre em horário local, formato AAAA-MM-DD) ---------- */
 const paraISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const deISO = (s) => { const [a, m, d] = s.split("-").map(Number); return new Date(a, m - 1, d); };
@@ -220,7 +232,7 @@ function SeletorPeriodo({ inicio, fim, onChange }) {
 
 export default function Relatorios() {
   const [tipo, setTipo] = useState("frequencia");
-  const [turmaFiltro, setTurmaFiltro] = useState("Todas as turmas");
+  const [turmaFiltro, setTurmaFiltro] = useState("TODAS");
 
   const [alunosData, setAlunosData] = useState([]);
   const [chamadasData, setChamadasData] = useState([]);
@@ -255,7 +267,12 @@ export default function Relatorios() {
         const todosIncidentes = Array.isArray(resIncidentes.data) ? resIncidentes.data : [];
         const todasTurmas = Array.isArray(resTurmas.data) ? resTurmas.data : [];
 
-        // Agrupa chamadas por aluno (ABSENT = falta, EXCUSED = justificada/abonada, PRESENT = presente)
+        const mapaTurmasPorId = new Map();
+        todasTurmas.forEach((t) => {
+          const tid = String(t.id || t._id);
+          mapaTurmasPorId.set(tid, t);
+        });
+
         const chamadasPorAluno = new Map();
         todasChamadas.forEach((c) => {
           const sid = String(c.studentId);
@@ -263,7 +280,6 @@ export default function Relatorios() {
           chamadasPorAluno.get(sid).push(c);
         });
 
-        // Agrupa pendências abertas por aluno a partir de /incidents
         const pendenciasPorAluno = new Map();
         todosIncidentes.forEach((inc) => {
           if (!inc.studentId) return;
@@ -276,10 +292,13 @@ export default function Relatorios() {
 
         const alunosFormatados = (resAlunos.data || []).map((a) => {
           const sid = String(a.id || a._id);
+          const turmaId = String(a.classId || a.class?.id || "");
+          const turmaObj = a.class || mapaTurmasPorId.get(turmaId) || null;
+          const infoTurma = formatarTurmaCompleta(turmaObj, a.turma);
+
           const chamadasAluno = chamadasPorAluno.get(sid) || [];
           const faltasNaoJustificadas = chamadasAluno.filter((c) => c.status === "ABSENT").length;
 
-          // Monta histórico unificado de faltas (ABSENT + EXCUSED) para a aba "Histórico de faltas"
           const historicoFaltasReais = chamadasAluno
             .filter((c) => c.status === "ABSENT" || c.status === "EXCUSED")
             .map((c) => ({
@@ -291,7 +310,10 @@ export default function Relatorios() {
             ...a,
             id: sid,
             nome: a.name || a.nome,
-            turma: a.class?.name || a.turma || "Sem turma",
+            turmaId: turmaId || infoTurma.rotuloCompleto,
+            turma: infoTurma.nome,
+            turmaDetalhe: infoTurma.detalhe,
+            turmaCompleta: infoTurma.rotuloCompleto,
             frequencia: a.frequency ?? a.attendanceRate ?? a.frequencia ?? 100,
             faltas: chamadasAluno.length > 0 ? faltasNaoJustificadas : (a.absences ?? a.faltas ?? 0),
             historicoFaltas: historicoFaltasReais,
@@ -327,17 +349,45 @@ export default function Relatorios() {
     fetchData();
   }, []);
 
-  const NOMES_TURMAS = useMemo(() => {
-    if (turmasData.length > 0) {
-      return [...new Set(turmasData.map((t) => t.name || t.nome || t).filter(Boolean))].sort((a, b) =>
-        String(a).localeCompare(String(b), "pt-BR", { numeric: true })
-      );
-    }
-    const turmasExtraidas = alunosData.map((a) => a.turma || a.class?.name).filter(Boolean);
-    return [...new Set(turmasExtraidas)].sort((a, b) =>
-      String(a).localeCompare(String(b), "pt-BR", { numeric: true })
+  // Lista padronizada de turmas com ID + Rótulo Completo: "1º Ano A (Ensino Fundamental · Tarde)"
+  const LISTA_TURMAS = useMemo(() => {
+    const mapa = new Map();
+
+    turmasData.forEach((t) => {
+      const id = String(t.id || t._id);
+      const info = formatarTurmaCompleta(t, t.name);
+      mapa.set(id, {
+        id,
+        nome: info.nome,
+        detalhe: info.detalhe,
+        rotuloCompleto: info.rotuloCompleto,
+        attendanceRate: t.attendanceRate,
+      });
+    });
+
+    alunosData.forEach((a) => {
+      const id = String(a.turmaId);
+      if (id && !mapa.has(id)) {
+        mapa.set(id, {
+          id,
+          nome: a.turma,
+          detalhe: a.turmaDetalhe,
+          rotuloCompleto: a.turmaCompleta,
+          attendanceRate: undefined,
+        });
+      }
+    });
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.rotuloCompleto.localeCompare(b.rotuloCompleto, "pt-BR", { numeric: true })
     );
   }, [turmasData, alunosData]);
+
+  const nomeTurmaSelecionada = useMemo(() => {
+    if (turmaFiltro === "TODAS") return "Todas as turmas";
+    const encontrada = LISTA_TURMAS.find((t) => t.id === turmaFiltro);
+    return encontrada ? encontrada.rotuloCompleto : turmaFiltro;
+  }, [turmaFiltro, LISTA_TURMAS]);
 
   const estudantes = useMemo(
     () =>
@@ -345,7 +395,7 @@ export default function Relatorios() {
         const freq = a.frequencia ?? 100;
         return (
           Number.isFinite(Number(freq)) &&
-          (turmaFiltro === "Todas as turmas" || a.turma === turmaFiltro)
+          (turmaFiltro === "TODAS" || String(a.turmaId) === String(turmaFiltro))
         );
       }),
     [alunosData, turmaFiltro]
@@ -375,23 +425,24 @@ export default function Relatorios() {
 
   const turmas = useMemo(
     () =>
-      NOMES_TURMAS.filter((t) => turmaFiltro === "Todas as turmas" || t === turmaFiltro).map(
-        (nome) => {
-          const lista = estudantes.filter((a) => a.turma === nome);
-          const faltas = faltasPeriodo.filter((f) => f.aluno.turma === nome);
-          const acoes = intervencoesPeriodo.filter((i) => i.aluno.turma === nome);
-          const turmaApi = turmasData.find((t) => (t.name || t.nome) === nome);
+      LISTA_TURMAS.filter((t) => turmaFiltro === "TODAS" || String(t.id) === String(turmaFiltro)).map(
+        (turmaObj) => {
+          const lista = estudantes.filter((a) => String(a.turmaId) === String(turmaObj.id));
+          const faltas = faltasPeriodo.filter((f) => String(f.aluno.turmaId) === String(turmaObj.id));
+          const acoes = intervencoesPeriodo.filter((i) => String(i.aluno.turmaId) === String(turmaObj.id));
 
-          // Usa a taxa ponderada real da turma (PRESENT + EXCUSED) se houver chamadas, ou média dos alunos
           const freqMedia =
             lista.length === 0
               ? 0
-              : turmaApi?.attendanceRate !== undefined
-              ? turmaApi.attendanceRate
+              : turmaObj.attendanceRate !== undefined
+              ? turmaObj.attendanceRate
               : media(lista.map((a) => a.frequencia));
 
           return {
-            turma: nome,
+            id: turmaObj.id,
+            turma: turmaObj.nome,
+            detalhe: turmaObj.detalhe,
+            turmaCompleta: turmaObj.rotuloCompleto,
             alunos: lista.length,
             frequencia: freqMedia,
             baixo: lista.filter((a) => risco(a.frequencia) === "Baixo").length,
@@ -404,7 +455,7 @@ export default function Relatorios() {
           };
         }
       ),
-    [NOMES_TURMAS, estudantes, faltasPeriodo, intervencoesPeriodo, turmaFiltro, turmasData]
+    [LISTA_TURMAS, estudantes, faltasPeriodo, intervencoesPeriodo, turmaFiltro]
   );
 
   const freqGeral = useMemo(() => {
@@ -427,21 +478,21 @@ export default function Relatorios() {
   ];
 
   const colunas = {
-    frequencia: ["Turma", "Alunos", "Frequência"],
-    risco: ["Turma", "Médio risco", "Alto risco"],
-    faltas: ["Turma", "Faltas não justificadas", "Justificadas / Abonadas"],
-    cadastro: ["Turma", "Alunos", "Frequência"],
-    acompanhamento: ["Turma", "Com pendências", "Em risco"],
-    intervencoes: ["Turma", "Intervenções no período", "Alunos"],
+    frequencia: ["Turma / Modalidade", "Alunos", "Frequência"],
+    risco: ["Turma / Modalidade", "Médio risco", "Alto risco"],
+    faltas: ["Turma / Modalidade", "Faltas não justificadas", "Justificadas / Abonadas"],
+    cadastro: ["Turma / Modalidade", "Alunos", "Frequência"],
+    acompanhamento: ["Turma / Modalidade", "Com pendências", "Em risco"],
+    intervencoes: ["Turma / Modalidade", "Intervenções no período", "Alunos"],
   }[tipo];
 
   const linhasResumo = turmas.map((t) => {
     switch (tipo) {
-      case "risco": return [t.turma, t.medio, t.alto];
-      case "faltas": return [t.turma, t.faltas, t.justificadas];
-      case "acompanhamento": return [t.turma, t.comPendencias, t.medio + t.alto];
-      case "intervencoes": return [t.turma, t.intervencoes, t.alunos];
-      default: return [t.turma, t.alunos, `${t.frequencia}%`];
+      case "risco": return [t.turmaCompleta, t.medio, t.alto];
+      case "faltas": return [t.turmaCompleta, t.faltas, t.justificadas];
+      case "acompanhamento": return [t.turmaCompleta, t.comPendencias, t.medio + t.alto];
+      case "intervencoes": return [t.turmaCompleta, t.intervencoes, t.alunos];
+      default: return [t.turmaCompleta, t.alunos, `${t.frequencia}%`];
     }
   });
 
@@ -458,7 +509,7 @@ export default function Relatorios() {
       return [
         a.registration || a.matricula || a.id,
         a.nome,
-        a.turma,
+        a.turmaCompleta,
         `${freq}%`,
         risco(freq),
         a.faltas,
@@ -474,7 +525,7 @@ export default function Relatorios() {
     const cabAluno = [
       "Matrícula",
       "Nome completo",
-      "Turma",
+      "Turma / Modalidade",
       "Frequência atual",
       "Risco atual",
       "Faltas não justificadas",
@@ -485,8 +536,8 @@ export default function Relatorios() {
     ];
 
     const alunosOrdenados = [...estudantes].sort((a, b) => {
-      const turmaA = a.turma || "";
-      const turmaB = b.turma || "";
+      const turmaA = a.turmaCompleta || "";
+      const turmaB = b.turmaCompleta || "";
       const nomeA = a.nome || "";
       const nomeB = b.nome || "";
       return turmaA.localeCompare(turmaB, "pt-BR", { numeric: true }) || nomeA.localeCompare(nomeB);
@@ -497,11 +548,11 @@ export default function Relatorios() {
     if (["frequencia", "risco", "acompanhamento", "cadastro"].includes(tipo)) {
       adicionar(
         "Acompanhamento individual",
-        ["Matrícula", "Aluno", "Turma", "Risco atual", "Observações", "Pendências abertas"],
+        ["Matrícula", "Aluno", "Turma / Modalidade", "Risco atual", "Observações", "Pendências abertas"],
         alunosOrdenados.map((a) => [
           a.registration || a.matricula || a.id,
           a.nome,
-          a.turma,
+          a.turmaCompleta,
           risco(a.frequencia),
           a.observacoes || "",
           (a.pendencias || []).join(" | "),
@@ -512,14 +563,14 @@ export default function Relatorios() {
     if (["faltas", "frequencia", "acompanhamento"].includes(tipo)) {
       adicionar(
         `Ausências e abonos registrados de ${descricaoPeriodo}`,
-        ["Data", "Matrícula", "Aluno", "Turma", "Status"],
+        ["Data", "Matrícula", "Aluno", "Turma / Modalidade", "Status"],
         [...faltasPeriodo]
           .sort((a, b) => b.data.localeCompare(a.data))
           .map((f) => [
             formatar(f.data),
             f.aluno.registration || f.aluno.matricula || f.aluno.id,
             f.aluno.nome,
-            f.aluno.turma,
+            f.aluno.turmaCompleta,
             f.justificada ? "Justificada / Abonada" : "Falta",
           ])
       );
@@ -528,14 +579,14 @@ export default function Relatorios() {
     if (["intervencoes", "acompanhamento", "risco"].includes(tipo)) {
       adicionar(
         `Intervenções registradas de ${descricaoPeriodo}`,
-        ["Data", "Matrícula", "Aluno", "Turma", "Tipo", "Descrição"],
+        ["Data", "Matrícula", "Aluno", "Turma / Modalidade", "Tipo", "Descrição"],
         [...intervencoesPeriodo]
           .sort((a, b) => String(b.data).localeCompare(String(a.data)))
           .map((i) => [
             formatar(String(i.data).slice(0, 10)),
             i.aluno.registration || i.aluno.matricula || i.aluno.id,
             i.aluno.nome,
-            i.aluno.turma,
+            i.aluno.turmaCompleta,
             i.tipo,
             i.descricao || "",
           ])
@@ -549,7 +600,7 @@ export default function Relatorios() {
     const secoes = montarRelatorio();
     const linhas = [
       ["PresenSee — " + titulo],
-      ["Turma", turmaFiltro],
+      ["Turma", nomeTurmaSelecionada],
       ["Período de registros", descricaoPeriodo],
       ["Indicadores de frequência e risco", "Situação atual extraída da API"],
       ["Gerado em", new Date().toLocaleString("pt-BR")],
@@ -583,7 +634,7 @@ export default function Relatorios() {
       doc.setTextColor(28, 31, 59); doc.setFont("helvetica", "bold"); doc.setFontSize(15);
       doc.text("PresenSee - " + limparPdf(titulo), margem, 17);
       doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(95, 100, 125);
-      doc.text(limparPdf(`${turmaFiltro} | ${descricaoPeriodo} | Relatório API`), margem, 24);
+      doc.text(limparPdf(`${nomeTurmaSelecionada} | ${descricaoPeriodo} | Relatório API`), margem, 24);
       y = 32;
     };
 
@@ -661,7 +712,10 @@ export default function Relatorios() {
           </label>
           <label className="report-filtro"><span>Turma</span><div className="report-select-wrap">
             <Icone tipo="pessoas" /><select value={turmaFiltro} onChange={(e) => setTurmaFiltro(e.target.value)}>
-              {["Todas as turmas", ...NOMES_TURMAS].map((n) => <option key={n} value={n}>{n}</option>)}
+              <option value="TODAS">Todas as turmas</option>
+              {LISTA_TURMAS.map((t) => (
+                <option key={t.id} value={t.id}>{t.rotuloCompleto}</option>
+              ))}
             </select><Icone tipo="chevron" size={18}/></div>
           </label>
           <div className="report-filtro">
@@ -694,11 +748,14 @@ export default function Relatorios() {
           <div className="report-table-scroll"><table className="report-table"><thead><tr>
             {colunas.map((c) => <th key={c}>{c}</th>)}
           </tr></thead><tbody>{turmas.map((t, index) => (
-            <tr key={t.turma}><td className="report-turma-name">{t.turma}</td>
+            <tr key={t.id}><td className="report-turma-name">
+              <div>{t.turma}</div>
+              {t.detalhe && <small style={{ display: "block", fontSize: "11px", color: "#64748b", fontWeight: 500 }}>{t.detalhe}</small>}
+            </td>
               <td>{linhasResumo[index][1]}</td>
               <td>{["frequencia", "cadastro"].includes(tipo) ? <div className="report-frequency">
                 <span className={`report-badge report-badge--${corFreq(t.frequencia)}`}>{t.frequencia}%</span>
-                <div className="report-frequency-bar" role="progressbar" aria-label={`Frequência de ${t.turma}`} aria-valuenow={t.frequencia} aria-valuemin={0} aria-valuemax={100}>
+                <div className="report-frequency-bar" role="progressbar" aria-label={`Frequência de ${t.turmaCompleta}`} aria-valuenow={t.frequencia} aria-valuemin={0} aria-valuemax={100}>
                   <span className={`report-frequency-fill report-frequency-fill--${corFreq(t.frequencia)}`} style={{width: `${t.frequencia}%`}}/>
                 </div></div> : linhasResumo[index][2]}</td>
             </tr>))}</tbody></table></div>
