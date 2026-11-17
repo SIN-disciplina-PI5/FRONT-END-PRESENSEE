@@ -24,14 +24,21 @@ const NOMES_TIPO = {
   colunas: "Colunas",
 };
 
-const TAMANHOS = [
-  { valor: "pequeno", rotulo: "P", nome: "Pequeno (1 col)" },
-  { valor: "medio", rotulo: "M", nome: "Médio (2 cols)" },
-  { valor: "grande", rotulo: "G", nome: "Grande (Largura total)" },
+const ALCAS_REDIMENSIONAMENTO = [
+  { direcao: "top", titulo: "Arraste para ajustar a altura pelo topo" },
+  { direcao: "right", titulo: "Arraste para ajustar a largura pela direita" },
+  { direcao: "bottom", titulo: "Arraste para ajustar a altura pela base" },
+  { direcao: "left", titulo: "Arraste para ajustar a largura pela esquerda" },
+  { direcao: "top-left", titulo: "Arraste para ajustar largura e altura" },
+  { direcao: "top-right", titulo: "Arraste para ajustar largura e altura" },
+  { direcao: "bottom-right", titulo: "Arraste para ajustar largura e altura" },
+  { direcao: "bottom-left", titulo: "Arraste para ajustar largura e altura" },
 ];
 
 // Quantos gráficos são atualizados ao mesmo tempo (evita sobrecarregar o /chat)
 const ATUALIZACOES_SIMULTANEAS = 3;
+const ESPACO_GRAFICOS = 20;
+const LARGURA_MINIMA_GRAFICO = 220;
 
 // Dispersão usa pontos { x, y }; os demais tipos usam { nome, valor }
 const formatoDoTipo = (tipo) => (tipo === "dispersao" ? "xy" : "nomevalor");
@@ -61,7 +68,6 @@ export default function Personalizado() {
   const {
     graficos,
     removerGrafico,
-    alterarTamanhoGrafico,
     atualizarGrafico,
     moverGrafico,
   } = useGraficos();
@@ -235,46 +241,67 @@ export default function Personalizado() {
     window.addEventListener("pointerup", aoSoltar);
   }
 
-  // Redimensionamento interativo por arraste na alça do card (largura/colunas + altura)
+  // Redimensiona o card continuamente; o renderer acompanha o novo tamanho do contêiner.
   function iniciarRedimensionamento(e, grafico, direcao) {
     e.stopPropagation();
     e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
 
+    const card = e.currentTarget.closest(".pers-card");
+    const larguraContainer = gridRef.current?.clientWidth || 1000;
+    const larguraInicial = card?.getBoundingClientRect().width || larguraContainer / 3;
     const startX = e.clientX;
     const startY = e.clientY;
     const alturaInicial = grafico.id === editandoId ? alturaTemp : grafico.altura || 220;
-    const colunasInicial = grafico.id === editandoId ? colunasTemp : grafico.colunas || 1;
-    const larguraGrid = gridRef.current?.offsetWidth || 1000;
-    const larguraColuna = larguraGrid / 3;
+    const redimensionaLargura = direcao.includes("left") || direcao.includes("right");
+    const redimensionaAltura = direcao.includes("top") || direcao.includes("bottom");
+    const fatorX = direcao.includes("left") ? -1 : 1;
+    const fatorY = direcao.includes("top") ? -1 : 1;
 
     function aoMover(ev) {
-      const deltaX = ev.clientX - startX;
-      const deltaY = ev.clientY - startY;
+      if (ev.pointerId !== e.pointerId) return;
 
-      if (direcao === "xy" || direcao === "x") {
-        const deltaCols = Math.round(deltaX / (larguraColuna * 0.55));
-        const novasColunas = Math.min(3, Math.max(1, colunasInicial + deltaCols));
+      const alteracoes = {};
+      if (redimensionaLargura) {
+        const larguraMinima = Math.min(LARGURA_MINIMA_GRAFICO, larguraContainer);
+        const novaLargura = Math.min(
+          larguraContainer,
+          Math.max(larguraMinima, larguraInicial + (ev.clientX - startX) * fatorX)
+        );
+        const proporcao = Math.min(
+          1,
+          Math.max(0, (novaLargura + ESPACO_GRAFICOS) / (larguraContainer + ESPACO_GRAFICOS))
+        );
+        const novasColunas = Math.min(3, Math.max(1, Math.round(proporcao * 3)));
         setColunasTemp(novasColunas);
-        atualizarGrafico(grafico.id, {
-          colunas: novasColunas,
-          tamanho: novasColunas === 3 ? "grande" : novasColunas === 2 ? "medio" : "pequeno",
-        });
+        alteracoes.largura = proporcao;
+        alteracoes.colunas = novasColunas;
+        alteracoes.tamanho =
+          novasColunas === 3 ? "grande" : novasColunas === 2 ? "medio" : "pequeno";
       }
 
-      if (direcao === "xy" || direcao === "y") {
-        const novaAltura = Math.min(560, Math.max(160, Math.round(alturaInicial + deltaY)));
+      if (redimensionaAltura) {
+        const novaAltura = Math.min(
+          560,
+          Math.max(160, Math.round(alturaInicial + (ev.clientY - startY) * fatorY))
+        );
         setAlturaTemp(novaAltura);
-        atualizarGrafico(grafico.id, { altura: novaAltura });
+        alteracoes.altura = novaAltura;
       }
+
+      atualizarGrafico(grafico.id, alteracoes);
     }
 
-    function aoSoltar() {
+    function aoSoltar(ev) {
+      if (ev.pointerId !== e.pointerId) return;
       window.removeEventListener("pointermove", aoMover);
       window.removeEventListener("pointerup", aoSoltar);
+      window.removeEventListener("pointercancel", aoSoltar);
     }
 
     window.addEventListener("pointermove", aoMover);
     window.addEventListener("pointerup", aoSoltar);
+    window.addEventListener("pointercancel", aoSoltar);
   }
 
   function exportarCSV() {
@@ -470,46 +497,6 @@ export default function Personalizado() {
               ))}
             </div>
 
-            <div className="pers-floating-dimensoes">
-              <div>
-                <span>Largura ({colunasTemp}x)</span>
-                <div className="pers-cols-btns">
-                  {[1, 2, 3].map((col) => (
-                    <button
-                      key={col}
-                      type="button"
-                      className={colunasTemp === col ? "ativo" : ""}
-                      onClick={() => {
-                        setColunasTemp(col);
-                        atualizarGrafico(graficoEditando.id, {
-                          colunas: col,
-                          tamanho: col === 3 ? "grande" : col === 2 ? "medio" : "pequeno",
-                        });
-                      }}
-                    >
-                      {col}x
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span>Altura ({alturaTemp}px)</span>
-                <input
-                  type="range"
-                  min="160"
-                  max="540"
-                  step="10"
-                  value={alturaTemp}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setAlturaTemp(val);
-                    atualizarGrafico(graficoEditando.id, { altura: val });
-                  }}
-                />
-              </div>
-            </div>
-
             <button type="button" className="pers-btn-salvar" onClick={salvarEdicao}>
               Salvar
             </button>
@@ -528,7 +515,6 @@ export default function Personalizado() {
           <div className="pers-grid" ref={gridRef}>
             {graficos.map((g) => {
               const emEdicao = g.id === editandoId;
-              const tamanho = g.tamanho || "pequeno";
               const colunas = emEdicao ? colunasTemp : g.colunas || 1;
               const alturaAtual = emEdicao ? alturaTemp : g.altura || 220;
               const tipoAtual = emEdicao ? tipoTemp : g.tipo;
@@ -538,7 +524,13 @@ export default function Personalizado() {
                   key={g.id}
                   onDoubleClick={() => ativarEdicao(g)}
                   draggable={emEdicao}
-                  onDragStart={() => setArrastandoCardId(g.id)}
+                  onDragStart={(e) => {
+                    if (e.target.closest(".pers-resize-handle")) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setArrastandoCardId(g.id);
+                  }}
                   onDragOver={(e) => {
                     e.preventDefault();
                     if (arrastandoCardId && arrastandoCardId !== g.id) {
@@ -560,9 +552,20 @@ export default function Personalizado() {
                       ? "Modo de edição ativo: arraste para mover ou puxe as bordas para redimensionar"
                       : "Dê duplo clique para editar"
                   }
-                  className={`pers-card pers-col-${colunas} ${
+                  className={`pers-card pers-col-${colunas}${
+                    Number.isFinite(g.largura) ? " pers-card--custom-size" : ""
+                  } ${
                     emEdicao ? "pers-card--editavel" : ""
                   } ${sobreCardId === g.id ? "pers-card--drop-target" : ""}`}
+                  style={
+                    Number.isFinite(g.largura)
+                      ? {
+                          "--pers-card-basis": `calc(${g.largura * 100}% - ${
+                            (1 - g.largura) * ESPACO_GRAFICOS
+                          }px)`,
+                        }
+                      : undefined
+                  }
                 >
                   <button
                     type="button"
@@ -590,69 +593,22 @@ export default function Personalizado() {
 
                   {g.subtitulo && <p className="pers-sub">{g.subtitulo}</p>}
 
-                  {/* Controles rápidos P / M / G visíveis no modo edição */}
-                  {emEdicao && (
-                    <div className="pers-controles">
-                      <span>Tamanho:</span>
-                      <div
-                        className="pers-tamanhos"
-                        role="group"
-                        aria-label={`Tamanho do gráfico ${g.titulo}`}
-                      >
-                        {TAMANHOS.map((opcao) => (
-                          <button
-                            key={opcao.valor}
-                            type="button"
-                            className={`pers-tamanho ${
-                              tamanho === opcao.valor ? "ativo" : ""
-                            }`}
-                            onClick={() => {
-                              alterarTamanhoGrafico(g.id, opcao.valor);
-                              setColunasTemp(
-                                opcao.valor === "grande" ? 3 : opcao.valor === "medio" ? 2 : 1
-                              );
-                              setAlturaTemp(
-                                opcao.valor === "grande" ? 360 : opcao.valor === "medio" ? 270 : 200
-                              );
-                            }}
-                            title={opcao.nome}
-                          >
-                            {opcao.rotulo}
-                          </button>
-                        ))}
-                      </div>
-                      <small style={{ marginLeft: "auto", color: "#633df2", fontWeight: 600 }}>
-                        {colunas} col · {alturaAtual}px
-                      </small>
-                    </div>
-                  )}
-
                   <GraficoRenderer
                     grafico={{ ...g, tipo: tipoAtual }}
                     altura={alturaAtual}
                   />
 
-                  {/* Alças de redimensionamento interativo (aparecem no duplo clique) */}
+                  {/* Bordas e cantos interativos para redimensionar o gráfico */}
                   {emEdicao && (
-                    <>
+                    ALCAS_REDIMENSIONAMENTO.map(({ direcao, titulo }) => (
                       <div
-                        className="pers-resize-handle pers-resize-right"
-                        onPointerDown={(e) => iniciarRedimensionamento(e, g, "x")}
-                        title="Arraste para alterar a largura"
+                        key={direcao}
+                        className={`pers-resize-handle pers-resize-${direcao}`}
+                        onPointerDown={(e) => iniciarRedimensionamento(e, g, direcao)}
+                        title={titulo}
+                        aria-hidden="true"
                       />
-                      <div
-                        className="pers-resize-handle pers-resize-bottom"
-                        onPointerDown={(e) => iniciarRedimensionamento(e, g, "y")}
-                        title="Arraste para alterar a altura"
-                      />
-                      <div
-                        className="pers-resize-handle pers-resize-corner"
-                        onPointerDown={(e) => iniciarRedimensionamento(e, g, "xy")}
-                        title="Arraste para alterar largura e altura"
-                      >
-                        ↘
-                      </div>
-                    </>
+                    ))
                   )}
                 </article>
               );
