@@ -149,6 +149,7 @@
 .pers-card {
   position: relative;
   box-sizing: border-box;
+  --pers-card-width: calc(33.333333% - 13.333333px);
   flex: 0 0 calc(33.333333% - 13.333333px);
   min-width: min(220px, 100%);
   padding: 20px;
@@ -157,15 +158,53 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   user-select: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.15s ease,
+    left 0.2s ease,
+    top 0.2s ease,
+    width 0.2s ease;
 }
 
 .pers-card.pers-col-2 {
+  --pers-card-width: calc(66.666667% - 6.666667px);
   flex-basis: calc(66.666667% - 6.666667px);
 }
 
 .pers-card.pers-col-3 {
+  --pers-card-width: 100%;
   flex-basis: 100%;
+}
+
+.pers-grid--canvas {
+  position: relative;
+  display: block;
+  min-height: 120px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.pers-grid--canvas .pers-card {
+  position: absolute;
+  z-index: 1;
+  width: var(--pers-card-width);
+  min-width: 0;
+  flex: none;
+}
+
+.pers-grid--canvas .pers-card--movendo {
+  z-index: 40;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25);
+  transition: none;
+}
+
+.pers-chart-shell > div {
+  transition: height 0.2s ease;
+}
+
+.pers-card--movendo .pers-chart-shell > div {
+  transition: none;
 }
 
 [data-theme="dark"] .pers-card,
@@ -175,20 +214,10 @@
   --color-card: #131c2e;
 }
 
-/* Estado Editável (Duplo Clique): Contorno Roxo + Cursor de Movimento */
+/* Estado editável ativado por duplo clique */
 .pers-card--editavel {
   border: 2.5px solid #633df2 !important;
   box-shadow: 0 0 0 4px rgba(99, 61, 242, 0.16), 0 14px 32px rgba(99, 61, 242, 0.14);
-  cursor: grab;
-}
-
-.pers-card--editavel:active {
-  cursor: grabbing;
-}
-
-.pers-card--drop-target {
-  border: 2px dashed #633df2;
-  transform: scale(0.99);
 }
 
 .pers-card-header {
@@ -197,6 +226,15 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 0 32px 4px 0;
+}
+
+.pers-card-header--movel {
+  cursor: grab;
+  touch-action: none;
+}
+
+.pers-card-header--movel:active {
+  cursor: grabbing;
 }
 
 .pers-card h3 {
@@ -523,11 +561,42 @@
 
 @media (max-width: 1024px) {
   .pers-card.pers-col-1 {
+    --pers-card-width: calc(50% - 10px);
     flex-basis: calc(50% - 10px);
   }
   .pers-card.pers-col-2,
   .pers-card.pers-col-3 {
+    --pers-card-width: 100%;
     flex-basis: 100%;
+  }
+  .pers-grid--canvas {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 0;
+  }
+  .pers-grid--canvas .pers-card {
+    position: relative;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    order: var(--pers-order, 0);
+    width: 100%;
+    flex: 0 0 auto;
+  }
+  .pers-grid--canvas .pers-card.pers-card--custom-size {
+    flex-basis: 100%;
+  }
+  .pers-grid--canvas .pers-resize-left,
+  .pers-grid--canvas .pers-resize-right,
+  .pers-grid--canvas .pers-resize-top,
+  .pers-grid--canvas .pers-resize-top-left,
+  .pers-grid--canvas .pers-resize-top-right,
+  .pers-grid--canvas .pers-resize-bottom-left,
+  .pers-grid--canvas .pers-resize-bottom-right {
+    display: none;
   }
 }
 

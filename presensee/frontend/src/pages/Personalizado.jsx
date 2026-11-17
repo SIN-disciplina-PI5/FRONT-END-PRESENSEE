@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useGraficos } from "../context/GraficosContext";
@@ -39,9 +39,221 @@ const ALCAS_REDIMENSIONAMENTO = [
 const ATUALIZACOES_SIMULTANEAS = 3;
 const ESPACO_GRAFICOS = 20;
 const LARGURA_MINIMA_GRAFICO = 220;
+const ESPACO_CANVAS = 24;
+const ALTURA_EXTRA_CARD = 150;
+const ALTURA_MINIMA_GRAFICO = 160;
+const ALTURA_MAXIMA_GRAFICO = 560;
 
 // Dispersão usa pontos { x, y }; os demais tipos usam { nome, valor }
 const formatoDoTipo = (tipo) => (tipo === "dispersao" ? "xy" : "nomevalor");
+
+function retangulosSeSobrepoem(a, b) {
+  return (
+    a.left < b.left + b.width + ESPACO_CANVAS &&
+    a.left + a.width + ESPACO_CANVAS > b.left &&
+    a.top < b.top + b.height + ESPACO_CANVAS &&
+    a.top + a.height + ESPACO_CANVAS > b.top
+  );
+}
+
+function buscarPosicaoLivre(
+  retangulo,
+  ocupados,
+  larguraCanvas,
+  alturaMaxima,
+  topoMinimo = 0
+) {
+  if (
+    retangulo.width > larguraCanvas ||
+    retangulo.height > alturaMaxima - topoMinimo
+  ) {
+    return null;
+  }
+  const maxLeft = Math.max(0, larguraCanvas - retangulo.width);
+  const maxTop = Math.max(topoMinimo, alturaMaxima - retangulo.height);
+  const candidatos = [
+    { left: retangulo.left, top: retangulo.top },
+    { left: 0, top: topoMinimo },
+    { left: maxLeft, top: topoMinimo },
+    { left: 0, top: maxTop },
+    { left: maxLeft, top: maxTop },
+  ];
+  ocupados.forEach((ocupado) => {
+    const direita = ocupado.left + ocupado.width + ESPACO_CANVAS;
+    const esquerda = ocupado.left - retangulo.width - ESPACO_CANVAS;
+    const abaixo = ocupado.top + ocupado.height + ESPACO_CANVAS;
+    const acima = ocupado.top - retangulo.height - ESPACO_CANVAS;
+    candidatos.push(
+      { left: direita, top: retangulo.top },
+      { left: esquerda, top: retangulo.top },
+      { left: retangulo.left, top: abaixo },
+      { left: retangulo.left, top: acima },
+      { left: 0, top: abaixo },
+      { left: maxLeft, top: abaixo },
+      { left: direita, top: ocupado.top },
+      { left: esquerda, top: ocupado.top }
+    );
+  });
+
+  let melhor = null;
+  let menorDistancia = Infinity;
+  const vistos = new Set();
+  for (const posicao of candidatos) {
+    const candidato = {
+      ...retangulo,
+      left: Math.min(maxLeft, Math.max(0, posicao.left)),
+      top: Math.min(maxTop, Math.max(topoMinimo, posicao.top)),
+    };
+    const chave = `${Math.round(candidato.left)}:${Math.round(candidato.top)}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    if (ocupados.some((ocupado) => retangulosSeSobrepoem(candidato, ocupado))) continue;
+
+    const distancia =
+      Math.abs(candidato.left - retangulo.left) + Math.abs(candidato.top - retangulo.top);
+    if (distancia < menorDistancia) {
+      melhor = candidato;
+      menorDistancia = distancia;
+    }
+  }
+  return melhor;
+}
+
+function planejarLayout(
+  retanguloPrincipal,
+  vizinhos,
+  larguraCanvas,
+  alturaMaxima,
+  topoVisivel,
+  fundoVisivel
+) {
+  const principal = {
+    ...retanguloPrincipal,
+    left: Math.min(
+      Math.max(0, larguraCanvas - retanguloPrincipal.width),
+      Math.max(0, retanguloPrincipal.left)
+    ),
+    top: Math.min(
+      Math.max(0, alturaMaxima - retanguloPrincipal.height),
+      Math.max(0, retanguloPrincipal.top)
+    ),
+  };
+  const ocupados = [principal];
+  const resultado = new Map([[principal.id, principal]]);
+  const ordenados = [...vizinhos].sort((a, b) => a.top - b.top || a.left - b.left);
+
+  ordenados.forEach((vizinho) => {
+    const jaLivre = (
+      vizinho.left >= 0 &&
+      vizinho.left + vizinho.width <= larguraCanvas &&
+      vizinho.top >= 0 &&
+      vizinho.top + vizinho.height <= alturaMaxima &&
+      !ocupados.some((ocupado) => retangulosSeSobrepoem(vizinho, ocupado))
+    );
+    if (jaLivre) {
+      ocupados.push(vizinho);
+      resultado.set(vizinho.id, vizinho);
+      return;
+    }
+
+    const larguraMinima = Math.min(LARGURA_MINIMA_GRAFICO, larguraCanvas);
+    const alturaMinimaGrafico = Math.min(
+      ALTURA_MINIMA_GRAFICO,
+      Math.max(1, alturaMaxima - vizinho.chromeHeight)
+    );
+    const escalaMinima = Math.max(
+      larguraMinima / Math.max(1, vizinho.width),
+      alturaMinimaGrafico / Math.max(1, vizinho.chartHeight)
+    );
+    let posicao = null;
+
+    for (let escala = 1; escala > escalaMinima; escala -= 0.05) {
+      const chartHeight = Math.max(
+        alturaMinimaGrafico,
+        Math.round(vizinho.chartHeight * escala)
+      );
+      const candidato = {
+        ...vizinho,
+        width: Math.max(larguraMinima, vizinho.width * escala),
+        chartHeight,
+        height: vizinho.chromeHeight + chartHeight,
+      };
+      posicao = buscarPosicaoLivre(
+        candidato,
+        ocupados,
+        larguraCanvas,
+        fundoVisivel,
+        topoVisivel
+      );
+      if (posicao) break;
+    }
+
+    if (!posicao) {
+      for (let escala = 1; escala > escalaMinima; escala -= 0.05) {
+        const chartHeight = Math.max(
+          alturaMinimaGrafico,
+          Math.round(vizinho.chartHeight * escala)
+        );
+        const candidato = {
+          ...vizinho,
+          width: Math.max(larguraMinima, vizinho.width * escala),
+          chartHeight,
+          height: vizinho.chromeHeight + chartHeight,
+        };
+        posicao = buscarPosicaoLivre(candidato, ocupados, larguraCanvas, alturaMaxima);
+        if (posicao) break;
+      }
+    }
+
+    if (!posicao) {
+      const candidatoMinimo = {
+        ...vizinho,
+        width: larguraMinima,
+        chartHeight: alturaMinimaGrafico,
+        height: vizinho.chromeHeight + alturaMinimaGrafico,
+      };
+      posicao = buscarPosicaoLivre(candidatoMinimo, ocupados, larguraCanvas, alturaMaxima);
+    }
+
+    if (!posicao) {
+      const topo = Math.max(...ocupados.map((ocupado) => ocupado.top + ocupado.height)) + ESPACO_CANVAS;
+      posicao = {
+        ...vizinho,
+        left: 0,
+        top: Math.min(Math.max(0, alturaMaxima - vizinho.height), topo),
+      };
+      posicao = buscarPosicaoLivre(
+        {
+          ...posicao,
+          width: larguraMinima,
+          chartHeight: alturaMinimaGrafico,
+          height: vizinho.chromeHeight + alturaMinimaGrafico,
+        },
+        ocupados,
+        larguraCanvas,
+        alturaMaxima
+      ) || posicao;
+    }
+
+    if (!posicao || ocupados.some((ocupado) => retangulosSeSobrepoem(posicao, ocupado))) {
+      posicao = {
+        ...vizinho,
+        left: 0,
+        top: 0,
+        width: larguraMinima,
+        chartHeight: alturaMinimaGrafico,
+        height: vizinho.chromeHeight + alturaMinimaGrafico,
+      };
+      posicao.top =
+        Math.max(...ocupados.map((ocupado) => ocupado.top + ocupado.height)) + ESPACO_CANVAS;
+    }
+
+    ocupados.push(posicao);
+    resultado.set(vizinho.id, posicao);
+  });
+
+  return resultado;
+}
 
 function formatoDosDados(dados) {
   const primeiro = dados[0];
@@ -69,7 +281,6 @@ export default function Personalizado() {
     graficos,
     removerGrafico,
     atualizarGrafico,
-    moverGrafico,
   } = useGraficos();
 
   // ID do gráfico ativado por duplo clique
@@ -78,9 +289,9 @@ export default function Personalizado() {
   const [colunasTemp, setColunasTemp] = useState(1);
   const [alturaTemp, setAlturaTemp] = useState(220);
 
-  // Estado para arrastar cards no grid
+  // Estado do gráfico que está sendo movido no canvas
   const [arrastandoCardId, setArrastandoCardId] = useState(null);
-  const [sobreCardId, setSobreCardId] = useState(null);
+  const [alturaViewport, setAlturaViewport] = useState(600);
 
   // Estado para painel flutuante móvel "Editar tipo de gráfico"
   const [posPainel, setPosPainel] = useState({ x: 24, y: 120 });
@@ -96,6 +307,109 @@ export default function Personalizado() {
   const gridRef = useRef(null);
 
   const graficoEditando = graficos.find((g) => g.id === editandoId) || null;
+  const posicionamentoPronto =
+    graficos.length > 0 &&
+    graficos.every((g) => Number.isFinite(g.posX) && Number.isFinite(g.posY));
+
+  let finalPadrao = 0;
+  graficos.forEach((g) => {
+    if (Number.isFinite(g.posY)) {
+      finalPadrao = Math.max(finalPadrao, g.posY + (g.altura || 220) + ALTURA_EXTRA_CARD + ESPACO_CANVAS);
+    }
+  });
+
+  const posicoesGrafico = new Map();
+  graficos.forEach((g) => {
+    const posY = Number.isFinite(g.posY) ? g.posY : finalPadrao;
+    posicoesGrafico.set(g.id, {
+      x: Number.isFinite(g.posX) ? g.posX : 0,
+      y: posY,
+    });
+    if (!Number.isFinite(g.posY)) {
+      finalPadrao = posY + (g.altura || 220) + ALTURA_EXTRA_CARD + ESPACO_CANVAS;
+    }
+  });
+
+  const alturaConteudoCanvas = Math.max(
+    alturaViewport +
+      graficos.reduce(
+        (total, g) =>
+          total + (g.alturaPreferida || g.altura || 220) + ALTURA_EXTRA_CARD + ESPACO_CANVAS,
+        ESPACO_CANVAS
+      ),
+    ...graficos.map((g) => {
+      const posicao = posicoesGrafico.get(g.id);
+      return (
+        posicao.y +
+        (g.alturaPreferida || g.altura || 220) +
+        ALTURA_EXTRA_CARD +
+        ESPACO_CANVAS
+      );
+    })
+  );
+
+  useLayoutEffect(() => {
+    if (graficos.length === 0 || !gridRef.current) return undefined;
+
+    const medirAlturaDisponivel = () => {
+      const topoCanvas = gridRef.current?.getBoundingClientRect().top || 0;
+      const alturaDisponivel = window.innerHeight - topoCanvas - 24;
+      setAlturaViewport(Math.max(120, Math.min(900, alturaDisponivel)));
+    };
+
+    medirAlturaDisponivel();
+    window.addEventListener("resize", medirAlturaDisponivel);
+    return () => window.removeEventListener("resize", medirAlturaDisponivel);
+  }, [graficos.length]);
+
+  useLayoutEffect(() => {
+    const canvas = gridRef.current;
+    if (!canvas || graficos.length === 0) return;
+
+    const posicionados = graficos.filter(
+      (g) => Number.isFinite(g.posX) && Number.isFinite(g.posY)
+    );
+    const pendentes = graficos.filter(
+      (g) => !Number.isFinite(g.posX) || !Number.isFinite(g.posY)
+    );
+    if (pendentes.length === 0) return;
+
+    const elementos = Array.from(canvas.querySelectorAll("[data-grafico-id]"));
+    const elementoDoGrafico = (id) =>
+      elementos.find((elemento) => elemento.dataset.graficoId === String(id));
+
+    if (posicionados.length === 0) {
+      const caixaCanvas = canvas.getBoundingClientRect();
+      const larguraCanvas = canvas.clientWidth || 1;
+      pendentes.forEach((g) => {
+        const elemento = elementoDoGrafico(g.id);
+        if (!elemento) return;
+        const caixa = elemento.getBoundingClientRect();
+        atualizarGrafico(g.id, {
+          posX: Math.max(0, (caixa.left - caixaCanvas.left) / larguraCanvas),
+          posY: Math.max(0, caixa.top - caixaCanvas.top),
+        });
+      });
+      return;
+    }
+
+    let proximaPosicaoY = posicionados.reduce((fim, g) => {
+      const elemento = elementoDoGrafico(g.id);
+      const altura = elemento?.getBoundingClientRect().height || (g.altura || 220) + ALTURA_EXTRA_CARD;
+      return Math.max(fim, g.posY + altura + ESPACO_CANVAS);
+    }, 0);
+
+    pendentes.forEach((g) => {
+      atualizarGrafico(g.id, {
+        posX: 0,
+        posY: proximaPosicaoY,
+      });
+      const elemento = elementoDoGrafico(g.id);
+      proximaPosicaoY +=
+        (elemento?.getBoundingClientRect().height || (g.altura || 220) + ALTURA_EXTRA_CARD) +
+        ESPACO_CANVAS;
+    });
+  }, [graficos, atualizarGrafico]);
 
   // Ativa edição no duplo clique
   function ativarEdicao(grafico) {
@@ -241,67 +555,293 @@ export default function Personalizado() {
     window.addEventListener("pointerup", aoSoltar);
   }
 
-  // Redimensiona o card continuamente; o renderer acompanha o novo tamanho do contêiner.
-  function iniciarRedimensionamento(e, grafico, direcao) {
-    e.stopPropagation();
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-
-    const card = e.currentTarget.closest(".pers-card");
-    const larguraContainer = gridRef.current?.clientWidth || 1000;
-    const larguraInicial = card?.getBoundingClientRect().width || larguraContainer / 3;
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const alturaInicial = grafico.id === editandoId ? alturaTemp : grafico.altura || 220;
-    const redimensionaLargura = direcao.includes("left") || direcao.includes("right");
-    const redimensionaAltura = direcao.includes("top") || direcao.includes("bottom");
-    const fatorX = direcao.includes("left") ? -1 : 1;
-    const fatorY = direcao.includes("top") ? -1 : 1;
-
-    function aoMover(ev) {
-      if (ev.pointerId !== e.pointerId) return;
-
-      const alteracoes = {};
-      if (redimensionaLargura) {
-        const larguraMinima = Math.min(LARGURA_MINIMA_GRAFICO, larguraContainer);
-        const novaLargura = Math.min(
-          larguraContainer,
-          Math.max(larguraMinima, larguraInicial + (ev.clientX - startX) * fatorX)
+  function medirLayoutCards(canvas) {
+    const caixaCanvas = canvas.getBoundingClientRect();
+    return Array.from(canvas.querySelectorAll("[data-grafico-id]"))
+      .map((elemento) => {
+        const grafico = graficos.find(
+          (item) => String(item.id) === elemento.dataset.graficoId
         );
+        if (!grafico) return null;
+        const caixa = elemento.getBoundingClientRect();
+        const chartHeightAtual = grafico.altura || 220;
+        const chromeHeight = Math.max(0, caixa.height - chartHeightAtual);
+        const chartHeight = Number.isFinite(grafico.alturaPreferida)
+          ? grafico.alturaPreferida
+          : chartHeightAtual;
+        const larguraPreferida = Number.isFinite(grafico.larguraPreferida)
+          ? Math.min(
+              canvas.clientWidth,
+              Math.max(
+                Math.min(LARGURA_MINIMA_GRAFICO, canvas.clientWidth),
+                grafico.larguraPreferida * (canvas.clientWidth + ESPACO_GRAFICOS) -
+                  ESPACO_GRAFICOS
+              )
+            )
+          : caixa.width;
+        return {
+          id: grafico.id,
+          left: caixa.left - caixaCanvas.left + canvas.scrollLeft,
+          top: caixa.top - caixaCanvas.top + canvas.scrollTop,
+          width: larguraPreferida,
+          height: chromeHeight + chartHeight,
+          chartHeight,
+          chromeHeight,
+          larguraAtual: caixa.width,
+          alturaAtual: chartHeightAtual,
+          alturaCardAtual: caixa.height,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function aplicarLayoutPreview(canvas, layout, idPrincipal, empilhado) {
+    layout.forEach((retangulo, id) => {
+      if (empilhado && id !== idPrincipal) return;
+      const card = Array.from(canvas.querySelectorAll("[data-grafico-id]")).find(
+        (elemento) => elemento.dataset.graficoId === String(id)
+      );
+      if (!card) return;
+
+      if (empilhado) {
+        card.style.setProperty("--pers-order", String(Math.round(retangulo.top)));
+      } else {
+        card.style.left = `${retangulo.left}px`;
+        card.style.top = `${retangulo.top}px`;
+        card.style.setProperty("--pers-card-width", `${retangulo.width}px`);
+        card.style.setProperty("--pers-order", String(Math.round(retangulo.top)));
+      }
+
+      const renderer = card.querySelector("[data-grafico-renderer] > div");
+      if (renderer) renderer.style.height = `${retangulo.chartHeight}px`;
+    });
+  }
+
+  function salvarLayout(
+    layout,
+    layoutInicial,
+    larguraCanvas,
+    idPrincipal,
+    empilhado,
+    modo
+  ) {
+    layout.forEach((retangulo, id) => {
+      if (empilhado && id !== idPrincipal) return;
+      const graficoSalvo = graficos.find((item) => item.id === id);
+      const retanguloInicial = layoutInicial.find((item) => item.id === id);
+      const altura = Math.min(
+        ALTURA_MAXIMA_GRAFICO,
+        Math.max(ALTURA_MINIMA_GRAFICO, Math.round(retangulo.chartHeight))
+      );
+      const alteracoes = {
+        posY: retangulo.top,
+        altura,
+      };
+
+      if (!empilhado) {
         const proporcao = Math.min(
           1,
-          Math.max(0, (novaLargura + ESPACO_GRAFICOS) / (larguraContainer + ESPACO_GRAFICOS))
+          Math.max(
+            0,
+            (retangulo.width + ESPACO_GRAFICOS) / (larguraCanvas + ESPACO_GRAFICOS)
+          )
         );
-        const novasColunas = Math.min(3, Math.max(1, Math.round(proporcao * 3)));
-        setColunasTemp(novasColunas);
+        const colunas = Math.min(3, Math.max(1, Math.round(proporcao * 3)));
+        alteracoes.posX = retangulo.left / larguraCanvas;
         alteracoes.largura = proporcao;
-        alteracoes.colunas = novasColunas;
-        alteracoes.tamanho =
-          novasColunas === 3 ? "grande" : novasColunas === 2 ? "medio" : "pequeno";
+        alteracoes.colunas = colunas;
+        alteracoes.tamanho = colunas === 3 ? "grande" : colunas === 2 ? "medio" : "pequeno";
+        const card = Array.from(gridRef.current?.querySelectorAll("[data-grafico-id]") || [])
+          .find((elemento) => elemento.dataset.graficoId === String(id));
+        if (card) {
+          const posX = retangulo.left / larguraCanvas;
+          card.style.left = `min(${
+            Math.min(Math.max(0, posX), Math.max(0, 1 - proporcao)) * 100
+          }%, calc(100% - var(--pers-card-width)))`;
+          card.style.top = `${retangulo.top}px`;
+          card.style.setProperty(
+            "--pers-card-width",
+            `calc(${proporcao * 100}% - ${(1 - proporcao) * ESPACO_GRAFICOS}px)`
+          );
+        }
       }
 
-      if (redimensionaAltura) {
-        const novaAltura = Math.min(
-          560,
-          Math.max(160, Math.round(alturaInicial + (ev.clientY - startY) * fatorY))
+      if (id === idPrincipal && modo === "redimensionar") {
+        alteracoes.alturaPreferida = altura;
+        if (!empilhado) alteracoes.larguraPreferida = alteracoes.largura;
+      } else {
+        if (!Number.isFinite(graficoSalvo?.alturaPreferida)) {
+          alteracoes.alturaPreferida = retanguloInicial?.alturaAtual || altura;
+        }
+        if (!empilhado && !Number.isFinite(graficoSalvo?.larguraPreferida)) {
+          const larguraPreferida = Number.isFinite(retanguloInicial?.larguraAtual)
+            ? retanguloInicial.larguraAtual
+            : retangulo.width;
+          alteracoes.larguraPreferida =
+            (larguraPreferida + ESPACO_GRAFICOS) / (larguraCanvas + ESPACO_GRAFICOS);
+        }
+      }
+
+      atualizarGrafico(id, alteracoes);
+      if (id === idPrincipal && id === editandoId) {
+        setAlturaTemp(altura);
+        if (!empilhado) {
+          setColunasTemp(alteracoes.colunas);
+        }
+      }
+    });
+  }
+
+  function iniciarAjusteGrafico(e, grafico, modo, direcao) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const canvas = gridRef.current;
+    const card = e.currentTarget.closest(".pers-card");
+    if (!canvas || !card) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    const empilhado = window.matchMedia("(max-width: 1024px)").matches;
+    const larguraCanvas = canvas.clientWidth || 1;
+    const layoutInicial = medirLayoutCards(canvas);
+    const principalInicial = layoutInicial.find((item) => item.id === grafico.id);
+    if (!principalInicial) return;
+    principalInicial.width = principalInicial.larguraAtual;
+    principalInicial.height = principalInicial.alturaCardAtual;
+    principalInicial.chartHeight = principalInicial.alturaAtual;
+    principalInicial.chromeHeight = Math.max(
+      0,
+      principalInicial.alturaCardAtual - principalInicial.alturaAtual
+    );
+    const caixaCanvas = canvas.getBoundingClientRect();
+    const deslocamentoX = e.clientX - card.getBoundingClientRect().left;
+    const deslocamentoY = e.clientY - card.getBoundingClientRect().top;
+    const pointerId = e.pointerId;
+    const posXInicial = principalInicial.left;
+    const posYInicial = principalInicial.top;
+    const larguraInicial = principalInicial.width;
+    const alturaGraficoInicial = principalInicial.chartHeight;
+    const alturaInicial = principalInicial.height;
+    const redimensionaLargura = modo === "redimensionar" &&
+      (direcao.includes("left") || direcao.includes("right"));
+    const redimensionaAltura = modo === "redimensionar" &&
+      (direcao.includes("top") || direcao.includes("bottom"));
+    const fatorX = direcao?.includes("left") ? -1 : 1;
+    const fatorY = direcao?.includes("top") ? -1 : 1;
+    const alturaMaximaCanvas = Math.max(
+      alturaConteudoCanvas,
+      canvas.scrollTop +
+        canvas.clientHeight +
+        layoutInicial.reduce(
+          (total, item) => total + item.height + ESPACO_CANVAS,
+          ESPACO_CANVAS
+        )
+    );
+    setArrastandoCardId(grafico.id);
+
+    function calcularLayout(ev) {
+      const principal = { ...principalInicial };
+      if (modo === "mover") {
+        principal.left = ev.clientX - caixaCanvas.left - deslocamentoX + canvas.scrollLeft;
+        principal.top = ev.clientY - caixaCanvas.top - deslocamentoY + canvas.scrollTop;
+      } else {
+        if (redimensionaLargura) {
+          const larguraMaxima = direcao.includes("left")
+            ? Math.min(larguraCanvas, larguraInicial + posXInicial)
+            : Math.min(larguraCanvas, larguraCanvas - posXInicial);
+          const larguraMinima = Math.min(LARGURA_MINIMA_GRAFICO, larguraMaxima);
+          principal.width = Math.min(
+            larguraMaxima,
+            Math.max(
+              larguraMinima,
+              larguraInicial + (ev.clientX - e.clientX) * fatorX
+            )
+          );
+          if (direcao.includes("left")) {
+            principal.left = posXInicial + larguraInicial - principal.width;
+          }
+        }
+        if (redimensionaAltura) {
+          const alturaMaxima = direcao.includes("top")
+            ? Math.min(ALTURA_MAXIMA_GRAFICO, alturaGraficoInicial + posYInicial)
+            : ALTURA_MAXIMA_GRAFICO;
+          principal.chartHeight = Math.min(
+            alturaMaxima,
+            Math.max(
+              ALTURA_MINIMA_GRAFICO,
+              alturaGraficoInicial + (ev.clientY - e.clientY) * fatorY
+            )
+          );
+          principal.height = principal.chromeHeight + principal.chartHeight;
+          if (direcao.includes("top")) {
+            principal.top = posYInicial + alturaInicial - principal.height;
+          }
+        }
+      }
+
+      const alturaMaxima = Math.max(
+        alturaMaximaCanvas,
+        alturaConteudoCanvas + Math.max(0, principal.height - alturaInicial)
+      );
+      if (empilhado) {
+        principal.left = 0;
+        principal.top = Math.min(
+          Math.max(0, alturaMaxima - principal.height),
+          Math.max(0, principal.top)
         );
-        setAlturaTemp(novaAltura);
-        alteracoes.altura = novaAltura;
+        return new Map([[grafico.id, principal]]);
       }
 
-      atualizarGrafico(grafico.id, alteracoes);
+      return planejarLayout(
+        principal,
+        layoutInicial.filter((item) => item.id !== grafico.id),
+        larguraCanvas,
+        alturaMaxima,
+        canvas.scrollTop,
+        canvas.scrollTop + canvas.clientHeight
+      );
+    }
+
+    function atualizarPreview(ev) {
+      const layout = calcularLayout(ev);
+      aplicarLayoutPreview(canvas, layout, grafico.id, empilhado);
+      return layout;
+    }
+
+    let ultimoEvento = e;
+    let frameId = null;
+    function aoMover(ev) {
+      if (ev.pointerId !== pointerId) return;
+      ultimoEvento = ev;
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        atualizarPreview(ultimoEvento);
+      });
     }
 
     function aoSoltar(ev) {
-      if (ev.pointerId !== e.pointerId) return;
+      if (ev.pointerId !== pointerId) return;
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      const layout = atualizarPreview(ev);
+      salvarLayout(layout, layoutInicial, larguraCanvas, grafico.id, empilhado, modo);
       window.removeEventListener("pointermove", aoMover);
       window.removeEventListener("pointerup", aoSoltar);
       window.removeEventListener("pointercancel", aoSoltar);
+      setArrastandoCardId(null);
     }
 
     window.addEventListener("pointermove", aoMover);
     window.addEventListener("pointerup", aoSoltar);
     window.addEventListener("pointercancel", aoSoltar);
+  }
+
+  function iniciarRedimensionamento(e, grafico, direcao) {
+    iniciarAjusteGrafico(e, grafico, "redimensionar", direcao);
+  }
+
+  function iniciarMovimentoGrafico(e, grafico) {
+    iniciarAjusteGrafico(e, grafico, "mover");
   }
 
   function exportarCSV() {
@@ -397,7 +937,8 @@ export default function Personalizado() {
           <div>
             <h1>Personalizado</h1>
             <p>
-              Dê <strong>duplo clique</strong> em qualquer gráfico para editar o tipo, mover de lugar ou ajustar largura e altura.
+              Dê <strong>duplo clique</strong> no gráfico para ativar a edição. Depois arraste o
+              cabeçalho para posicioná-lo e as bordas para redimensionar.
             </p>
           </div>
 
@@ -512,60 +1053,74 @@ export default function Personalizado() {
             </span>
           </div>
         ) : (
-          <div className="pers-grid" ref={gridRef}>
+          <div
+            className={`pers-grid${posicionamentoPronto ? " pers-grid--canvas" : ""}`}
+            ref={gridRef}
+            style={posicionamentoPronto ? { height: `${alturaViewport}px` } : undefined}
+          >
             {graficos.map((g) => {
               const emEdicao = g.id === editandoId;
               const colunas = emEdicao ? colunasTemp : g.colunas || 1;
-              const alturaAtual = emEdicao ? alturaTemp : g.altura || 220;
+              const alturaAtual = Math.min(
+                ALTURA_MAXIMA_GRAFICO,
+                Math.max(
+                  ALTURA_MINIMA_GRAFICO,
+                  emEdicao ? alturaTemp : g.altura || 220
+                )
+              );
               const tipoAtual = emEdicao ? tipoTemp : g.tipo;
+              const posicao = posicoesGrafico.get(g.id);
+              const proporcaoLargura = Math.min(
+                1,
+                Math.max(0, Number.isFinite(g.largura) ? g.largura : colunas / 3)
+              );
+              const alturaCardEstimado = alturaAtual + ALTURA_EXTRA_CARD;
+              const topoCard = Math.min(
+                Math.max(0, alturaConteudoCanvas - alturaCardEstimado),
+                Math.max(0, posicao.y)
+              );
+              const larguraPersonalizada = Number.isFinite(g.largura)
+                ? `calc(${proporcaoLargura * 100}% - ${
+                    (1 - proporcaoLargura) * ESPACO_GRAFICOS
+                  }px)`
+                : undefined;
+              const estiloCard = {
+                ...(larguraPersonalizada
+                  ? {
+                      "--pers-card-basis": larguraPersonalizada,
+                      "--pers-card-width": larguraPersonalizada,
+                    }
+                  : {}),
+                ...(posicionamentoPronto
+                  ? {
+                      left: `min(${
+                        Math.min(
+                          Math.max(0, posicao.x),
+                          Math.max(0, 1 - proporcaoLargura)
+                        ) * 100
+                      }%, calc(100% - var(--pers-card-width)))`,
+                      top: `${topoCard}px`,
+                      "--pers-order": Math.round(topoCard),
+                    }
+                  : {}),
+              };
 
               return (
                 <article
                   key={g.id}
+                  data-grafico-id={g.id}
                   onDoubleClick={() => ativarEdicao(g)}
-                  draggable={emEdicao}
-                  onDragStart={(e) => {
-                    if (e.target.closest(".pers-resize-handle")) {
-                      e.preventDefault();
-                      return;
-                    }
-                    setArrastandoCardId(g.id);
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    if (arrastandoCardId && arrastandoCardId !== g.id) {
-                      setSobreCardId(g.id);
-                    }
-                  }}
-                  onDragLeave={() => setSobreCardId(null)}
-                  onDrop={() => {
-                    moverGrafico(arrastandoCardId, g.id);
-                    setArrastandoCardId(null);
-                    setSobreCardId(null);
-                  }}
-                  onDragEnd={() => {
-                    setArrastandoCardId(null);
-                    setSobreCardId(null);
-                  }}
                   title={
                     emEdicao
-                      ? "Modo de edição ativo: arraste para mover ou puxe as bordas para redimensionar"
+                      ? "Modo de edição ativo: arraste o cabeçalho para mover e as bordas para redimensionar"
                       : "Dê duplo clique para editar"
                   }
                   className={`pers-card pers-col-${colunas}${
                     Number.isFinite(g.largura) ? " pers-card--custom-size" : ""
                   } ${
                     emEdicao ? "pers-card--editavel" : ""
-                  } ${sobreCardId === g.id ? "pers-card--drop-target" : ""}`}
-                  style={
-                    Number.isFinite(g.largura)
-                      ? {
-                          "--pers-card-basis": `calc(${g.largura * 100}% - ${
-                            (1 - g.largura) * ESPACO_GRAFICOS
-                          }px)`,
-                        }
-                      : undefined
-                  }
+                  } ${arrastandoCardId === g.id ? "pers-card--movendo" : ""}`}
+                  style={estiloCard}
                 >
                   <button
                     type="button"
@@ -579,13 +1134,18 @@ export default function Personalizado() {
                     ×
                   </button>
 
-                  <div className="pers-card-header">
+                  <div
+                    className={`pers-card-header${emEdicao ? " pers-card-header--movel" : ""}`}
+                    onPointerDown={
+                      emEdicao ? (e) => iniciarMovimentoGrafico(e, g) : undefined
+                    }
+                  >
                     <h3>{g.titulo}</h3>
                     <span className="pers-tipo-badge">
                       {NOMES_TIPO[tipoAtual] || tipoAtual}
                     </span>
                     {emEdicao && (
-                      <span className="pers-edit-badge" title="Arraste o card para mover">
+                      <span className="pers-edit-badge" title="Arraste o cabeçalho para posicionar">
                         ✥ Editando
                       </span>
                     )}
@@ -593,10 +1153,12 @@ export default function Personalizado() {
 
                   {g.subtitulo && <p className="pers-sub">{g.subtitulo}</p>}
 
-                  <GraficoRenderer
-                    grafico={{ ...g, tipo: tipoAtual }}
-                    altura={alturaAtual}
-                  />
+                  <div className="pers-chart-shell" data-grafico-renderer>
+                    <GraficoRenderer
+                      grafico={{ ...g, tipo: tipoAtual }}
+                      altura={alturaAtual}
+                    />
+                  </div>
 
                   {/* Bordas e cantos interativos para redimensionar o gráfico */}
                   {emEdicao && (
