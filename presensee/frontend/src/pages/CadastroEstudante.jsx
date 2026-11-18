@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { MascotAvatar } from "../components/Icons";
 import api from "../services/api";
+import { buscarEnderecoPorCEP, formatarCEP } from "../services/cep";
 import "../styles/CadastroEstudante.css";
 
 const PARENTESCOS = ["Mãe", "Pai", "Avó/Avô", "Tio/Tia", "Irmã/Irmão", "Tutor(a) legal", "Outro"];
@@ -46,11 +47,6 @@ function mascaraTelefone(valor) {
   if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
   if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
-
-function mascaraCEP(valor) {
-  const d = soDigitos(valor).slice(0, 8);
-  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
 }
 
 function cpfValido(cpf) {
@@ -164,6 +160,22 @@ function CadastroEstudante() {
     if (erros[campo]) setErros((atual) => ({ ...atual, [campo]: undefined }));
     if (erroGeral) setErroGeral("");
   }
+
+    async function alterarCEP(valor) {
+      const cep = formatarCEP(valor);
+      alterar("cep", cep);
+
+      const endereco = await buscarEnderecoPorCEP(cep);
+      if (!endereco) return;
+
+      setForm((atual) => ({
+        ...atual,
+        rua: endereco.logradouro || atual.rua,
+        bairro: endereco.bairro || atual.bairro,
+        cidade: endereco.cidade || atual.cidade,
+        estado: endereco.estado || atual.estado,
+      }));
+    }
 
   function escolherFoto(evento) {
     const arquivo = evento.target.files?.[0];
@@ -492,7 +504,7 @@ function CadastroEstudante() {
                   className="cest-input"
                   inputMode="numeric"
                   value={form.cep}
-                  onChange={(e) => alterar("cep", mascaraCEP(e.target.value))}
+                  onChange={(e) => alterarCEP(e.target.value)}
                   placeholder="00000-000"
                 />
               </Campo>
