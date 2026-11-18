@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import api from "../../services/api" // Conexão com o backend
+import { buscarEnderecoPorCEP, formatarCEP } from "../../services/cep"
 
 const initial = {
   nome: "", inep: "", rede: "Estadual", municipio: "", uf: "PE",
@@ -15,6 +16,22 @@ export default function AdminNovaEscola() {
 
   function update(event) {
     setDados((anterior) => ({ ...anterior, [event.target.name]: event.target.value }))
+  }
+
+  async function atualizarCEP(event) {
+    const cep = formatarCEP(event.target.value)
+    setDados((anterior) => ({ ...anterior, cep }))
+
+    const endereco = await buscarEnderecoPorCEP(cep)
+    if (!endereco) return
+
+    setDados((anterior) => ({
+      ...anterior,
+      logradouro: endereco.logradouro || anterior.logradouro,
+      bairro: endereco.bairro || anterior.bairro,
+      municipio: endereco.cidade || anterior.municipio,
+      uf: endereco.estado || anterior.uf,
+    }))
   }
 
   async function submit(event) {
@@ -88,7 +105,18 @@ export default function AdminNovaEscola() {
         
         <h3>Endereço da escola</h3>
         <div className="admin-form-grid">
-          {field("CEP", "cep", false)}
+          <label>
+            CEP
+            <input
+              type="text"
+              name="cep"
+              inputMode="numeric"
+              placeholder="00000-000"
+              value={dados.cep}
+              onChange={atualizarCEP}
+              disabled={loading}
+            />
+          </label>
           {field("Logradouro (rua/avenida)", "logradouro", false)}
           {field("Número", "numero", false)}
           {field("Complemento", "complemento")}

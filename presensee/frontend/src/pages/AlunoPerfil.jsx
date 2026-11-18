@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import GaugeChart from "../components/GaugeChart";
 import api from "../services/api";
+import { buscarEnderecoPorCEP, formatarCEP } from "../services/cep";
 import "../styles/AlunoPerfil.css";
 
 const PRIORIDADES = ["Alta", "Média", "Baixa"];
@@ -481,23 +482,16 @@ function AlunoPerfil() {
   });
 
   async function buscarCepAutomatico(cepDigitado) {
-    const cepLimpo = cepDigitado.replace(/\D/g, "");
-    if (cepLimpo.length !== 8) return;
-    try {
-      const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-      const data = await resp.json();
-      if (!data.erro) {
-        setFormEdicaoAluno((prev) => ({
-          ...prev,
-          rua: data.logradouro || prev.rua,
-          bairro: data.bairro || prev.bairro,
-          cidade: data.localidade || prev.cidade,
-          estado: data.uf || prev.estado,
-        }));
-      }
-    } catch {
-      // Ignora erro de rede no ViaCEP
-    }
+    const endereco = await buscarEnderecoPorCEP(cepDigitado);
+    if (!endereco) return;
+
+    setFormEdicaoAluno((prev) => ({
+      ...prev,
+      rua: endereco.logradouro || prev.rua,
+      bairro: endereco.bairro || prev.bairro,
+      cidade: endereco.cidade || prev.cidade,
+      estado: endereco.estado || prev.estado,
+    }));
   }
 
   function abrirModalEdicaoAluno() {
@@ -1364,7 +1358,7 @@ function AlunoPerfil() {
                       placeholder="50000-000"
                       value={formEdicaoAluno.cep}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const val = formatarCEP(e.target.value);
                         setFormEdicaoAluno({ ...formEdicaoAluno, cep: val });
                         buscarCepAutomatico(val);
                       }}
