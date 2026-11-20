@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Welcome from "./pages/Welcome";
@@ -18,6 +18,16 @@ import { adminRoutes } from "./painel-administrativo/AdminRoutes";
 import { GraficosProvider } from "./context/GraficosContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Personalizado from "./pages/Personalizado";
+import MascoteAssistente from "./components/MascoteAssistente";
+
+function AssistenteGlobal() {
+  const { pathname } = useLocation();
+  const paginasPublicas = ["/", "/login", "/interno/nova-escola"];
+
+  if (!localStorage.getItem("token") || paginasPublicas.includes(pathname)) return null;
+
+  return <MascoteAssistente />;
+}
 
 function App() {
   return (
@@ -143,6 +153,7 @@ function App() {
           }
         />
       </Routes>
+      <AssistenteGlobal />
     </BrowserRouter>
     </GraficosProvider>
     

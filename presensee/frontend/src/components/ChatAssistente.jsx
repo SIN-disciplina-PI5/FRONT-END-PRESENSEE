@@ -57,8 +57,7 @@ function carregarHistorico(chave) {
   }
 }
 
-export default function ChatAssistente() {
-  const [aberto, setAberto] = useState(false);
+export default function ChatAssistente({ aberto, onFechar }) {
   const [chatVisivel, setChatVisivel] = useState(false);
   const [chaveHistorico] = useState(obterChaveHistorico);
   const [historicoInicial] = useState(() => carregarHistorico(chaveHistorico));
@@ -169,10 +168,10 @@ export default function ChatAssistente() {
 
   useEffect(() => {
     if (!aberto) return undefined;
-    const aoTeclar = (e) => e.key === "Escape" && setAberto(false);
+    const aoTeclar = (e) => e.key === "Escape" && onFechar();
     document.addEventListener("keydown", aoTeclar);
     return () => document.removeEventListener("keydown", aoTeclar);
-  }, [aberto]);
+  }, [aberto, onFechar]);
 
   function adicionarNoDashboard(mensagem) {
     const { titulo, subtitulo, tipo, dados, eixoX, eixoY } = mensagem.grafico;
@@ -192,7 +191,7 @@ export default function ChatAssistente() {
   }
 
   function verPersonalizado() {
-    setAberto(false);
+    onFechar();
     navigate("/personalizado");
   }
 
@@ -253,7 +252,7 @@ export default function ChatAssistente() {
         >
           <header className="chat-topo">
             <strong>✦ Assistente PresenSee</strong>
-            <button type="button" onClick={() => setAberto(false)} aria-label="Fechar chat">
+            <button type="button" onClick={onFechar} aria-label="Fechar chat">
               ×
             </button>
           </header>
@@ -335,16 +334,6 @@ export default function ChatAssistente() {
           )}
         </section>
       )}
-
-      <button
-        type="button"
-        className="chat-fab"
-        onClick={() => setAberto((v) => !v)}
-        aria-label={aberto ? "Fechar assistente" : "Abrir assistente"}
-        aria-expanded={aberto}
-      >
-        <img src={mascoteImg} alt="" />
-      </button>
     </>
   );
 }
