@@ -254,8 +254,14 @@
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
-  background: rgba(236, 72, 153, 0.12);
-  color: #db2777;
+  background: rgba(99, 61, 242, 0.12);
+  color: #5b34e0;
+}
+
+[data-theme="dark"] .pers-tipo-badge {
+  background: rgba(167, 139, 250, 0.18);
+  color: #c4b5fd;
+
 }
 
 .pers-edit-badge {

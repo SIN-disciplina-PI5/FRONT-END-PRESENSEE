@@ -18,6 +18,7 @@ import { adminRoutes } from "./painel-administrativo/AdminRoutes";
 import { GraficosProvider } from "./context/GraficosContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Personalizado from "./pages/Personalizado";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -125,7 +126,7 @@ function App() {
 />
 
 
-        <Route
+                <Route
           path="/diario"
           element={
             <ProtectedRoute>
@@ -142,6 +143,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
     </GraficosProvider>
