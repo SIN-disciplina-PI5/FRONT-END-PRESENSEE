@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import {
   Area, AreaChart, CartesianGrid, Bar, BarChart, Cell, Pie, PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Rectangle,
 } from "recharts";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { IconAlunos, IconAlertas, MascotAvatar } from "../components/Icons";
 import { getUsuario } from "../services/auth";
 import api from "../services/api";
 import NotificacoesHome from "../components/NotificacoesHome";
+import { TEXTO_SEM_DADOS, contarAlunosDaTurma, normalizarNomeTurma } from "../utils/frequencia";
 import "../styles/Dashboard.css";
 
 const CORES_RISCO = { alto: "#f23b4b", medio: "#ffaf17", baixo: "#11ba7a" };
@@ -65,28 +66,44 @@ function CabecalhoPainel({ titulo, descricao, children }) {
 
 function TooltipGrafico({ active, payload, label, unidade = "%" }) {
   if (!active || !payload?.length) return null;
+  const semDados = payload[0].payload?.semDados;
   return (
     <div className="pd-tooltip">
       {label && <strong>{label}</strong>}
-      <span>{payload[0].value}{unidade}</span>
+      <span>{semDados ? "Sem dados (turma sem alunos)" : `${payload[0].value}${unidade}`}</span>
     </div>
+  );
+}
+
+// não funciona direito com barras de altura 0 (renumera o índice e mostraria "0%").
+function BarraFrequencia({ unidade = "%", ...props }) {
+  const { x, y, width, value, payload } = props;
+  const semDados = payload?.semDados;
+  return (
+    <g>
+      {!semDados && <Rectangle {...props} />}
+      <text x={x + width / 2} y={y - 6} textAnchor="middle" fontSize={12} fontWeight={700}
+            fill={semDados ? "#8a8fa8" : "#141a37"}>
+        {semDados ? TEXTO_SEM_DADOS : `${value}${unidade}`}
+      </text>
+    </g>
   );
 }
 
 function GraficoFrequencia({ dados, eixo = "dia", campo = "frequencia", unidade = "%" }) {
   if (!dados || !dados.length) return <p className="pd-sem-dados">Sem dados disponíveis.</p>;
-  const valores = dados.map((item) => Number(item[campo]) || 0);
+  const dadosGrafico = dados.map((item) => (item.semDados ? { ...item, [campo]: 0 } : item));
+  const valores = dadosGrafico.map((item) => Number(item[campo]) || 0);
   const maximo = campo === "frequencia" ? 100 : Math.max(1, ...valores) + 2;
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={dados} margin={{ top: 23, right: 4, bottom: 0, left: 4 }} barCategoryGap="10%">
+      <BarChart data={dadosGrafico} margin={{ top: 23, right: 4, bottom: 0, left: 4 }} barCategoryGap="10%">
         <XAxis dataKey={eixo} axisLine={false} tickLine={false} />
         <YAxis hide domain={[0, maximo]} />
         <Tooltip content={<TooltipGrafico unidade={unidade} />} cursor={false} />
         <Bar dataKey={campo} className="pd-barra" fill="#633df2" radius={[6, 6, 0, 0]}
           isAnimationActive animationDuration={850} maxBarSize={64}
-          label={{ position: "top", formatter: (valor) => `${valor}${unidade}`, fontSize: 12, fontWeight: 700, fill: "#141a37" }}
-        />
+          shape={<BarraFrequencia unidade={unidade} />} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -126,6 +143,28 @@ function Dashboard() {
   const [filtroTurma, setFiltroTurma] = useState("Todas");
   const [paginaTurmas, setPaginaTurmas] = useState(0);
   const [mesesExibidos, setMesesExibidos] = useState(6);
+  const [alunosPorTurma, setAlunosPorTurma] = useState({});
+
+  useEffect(() => {
+    let ativo = true;
+    async function carregarContagemDeAlunos() {
+      try {
+        const { data } = await api.get("/classes");
+        if (!ativo || !Array.isArray(data)) return;
+        const contagem = {};
+        data.forEach((turma) => {
+          const nome = normalizarNomeTurma(turma.name || turma.nome);
+          const total = contarAlunosDaTurma(turma) ?? 0;
+          contagem[nome] = (contagem[nome] || 0) + total; // mesma turma em turnos diferentes: soma
+        });
+        setAlunosPorTurma(contagem);
+      } catch (error) {
+        console.warn("Não foi possível carregar a contagem de alunos por turma:", error);
+      }
+    }
+    carregarContagemDeAlunos();
+    return () => { ativo = false; };
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -165,7 +204,11 @@ function Dashboard() {
     { nome: "Baixo", valor: dados.alunosBaixoRisco || 0, cor: CORES_RISCO.baixo },
   ];
 
-  const frequenciaPorTurma = dados.turmas || [];
+  const frequenciaPorTurma = (dados.turmas || []).map((item) => {
+    const totalAlunos = contarAlunosDaTurma(item) ?? alunosPorTurma[normalizarNomeTurma(item.turma)];
+    const semDados = totalAlunos === 0 || item.frequencia === null || item.frequencia === undefined;
+    return semDados ? { ...item, frequencia: 0, semDados: true } : item;
+  });
   const anosDisponiveis = [...new Set(frequenciaPorTurma.map(({ turma }) => String(turma).charAt(0)))].sort();
   const turmasFiltradas = frequenciaPorTurma.filter(({ turma }) => filtroTurma === "Todas" || String(turma).startsWith(filtroTurma));
   const totalPaginas = Math.max(1, Math.ceil(turmasFiltradas.length / TURMAS_POR_PAGINA));
