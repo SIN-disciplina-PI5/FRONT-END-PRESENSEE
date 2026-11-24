@@ -398,3 +398,11 @@
     padding: 16px 10px;
   }
 }
+
+.turma-sem-dados {
+  display: inline-block;
+  min-width: 24px;
+  color: var(--color-text-muted, #6b6b78);
+  font-weight: 600;
+  cursor: help;
+}

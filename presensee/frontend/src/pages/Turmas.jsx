@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
 import "../styles/Turmas.css";
+import { TITULO_SEM_DADOS, formatarFrequencia } from "../utils/frequencia";
 
 function Turmas() {
   const navigate = useNavigate();
@@ -20,16 +21,22 @@ function Turmas() {
     try {
       const response = await api.get("/classes");
 
-      const turmasFormatadas = response.data.map((turma) => ({
-        id: turma.id || turma._id,
-        nome: turma.name || turma.nome || "Sem Nome",
-        curso: turma.course || turma.curso || "Ensino Médio",
-        alunos: turma._count?.students || turma.students?.length || turma.alunos || 0,
-        turno: turma.shift || turma.turno || "Manhã",
-        frequencia: turma.attendanceRate || turma.frequencia || 100,
-        atencao: turma.attentionStudents || turma.atencao || 0,
-        altoRisco: turma.highRiskStudents || turma.altoRisco || 0,
-      }));
+      const turmasFormatadas = response.data.map((turma) => {
+        const alunos = turma._count?.students || turma.students?.length || turma.alunos || 0;
+        const semAlunos = alunos === 0;
+        return {
+          id: turma.id || turma._id,
+          nome: turma.name || turma.nome || "Sem Nome",
+          curso: turma.course || turma.curso || "Ensino Médio",
+          alunos,
+          semAlunos,
+          turno: turma.shift || turma.turno || "Manhã",
+          // null = "Sem dados" (antes caía no 100% padrão)
+          frequencia: semAlunos ? null : turma.attendanceRate || turma.frequencia || 100,
+          atencao: turma.attentionStudents || turma.atencao || 0,
+          altoRisco: turma.highRiskStudents || turma.altoRisco || 0,
+        };
+      });
 
       setTurmas(turmasFormatadas);
     } catch (error) {
@@ -268,7 +275,9 @@ function Turmas() {
                   <span>Alunos</span>
                 </div>
                 <div>
-                  <strong>{turmaSelecionada.frequencia}%</strong>
+                  <strong title={turmaSelecionada.semAlunos ? TITULO_SEM_DADOS : undefined}>
+                    {formatarFrequencia(turmaSelecionada.frequencia)}
+                  </strong>
                   <span>Frequência média</span>
                 </div>
                 <div>
