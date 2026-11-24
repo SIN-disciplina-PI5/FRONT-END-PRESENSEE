@@ -4,6 +4,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useGraficos } from "../context/GraficosContext";
 import GraficoRenderer from "../components/GraficoRenderer";
 import api from "../services/api";
+import { capturarTodos, gerarExcel, gerarPDF } from "../utils/exportarGraficos";
 import "../styles/Personalizado.css";
 
 const OPCOES_TIPO = [
@@ -302,6 +303,7 @@ export default function Personalizado() {
   const [avisoTopo, setAvisoTopo] = useState("");
   const [avisoErro, setAvisoErro] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const [graficoParaRemover, setGraficoParaRemover] = useState(null);
   const avisoTimerRef = useRef(null);
   const gridRef = useRef(null);
@@ -870,52 +872,38 @@ export default function Personalizado() {
     URL.revokeObjectURL(url);
   }
 
-  function exportarPDF() {
+  const dataArquivo = () => new Date().toISOString().slice(0, 10);
+
+  async function exportarPDF() {
     setMenuExportarAberto(false);
-    if (graficos.length === 0) return;
+    if (graficos.length === 0 || exportando) return;
+    setExportando(true);
+    try {
+      const imagens = await capturarTodos(graficos);
+      gerarPDF({ graficos, imagens, nomesTipo: NOMES_TIPO, nomeArquivo: `presensee-personalizado-${dataArquivo()}.pdf` });
+      mostrarAviso("PDF exportado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+      mostrarAviso("Não foi possível exportar o PDF. Tente novamente.", 5000, true);
+    } finally {
+      setExportando(false);
+    }
+  }
 
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    let y = 20;
-
-    doc.setFillColor(99, 61, 242);
-    doc.rect(0, 0, 210, 8, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(28, 31, 59);
-    doc.text("PresenSee - Graficos Personalizados", 14, y);
-    y += 10;
-
-    graficos.forEach((g) => {
-      if (y > 260) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(99, 61, 242);
-      doc.text(
-        String(g.titulo || "Grafico").normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-        14,
-        y
-      );
-      y += 6;
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(60, 65, 85);
-      (g.dados || []).forEach((d) => {
-        if (y > 275) {
-          doc.addPage();
-          y = 20;
-        }
-        const linha = `- ${d.nome ?? d.x}: ${d.valor ?? d.y}`;
-        doc.text(linha.normalize("NFD").replace(/[\u0300-\u036f]/g, ""), 18, y);
-        y += 5;
-      });
-      y += 6;
-    });
-
-    doc.save(`presensee-personalizado-${new Date().toISOString().slice(0, 10)}.pdf`);
+  async function exportarExcel() {
+    setMenuExportarAberto(false);
+    if (graficos.length === 0 || exportando) return;
+    setExportando(true);
+    try {
+      const imagens = await capturarTodos(graficos);
+      await gerarExcel({ graficos, imagens, nomesTipo: NOMES_TIPO, nomeArquivo: `presensee-personalizado-${dataArquivo()}.xlsx` });
+      mostrarAviso("Excel exportado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao exportar Excel:", error);
+      mostrarAviso("Não foi possível exportar o Excel. Tente novamente.", 5000, true);
+    } finally {
+      setExportando(false);
+    }
   }
 
   return (
@@ -970,22 +958,16 @@ export default function Personalizado() {
             </button>
 
             <div className="pers-export-wrap">
-              <button
-                type="button"
-                className="pers-btn-pri"
+              <button type="button" className="pers-btn-pri"
                 onClick={() => setMenuExportarAberto((v) => !v)}
-                disabled={graficos.length === 0}
-              >
-                Exportar ▾
+                disabled={graficos.length === 0 || exportando} aria-busy={exportando}>
+                {exportando ? "Exportando…" : "Exportar ▾"}
               </button>
               {menuExportarAberto && (
                 <div className="pers-export-menu">
-                  <button type="button" onClick={exportarPDF}>
-                    Exportar PDF
-                  </button>
-                  <button type="button" onClick={exportarCSV}>
-                    Exportar Excel (CSV)
-                  </button>
+                  <button type="button" onClick={exportarPDF}>Exportar PDF (com gráficos)</button>
+                  <button type="button" onClick={exportarExcel}>Exportar Excel (com gráficos)</button>
+                  <button type="button" onClick={exportarCSV}>Somente valores (CSV)</button>
                 </div>
               )}
             </div>
