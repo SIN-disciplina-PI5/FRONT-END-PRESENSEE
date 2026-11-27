@@ -436,4 +436,4 @@ https://github.com/SIN-disciplina-PI5/FRONT-END-PRESENSEE
 
 ## 📄 Licença
 
-Projeto acadêmico, desenvolvido para fins educacionais e sem fins lucrativos. Os termos formais de licenciamento devem ser definidos pelos responsáveis pelo repositório.
+Projeto acadêmico, desenvolvido para fins educacionais e sem fins lucrativos. 
